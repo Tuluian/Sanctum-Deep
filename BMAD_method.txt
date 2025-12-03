@@ -1,0 +1,48 @@
+Install with 'npx bmad-method install'
+
+Load analyst agent first by running 'workflow-init'
+
+Load PM agent with 'prd' (or 'tech-spec' for small projects)
+
+Load Architect at 'create-architecture' (10+ stories only)
+
+Build: 
+Load SM agent → Run workflows for each story → Load DEV agent → Implement
+
+*** ALWAYS use fresh chats and fresh sessions for each workflow to avoid hallucinations and get fresh info ***
+
+For Claude Code - How to Use
+    Type Slash Command IN CLAUDE while running: 
+    Start with / to see available commands
+    Select Agent: Type /bmad:{agent-name} (e.g., /bmad-dev)
+    Execute: Press Enter to activate that agent persona
+    Examples
+    /bmad:bmm:agents:dev - Activate development agent - The DEV agent will implement the story
+    /bmad:bmm:agents:architect - Activate architect agent
+    /bmad:bmm:workflows:dev-story - Execute dev-story workflow
+
+    Do *help for available things to do with any agent:
+    /analyst - for analyst
+        Then you can talk to it like usual.
+    /architect - for architect
+
+To start claude code, use 'claude' from within project folder
+    If claude isn't ready in PATH, use
+        & "C:\Users\C\.local\bin\claude.exe"
+    
+    Launch claude, then go to the agent you need.
+    /dev  - will take you to the developer role
+        This role will automatically read errors and fix right away, rather than copy/pasting.
+
+    UX-Designer will help with the UI side 
+
+    3.1 Initialize Sprint Planning
+        Start a new chat with the SM (Scrum Master) agent
+        Wait for the menu to appear
+        Tell the agent: "Run sprint-planning"
+        This creates your sprint-status.yaml file that tracks all epics and stories
+
+    For each subsequent story, repeat the cycle using fresh chats for each workflow:
+        New chat → SM agent → "Run create-story"
+        New chat → DEV agent → "Run dev-story"
+        New chat → DEV agent → "Run code-review" (optional but always super highly recommended!!!!!)

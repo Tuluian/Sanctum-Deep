@@ -1,0 +1,455 @@
+# Product Requirements Document: Sanctum Ruins
+
+## Product Overview
+
+**Type**: Browser-based roguelike deck-builder  
+**Target Platform**: Desktop web (mobile-responsive later)  
+**Core Loop**: 15-30 minute runs through a sentient, ever-shifting dungeon  
+**Revenue Model**: 
+- Free: 2 base classes (Cleric, Dungeon Knight)
+- Premium class DLC: $4.99 per class (Diabolist, Oathbound, Fey-Touched)
+
+---
+
+## Setting & Theme
+
+You delve into **Sanctum Ruins**, an ancient dungeon that responds to those who enter it. The dungeon tests worthy souls, granting power to those who survive. Each class represents a different approach to surviving the depths.
+
+---
+
+## Core Mechanics
+
+### Free Character Classes
+
+**The Cleric**
+- Starting deck: 4 Smite (deal 5 damage), 4 Shield of Faith (gain 5 block), 1 Prayer of Mending (heal 6 HP), 1 Consecrate (deal 3 damage, heal 3 HP)
+- Starting HP: 75
+- Core mechanic: **Devotion** - healing yourself generates Devotion tokens. Spend tokens to empower cards or trigger bonus effects
+- Playstyle: Attrition warfare, outlast enemies through sustained healing
+
+**The Dungeon Knight**
+- Starting deck: 5 Sword Strike (deal 6 damage), 4 Raise Shield (gain 6 block), 1 Bulwark Stance (gain 8 block, next attack deals +3 damage)
+- Starting HP: 80
+- Core mechanic: **Fortify** - block that persists between turns (caps at 15). Cards synergize with having high Fortify
+- Playstyle: Balanced offense/defense, strategic block management
+
+### Premium DLC Classes ($4.99 each)
+
+**The Diabolist** (Pact Magic - Infernal)
+- Starting HP: 70
+- Core mechanic: **Contracts** - powerful cards that add Curse cards to your deck or have deferred costs
+- Playstyle: High risk/reward, managing deck pollution vs raw power
+- Example cards: "Blood Pact" (deal 15 damage, add Pain card to deck), "Hellfire" (deal 8 damage to all enemies, lose 3 HP)
+
+**The Oathbound** (Pact Magic - Celestial)
+- Starting HP: 75
+- Core mechanic: **Vows** - declare restrictions for powerful sustained effects
+- Playstyle: Combo chains, committing to strategies
+- Example cards: "Oath of Retribution" (next 3 attacks deal double, but can't block), "Sacred Vow" (gain 2 Resolve per turn, but must attack every turn)
+
+**The Fey-Touched** (Pact Magic - Chaotic)
+- Starting HP: 65
+- Core mechanic: **Whimsy** - cards with random outcomes or chaotic effects
+- Playstyle: Adaptation, embracing chaos
+- Example cards: "Fairy Dust" (random effect: draw 3, deal 8, gain 10 block), "Trickster's Trade" (transform random card in hand)
+
+---
+
+## Combat System
+
+### Resource: **Resolve** (3 per turn base)
+Your mental fortitude to continue fighting. More evocative than Energy/Mana for a dungeon survival theme.
+
+### Turn Structure
+1. Draw hand (5 cards base)
+2. Player plays cards (using Resolve)
+3. Player ends turn
+4. Enemy executes intent
+5. Resolve refills, new turn begins
+
+### Core Stats
+- **HP**: Health points
+- **Block**: Temporary shield (resets each turn unless using Fortify)
+- **Resolve**: Resource to play cards (refills each turn)
+- **Fortify**: Persistent block (Dungeon Knight specific, caps at 15)
+- **Devotion**: Healing currency (Cleric specific)
+
+### Status Effects (Original Names)
+
+**Debuffs**:
+- **Sundered**: Take 50% more damage (X turns)
+- **Impaired**: Deal 25% less damage (X turns)
+- **Bleeding**: Lose X HP at end of turn, reduces by 1 each turn
+- **Cursed**: Various negative effects depending on curse type
+- **Bound**: Cannot play certain card types (X turns)
+
+**Buffs**:
+- **Blessed**: Heal X HP at end of turn (X turns)
+- **Empowered**: Next card effect increased by 50%
+- **Warded**: Block damage from next attack
+- **Might**: Increase attack damage by X
+- **Resilience**: Increase block gained by X
+
+---
+
+## Card Types & Rarities
+
+### Types
+- **Attack**: Deal damage (0-3 Resolve)
+- **Skill**: Block, healing, manipulation (0-2 Resolve)
+- **Power**: Permanent combat effects (1-3 Resolve, play once)
+- **Curse**: Negative cards (pollute deck, often cost 0 but waste draw)
+
+### Rarities
+- **Common** (70% drop rate)
+- **Uncommon** (25% drop rate)  
+- **Rare** (5% drop rate)
+
+---
+
+## Progression Structure
+
+### Map Layout
+- **3 Acts**: 15 encounters each (45 total)
+- **Branching paths**: Player chooses route
+- **Node Types**:
+  - Combat (common enemies)
+  - Elite Combat (harder enemies, better rewards)
+  - Campfire (rest/upgrade)
+  - Merchant (shop)
+  - Shrine (random event, often risk/reward)
+  - Boss (end of each Act)
+
+### Rewards After Combat
+1. **Gold** (always, scales with difficulty)
+2. **Card choice**: Pick 1 of 3 cards OR skip
+3. **Potion** (30% chance)
+
+### Campfire Options
+- **Rest**: Heal 30% max HP
+- **Inscribe**: Upgrade a card (better effects, reduced cost, or additional effects)
+- **Meditate**: Remove a card from deck (once per campfire)
+
+### Merchant
+- Buy cards (50-150g by rarity)
+- Buy relics (250-300g)
+- Purge card (75g, +25g each time)
+- Buy potions (50g)
+- Class-specific items
+
+### Shrines (Risk/Reward Events)
+Examples:
+- "Ancient Altar": Sacrifice 15% max HP for a rare relic
+- "Mysterious Fountain": Gain 3 random cards OR lose 20 gold
+- "Forgotten Grimoire": Transform 2 cards into random cards of higher rarity
+- "Cursed Idol": Gain powerful relic but add 2 Curses to deck
+
+---
+
+## Relics (Passive Items)
+
+V1 Target: 25 relics
+
+**Universal Relics** (work for all classes):
+- **Worn Waterskin**: Heal 3 HP after each combat
+- **Iron Ring**: +5 max HP
+- **Lucky Coin**: Gain 20% more gold
+- **Adventurer's Pack**: Start each combat with 1 extra card in hand
+- **Ankh Talisman**: First time you would die, heal to 50% HP (consumed)
+
+**Class-Specific Examples**:
+- **Holy Symbol** (Cleric): Generate 1 Devotion at start of each combat
+- **Tower Shield** (Knight): Start combat with 5 Fortify
+- **Infernal Shard** (Diabolist): Curse cards in your deck deal 3 damage when drawn
+- **Celestial Sigil** (Oathbound): Vow effects last 1 additional turn
+- **Fey Trinket** (Fey-Touched): 25% chance to not consume Resolve when playing cards
+
+---
+
+## Enemies
+
+### Act 1: The Entrance Halls (Undead/Cultists)
+- **Common**: 8 enemy types (Skeleton, Cultist, Zombie, etc.)
+- **Elite**: 2 enemy types (Tomb Guardian, High Cultist)
+- **Boss**: The Bonelord
+
+### Act 2: The Sunken Crypts (Aberrations/Dark Magic)
+- **Common**: 8 enemy types (Slime, Dark Mage, Gargoyle, etc.)
+- **Elite**: 2 enemy types (Void Caller, Stone Sentinel)
+- **Boss**: The Drowned King
+
+### Act 3: The Sanctum Core (Demons/Guardians)
+- **Common**: 6 enemy types (Imp, Corrupted Angel, etc.)
+- **Elite**: 2 enemy types (Greater Demon, Sanctum Warden)
+- **Boss**: The Hollow God (final boss)
+
+### Enemy AI Patterns
+- Enemies telegraph next move (Attack X, Defend X, Buff, Debuff, Multi-attack)
+- 2-4 moves per enemy with conditions (HP thresholds, cooldowns, patterns)
+- Elite enemies have 2 phases or special mechanics
+
+---
+
+## Potions (Consumables)
+
+8 potion types in V1:
+- **Health Potion**: Heal 20 HP
+- **Resolve Elixir**: Gain 2 Resolve this turn
+- **Liquid Courage**: +3 Might for this combat
+- **Shield Tonic**: Gain 15 block
+- **Cleansing Water**: Remove all debuffs
+- **Poison Vial**: Apply 8 Bleeding to enemy
+- **Bottled Blessing**: Gain Blessed 5 for 3 turns
+- **Miracle Draught**: Upgrade a random card in hand for this combat
+
+Max potion capacity: 3
+
+---
+
+## Technical Requirements
+
+### State Schema
+
+```typescript
+GameState {
+  run: {
+    seed: string
+    currentAct: number
+    currentNode: number
+    gold: number
+    potions: Potion[]
+    relics: Relic[]
+    deck: Card[] // full deck
+    maxHP: number
+    currentHP: number
+    character: CharacterClass
+    visitedNodes: string[]
+    floorMap: MapNode[]
+  }
+  combat: {
+    turn: number
+    player: {
+      hp: number
+      block: number
+      resolve: number
+      maxResolve: number
+      hand: Card[]
+      drawPile: Card[]
+      discardPile: Card[]
+      exhaustPile: Card[]
+      statusEffects: StatusEffect[]
+      devotion?: number // Cleric only
+      fortify?: number // Knight only
+    }
+    enemies: Enemy[]
+    rewards: CombatRewards | null
+  }
+}
+```
+
+### Key Systems to Build
+
+1. **Card Effect Engine**: Parse and execute card effects dynamically
+2. **Combat Resolver**: Handle damage, block, healing, status effects with proper ordering
+3. **Class Ability Manager**: Handle class-specific mechanics (Devotion, Fortify, Contracts, etc.)
+4. **Enemy AI**: Pattern-based behavior with telegraphing
+5. **Map Generator**: Procedural paths with guaranteed node type distribution
+6. **RNG System**: Seeded random for shareable runs
+7. **Save System**: LocalStorage + optional cloud sync (auth required)
+8. **Animation System**: Card plays, damage numbers, status icons, screen shake
+
+### UI Components
+
+**Core Screens**:
+- Main menu (new run, continue, class selection, settings)
+- Map view (node selection, current path)
+- Combat view (enemy area, player stats, hand, piles, end turn button)
+- Campfire screen (rest/upgrade/meditate choices)
+- Merchant screen (buyable items with gold display)
+- Shrine screen (event description with choice buttons)
+- Reward screen (card selection, skip option)
+- Victory/Defeat screen (run stats, unlock progress)
+
+**Overlays**:
+- Deck viewer (all cards, sortable)
+- Relic collection
+- Potion inventory (use during combat)
+- Settings menu
+- Card inspection (hover for details)
+
+---
+
+## Monetization Structure
+
+### Free Tier
+- Full game access (all 3 Acts)
+- 2 classes: Cleric, Dungeon Knight
+- All relics, potions, enemies
+- Cloud saves (if logged in)
+- Leaderboards
+
+### Premium Class DLC ($4.99 each)
+- **Diabolist Pack**: Unlocks class + 30 unique cards + 5 class relics
+- **Oathbound Pack**: Unlocks class + 30 unique cards + 5 class relics
+- **Fey-Touched Pack**: Unlocks class + 30 unique cards + 5 class relics
+
+### Optional: Class Bundle ($11.99)
+- All 3 premium classes (20% discount)
+
+### Future Monetization (Post-Launch)
+- Cosmetic card backs ($1.99)
+- Alt character skins ($2.99)
+- Daily Challenge mode subscription ($2.99/mo)
+
+---
+
+## Development Phases
+
+### Phase 1: Combat Prototype (Week 1-2)
+- Combat state machine
+- Card playing (click to play, target selection)
+- 15 basic cards (Cleric: 8, Knight: 7)
+- 3 test enemies with simple AI
+- Damage/block/healing calculation
+- Turn system with Resolve refill
+- Basic UI (functional, not pretty)
+
+**Success Metric**: Single combat feels good to play
+
+### Phase 2: Core Loop (Week 3-4)
+- Map generation (Act 1: 15 nodes)
+- Node types: Combat, Campfire, Merchant, Boss
+- Card rewards post-combat
+- Deck builder (add/upgrade/remove)
+- 8 relics (4 universal, 2 per class)
+- Save/load system
+- Gold economy
+
+**Success Metric**: Can complete Act 1 run
+
+### Phase 3: Content Expansion (Week 5-6)
+- Acts 2 & 3 (30 more nodes)
+- 30 more cards (15 per class)
+- 20 enemies total (distributed across acts)
+- 3 boss fights
+- All status effects implemented
+- 8 potions
+- 17 more relics
+- Shrine events (5 types)
+
+**Success Metric**: Full 3-act run with variety
+
+### Phase 4: Premium Classes (Week 7-8)
+- Diabolist class + 30 cards + 5 relics
+- Oathbound class + 30 cards + 5 relics
+- Fey-Touched class + 30 cards + 5 relics
+- Class selection screen with "locked" indicators
+- Purchase flow integration
+
+**Success Metric**: DLC classes feel distinct and worth $4.99
+
+### Phase 5: Polish & Juice (Week 9-10)
+- Card animations (slide, flip, glow)
+- Damage numbers (popup, shake)
+- Screen shake on big hits
+- Status effect particles
+- Sound effects (60+ sounds)
+- Music (3-4 tracks)
+- Settings (volume, SFX toggle, animation speed)
+
+**Success Metric**: Game feels premium
+
+### Phase 6: Meta & Launch (Week 11-12)
+- User accounts (email/Google/Discord auth)
+- Cloud saves
+- Leaderboards (fastest times, highest scores)
+- Run history viewer
+- Unlock progression (cards/relics unlock over time)
+- Payment integration (Stripe)
+- Landing page + trailer
+- Analytics tracking
+- Beta testing + balance
+
+---
+
+## Card Design Examples
+
+### Cleric Cards
+
+**Common**:
+- **Smite** (1 Resolve): Deal 6 damage
+- **Shield of Faith** (1 Resolve): Gain 6 block
+- **Prayer** (0 Resolve): Heal 4 HP
+- **Holy Light** (1 Resolve): Deal 4 damage. Heal 2 HP.
+
+**Uncommon**:
+- **Martyr's Stance** (1 Resolve, Power): Whenever you heal, gain 1 block
+- **Divine Judgement** (2 Resolve): Deal 12 damage. If target is Sundered, deal 6 more.
+- **Healing Circle** (2 Resolve): Heal 8 HP. Gain 1 Devotion.
+
+**Rare**:
+- **Resurrection** (3 Resolve, Exhaust): Return to full HP. Add 2 Curses to deck.
+- **Smite the Wicked** (2 Resolve): Deal 8 damage. Spend 3 Devotion: Deal 16 instead.
+
+### Dungeon Knight Cards
+
+**Common**:
+- **Sword Strike** (1 Resolve): Deal 6 damage
+- **Raise Shield** (1 Resolve): Gain 6 block
+- **Fortified Guard** (1 Resolve): Gain 4 block. Convert to Fortify.
+
+**Uncommon**:
+- **Shieldbash** (2 Resolve): Deal damage equal to your Fortify
+- **Iron Resolve** (1 Resolve, Power): Fortify cap increased to 25
+- **Defensive Formation** (2 Resolve): Gain 12 block. Next turn, gain 6 block.
+
+**Rare**:
+- **Unbreakable** (2 Resolve, Power): Block doesn't reset at end of turn
+- **Counter Strike** (1 Resolve): Gain 8 block. If an enemy attacks you, deal 10 damage.
+
+---
+
+## Balancing Principles
+
+1. **Commons are workhorses**: Reliable, you'll play them every combat
+2. **Uncommons are build-around**: Enable strategies
+3. **Rares are game-changers**: Dramatically alter how you play
+4. **Deck should stay lean**: Encourage skipping cards, make removal valuable
+5. **Class identity is critical**: Each class feels completely different
+
+Target:
+- Average winning deck: 25-30 cards
+- Average winning run: 25-35 minutes
+- Win rate for experienced players: 15-25%
+- Win rate for new players: 3-8%
+
+---
+
+## Out of Scope V1
+
+- More than 5 classes
+- Daily challenges
+- Achievements
+- Custom runs (modifiers/handicaps)
+- Multiplayer or co-op
+- Card crafting
+- Seasonal events
+- Mobile native app
+- Ascension/difficulty modifiers (post-launch)
+
+---
+
+## Marketing Hooks
+
+- "Free roguelike deck-builder with fair monetization"
+- "No gacha, no P2W, just $5 per class"
+- "Perfect for Slay the Spire fans seeking something fresh"
+- "Cleric class heals through everything"
+- "Premium classes offer truly unique playstyles"
+
+---
+
+Ready to start building? I'm thinking we begin with:
+1. **Combat prototype** with Cleric vs 1 simple enemy
+2. Get the healing/Devotion mechanic feeling good
+3. Expand from there

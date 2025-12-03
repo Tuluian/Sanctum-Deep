@@ -1,0 +1,385 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: 'Georgia', serif;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  color: #e0e0e0;
+  min-height: 100vh;
+  padding: 10px;
+  overflow-x: hidden;
+}
+
+.game-container {
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+h1 {
+  text-align: center;
+  color: #f4d03f;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  margin-bottom: 15px;
+  font-size: 1.8em;
+}
+
+.combat-area {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.enemy-area,
+.player-area {
+  border-radius: 8px;
+  padding: 15px;
+}
+
+.enemy-area {
+  background: rgba(139, 0, 0, 0.2);
+  border: 2px solid #8b0000;
+}
+
+.player-area {
+  background: rgba(25, 118, 210, 0.2);
+  border: 2px solid #1976d2;
+}
+
+h2 {
+  font-size: 1.3em;
+  margin-bottom: 10px;
+}
+
+.enemy {
+  background: rgba(139, 0, 0, 0.3);
+  border: 2px solid #ff4444;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.enemy.selected {
+  border-color: #f4d03f;
+  box-shadow: 0 0 10px rgba(244, 208, 63, 0.5);
+}
+
+.enemy.dead {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.enemy-name {
+  font-size: 1.2em;
+  font-weight: bold;
+  color: #ff6b6b;
+  margin-bottom: 8px;
+}
+
+.hp-bar {
+  background: #2a2a2a;
+  border: 2px solid #555;
+  border-radius: 5px;
+  height: 22px;
+  position: relative;
+  margin: 8px 0;
+  overflow: hidden;
+}
+
+.hp-fill {
+  background: linear-gradient(90deg, #e74c3c, #c0392b);
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.hp-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-weight: bold;
+  color: white;
+  text-shadow: 1px 1px 2px black;
+  font-size: 0.9em;
+}
+
+.intent {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 5px;
+  margin-top: 8px;
+  font-size: 0.9em;
+}
+
+.player-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.stat-box {
+  background: rgba(0, 0, 0, 0.4);
+  padding: 10px;
+  border-radius: 8px;
+  border: 2px solid #555;
+}
+
+.stat-label {
+  font-size: 0.8em;
+  color: #aaa;
+  margin-bottom: 3px;
+}
+
+.stat-value {
+  font-size: 1.4em;
+  font-weight: bold;
+  color: #f4d03f;
+}
+
+.hand-area {
+  background: rgba(0, 0, 0, 0.3);
+  border: 2px solid #555;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 15px;
+}
+
+.hand-title {
+  font-size: 1.1em;
+  margin-bottom: 10px;
+  color: #f4d03f;
+}
+
+.cards {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.card {
+  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+  border: 3px solid #555;
+  border-radius: 8px;
+  padding: 12px;
+  width: 160px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.card:hover:not(.unplayable) {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.card.attack {
+  border-color: #e74c3c;
+}
+
+.card.skill {
+  border-color: #3498db;
+}
+
+.card.power {
+  border-color: #9b59b6;
+}
+
+.card.curse {
+  border-color: #2c2c2c;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2c2c2c 100%);
+}
+
+.card.unplayable {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.card-name {
+  font-weight: bold;
+  font-size: 1em;
+}
+
+.card-cost {
+  background: #f4d03f;
+  color: #1a1a2e;
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.1em;
+}
+
+.card-type {
+  font-size: 0.75em;
+  color: #aaa;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.card-description {
+  font-size: 0.85em;
+  line-height: 1.3;
+  color: #ddd;
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+button {
+  background: linear-gradient(135deg, #f4d03f 0%, #e6c230 100%);
+  color: #1a1a2e;
+  border: none;
+  padding: 12px 20px;
+  font-size: 1em;
+  font-weight: bold;
+  border-radius: 8px;
+  cursor: pointer;
+  flex: 1;
+  text-transform: uppercase;
+  transition: transform 0.1s;
+}
+
+button:hover {
+  transform: scale(1.02);
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+.log-area {
+  background: rgba(0, 0, 0, 0.6);
+  border: 2px solid #555;
+  border-radius: 8px;
+  padding: 15px;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.log-title {
+  font-size: 1em;
+  margin-bottom: 8px;
+  color: #f4d03f;
+}
+
+.log-entry {
+  padding: 4px 0;
+  border-bottom: 1px solid #333;
+  font-size: 0.85em;
+}
+
+.game-over {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.95);
+  border: 3px solid #f4d03f;
+  border-radius: 15px;
+  padding: 30px;
+  text-align: center;
+  z-index: 1000;
+  max-width: 90%;
+}
+
+.game-over h2 {
+  font-size: 2em;
+  margin-bottom: 15px;
+}
+
+.victory h2 {
+  color: #2ecc71;
+}
+
+.defeat h2 {
+  color: #e74c3c;
+}
+
+.piles {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  font-size: 0.85em;
+  flex-wrap: wrap;
+}
+
+.pile {
+  background: rgba(0, 0, 0, 0.4);
+  padding: 6px 10px;
+  border-radius: 5px;
+  border: 1px solid #555;
+}
+
+.status-effects {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.status {
+  background: rgba(0, 0, 0, 0.6);
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-size: 0.8em;
+  border: 1px solid #666;
+}
+
+.block-display {
+  display: inline-block;
+  background: rgba(100, 149, 237, 0.3);
+  border: 2px solid #6495ed;
+  padding: 3px 8px;
+  border-radius: 5px;
+  font-weight: bold;
+  color: #6495ed;
+  font-size: 0.9em;
+}
+
+/* Responsive adjustments */
+@media (min-width: 768px) {
+  .game-container {
+    max-width: 800px;
+  }
+
+  .player-stats {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .card {
+    width: 180px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .game-container {
+    max-width: 1000px;
+  }
+
+  h1 {
+    font-size: 2.2em;
+  }
+}

@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sanctum Ruins - Mobile</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 10px;
+            overflow-x: hidden;
+        }
+
+        .game-container {
+            max-width: 100%;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #f4d03f;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            margin-bottom: 15px;
+            font-size: 1.8em;
+        }
+
+        .combat-area {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .enemy-area, .player-area {
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .enemy-area {
+            background: rgba(139, 0, 0, 0.2);
+            border: 2px solid #8b0000;
+        }
+
+        .player-area {
+            background: rgba(25, 118, 210, 0.2);
+            border: 2px solid #1976d2;
+        }
+
+        h2 {
+            font-size: 1.3em;
+            margin-bottom: 10px;
+        }
+
+        .enemy {
+            background: rgba(139, 0, 0, 0.3);
+            border: 2px solid #ff4444;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .enemy.selected {
+            border-color: #f4d03f;
+            box-shadow: 0 0 10px rgba(244, 208, 63, 0.5);
+        }
+
+        .enemy.dead {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .enemy-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #ff6b6b;
+            margin-bottom: 8px;
+        }
+
+        .hp-bar {
+            background: #2a2a2a;
+            border: 2px solid #555;
+            border-radius: 5px;
+            height: 22px;
+            position: relative;
+            margin: 8px 0;
+            overflow: hidden;
+        }
+
+        .hp-fill {
+            background: linear-gradient(90deg, #e74c3c, #c0392b);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .hp-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-weight: bold;
+            color: white;
+            text-shadow: 1px 1px 2px black;
+            font-size: 0.9em;
+        }
+
+        .intent {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px;
+            background: rgba(0,0,0,0.4);
+            border-radius: 5px;
+            margin-top: 8px;
+            font-size: 0.9em;
+        }
+
+        .player-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .stat-box {
+            background: rgba(0,0,0,0.4);
+            padding: 10px;
+            border-radius: 8px;
+            border: 2px solid #555;
+        }
+
+        .stat-label {
+            font-size: 0.8em;
+            color: #aaa;
+            margin-bottom: 3px;
+        }
+
+        .stat-value {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #f4d03f;
+        }
+
+        .hand-area {
+            background: rgba(0,0,0,0.3);
+            border: 2px solid #555;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .hand-title {
+            font-size: 1.1em;
+            margin-bottom: 10px;
+            color: #f4d03f;
+        }
+
+        .cards {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .card {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            border: 3px solid #555;
+            border-radius: 8px;
+            padding: 12px;
+            width: 160px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .card.attack {
+            border-color: #e74c3c;
+        }
+
+        .card.skill {
+            border-color: #3498db;
+        }
+
+        .card.unplayable {
+            opacity: 0.5;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .card-name {
+            font-weight: bold;
+            font-size: 1em;
+        }
+
+        .card-cost {
+            background: #f4d03f;
+            color: #1a1a2e;
+            border-radius: 50%;
+            width: 26px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .card-type {
+            font-size: 0.75em;
+            color: #aaa;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .card-description {
+            font-size: 0.85em;
+            line-height: 1.3;
+            color: #ddd;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #f4d03f 0%, #e6c230 100%);
+            color: #1a1a2e;
+            border: none;
+            padding: 12px 20px;
+            font-size: 1em;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            flex: 1;
+            text-transform: uppercase;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .log-area {
+            background: rgba(0,0,0,0.6);
+            border: 2px solid #555;
+            border-radius: 8px;
+            padding: 15px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .log-title {
+            font-size: 1em;
+            margin-bottom: 8px;
+            color: #f4d03f;
+        }
+
+        .log-entry {
+            padding: 4px 0;
+            border-bottom: 1px solid #333;
+            font-size: 0.85em;
+        }
+
+        .game-over {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.95);
+            border: 3px solid #f4d03f;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            z-index: 1000;
+            max-width: 90%;
+        }
+
+        .game-over h2 {
+            font-size: 2em;
+            margin-bottom: 15px;
+        }
+
+        .victory h2 {
+            color: #2ecc71;
+        }
+
+        .defeat h2 {
+            color: #e74c3c;
+        }
+
+        .piles {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            font-size: 0.85em;
+            flex-wrap: wrap;
+        }
+
+        .pile {
+            background: rgba(0,0,0,0.4);
+            padding: 6px 10px;
+            border-radius: 5px;
+            border: 1px solid #555;
+        }
+
+        .status-effects {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .status {
+            background: rgba(0,0,0,0.6);
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            border: 1px solid #666;
+        }
+
+        .block-display {
+            display: inline-block;
+            background: rgba(100, 149, 237, 0.3);
+            border: 2px solid #6495ed;
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-weight: bold;
+            color: #6495ed;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>⚔️ Sanctum Ruins ⚔️</h1>
+        
+        <div class="combat-area">
+            <div class="enemy-area">
+                <h2 style="color: #ff6b6b;">Enemies</h2>
+                <div id="enemies"></div>
+            </div>
+            
+            <div class="player-area">
+                <h2 style="color: #6495ed;">The Cleric</h2>
+                <div class="player-stats">
+                    <div class="stat-box">
+                        <div class="stat-label">Health</div>
+                        <div class="stat-value" id="player-hp">75/75</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Block</div>
+                        <div class="stat-value" id="player-block">0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Resolve</div>
+                        <div class="stat-value" id="player-resolve">3/3</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Devotion</div>
+                        <div class="stat-value" style="color: #ffd700;" id="player-devotion">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="hand-area">
+            <div class="hand-title">Your Hand</div>
+            <div class="cards" id="hand"></div>
+            <div class="piles">
+                <div class="pile">Draw: <span id="draw-count">0</span></div>
+                <div class="pile">Discard: <span id="discard-count">0</span></div>
+                <div class="pile">Turn: <span id="turn-count">1</span></div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="end-turn-btn">End Turn</button>
+            <button id="restart-btn" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white;">Restart</button>
+        </div>
+
+        <div class="log-area">
+            <div class="log-title">Combat Log</div>
+            <div id="combat-log"></div>
+        </div>
+    </div>
+
+    <script>
+        // All game code in one file for mobile compatibility
+        
+        // Types and constants
+        const CardType = {
+            ATTACK: 'ATTACK',
+            SKILL: 'SKILL',
+            POWER: 'POWER'
+        };
+
+        const StatusType = {
+            SUNDERED: 'SUNDERED',
+            IMPAIRED: 'IMPAIRED',
+            BLEEDING: 'BLEEDING',
+            BLESSED: 'BLESSED',
+            MIGHT: 'MIGHT',
+            RESILIENCE: 'RESILIENCE'
+        };
+
+        const EffectType = {
+            DAMAGE: 'DAMAGE',
+            BLOCK: 'BLOCK',
+            HEAL: 'HEAL',
+            APPLY_STATUS: 'APPLY_STATUS',
+            GAIN_DEVOTION: 'GAIN_DEVOTION'
+        };
+
+        // Card database
+        const CARDS = {
+            smite: {
+                id: 'smite',
+                name: 'Smite',
+                type: CardType.ATTACK,
+                cost: 1,
+                description: 'Deal 5 damage.',
+                effects: [{ type: EffectType.DAMAGE, amount: 5 }]
+            },
+            shieldOfFaith: {
+                id: 'shield',
+                name: 'Shield of Faith',
+                type: CardType.SKILL,
+                cost: 1,
+                description: 'Gain 5 block.',
+                effects: [{ type: EffectType.BLOCK, amount: 5 }]
+            },
+            prayerOfMending: {
+                id: 'prayer',
+                name: 'Prayer of Mending',
+                type: CardType.SKILL,
+                cost: 1,
+                description: 'Heal 6 HP.',
+                effects: [{ type: EffectType.HEAL, amount: 6 }]
+            },
+            consecrate: {
+                id: 'consecrate',
+                name: 'Consecrate',
+                type: CardType.ATTACK,
+                cost: 1,
+                description: 'Deal 3 damage. Heal 3 HP.',
+                effects: [
+                    { type: EffectType.DAMAGE, amount: 3 },
+                    { type: EffectType.HEAL, amount: 3 }
+                ]
+            }
+        };
+
+        // Combat Engine
+        class CombatEngine {
+            constructor(player, enemies) {
+                this.player = player;
+                this.enemies = enemies;
+                this.turn = 1;
+                this.gameOver = false;
+                this.victory = false;
+            }
+
+            shuffle(array) {
+                const arr = [...array];
+                for (let i = arr.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [arr[i], arr[j]] = [arr[j], arr[i]];
+                }
+                return arr;
+            }
+
+            startCombat() {
+                this.player.drawPile = this.shuffle([...this.player.drawPile]);
+                this.enemies.forEach(e => this.setEnemyIntent(e));
+                this.drawCards(5);
+                this.player.resolve = this.player.maxResolve;
+            }
+
+            drawCards(count) {
+                for (let i = 0; i < count; i++) {
+                    if (this.player.drawPile.length === 0) {
+                        if (this.player.discardPile.length === 0) break;
+                        this.player.drawPile = this.shuffle([...this.player.discardPile]);
+                        this.player.discardPile = [];
+                    }
+                    const card = this.player.drawPile.shift();
+                    if (card) this.player.hand.push(card);
+                }
+            }
+
+            playCard(cardIndex, targetIndex = 0) {
+                const card = this.player.hand[cardIndex];
+                if (!card || card.cost > this.player.resolve) {
+                    return { success: false, message: 'Cannot play card' };
+                }
+
+                const target = this.enemies[targetIndex];
+                if (!target || target.currentHp <= 0) {
+                    return { success: false, message: 'Invalid target' };
+                }
+
+                this.player.resolve -= card.cost;
+                this.player.hand.splice(cardIndex, 1);
+
+                const log = [];
+                card.effects.forEach(effect => {
+                    const result = this.applyEffect(effect, target);
+                    if (result) log.push(result);
+                });
+
+                this.player.discardPile.push(card);
+
+                if (this.enemies.every(e => e.currentHp <= 0)) {
+                    this.victory = true;
+                    this.gameOver = true;
+                }
+
+                return { success: true, log };
+            }
+
+            applyEffect(effect, target) {
+                switch (effect.type) {
+                    case EffectType.DAMAGE:
+                        return this.dealDamage(target, effect.amount);
+                    case EffectType.BLOCK:
+                        this.player.block += effect.amount;
+                        return `Gained ${effect.amount} block`;
+                    case EffectType.HEAL:
+                        const heal = Math.min(effect.amount, this.player.maxHp - this.player.currentHp);
+                        this.player.currentHp += heal;
+                        if (heal > 0) this.player.devotion++;
+                        return `Healed ${heal} HP (gained 1 Devotion)`;
+                    case EffectType.GAIN_DEVOTION:
+                        this.player.devotion++;
+                        return 'Gained 1 Devotion';
+                }
+            }
+
+            dealDamage(enemy, damage) {
+                const damageToHp = Math.max(0, damage - enemy.block);
+                enemy.block = Math.max(0, enemy.block - damage);
+                enemy.currentHp = Math.max(0, enemy.currentHp - damageToHp);
+                return `Dealt ${damage} damage to ${enemy.name}`;
+            }
+
+            endTurn() {
+                const log = [];
+                this.player.discardPile.push(...this.player.hand);
+                this.player.hand = [];
+
+                this.enemies.forEach(enemy => {
+                    if (enemy.currentHp > 0) {
+                        enemy.block = 0;
+                        const move = enemy.intent;
+                        
+                        if (move.intent === 'attack') {
+                            const damageToHp = Math.max(0, move.damage - this.player.block);
+                            this.player.block = Math.max(0, this.player.block - move.damage);
+                            this.player.currentHp -= damageToHp;
+                            log.push(`${enemy.name} dealt ${move.damage} damage (${damageToHp} to HP)`);
+                        } else if (move.intent === 'defend') {
+                            enemy.block += move.block;
+                            log.push(`${enemy.name} gained ${move.block} block`);
+                        }
+
+                        this.setEnemyIntent(enemy);
+                    }
+                });
+
+                // Reset player block AFTER enemies attack
+                this.player.block = 0;
+
+                if (this.player.currentHp <= 0) {
+                    this.gameOver = true;
+                    this.victory = false;
+                    log.push('You have been defeated!');
+                }
+
+                if (!this.gameOver) {
+                    this.turn++;
+                    this.player.resolve = this.player.maxResolve;
+                    this.drawCards(5);
+                    log.push(`--- Turn ${this.turn} ---`);
+                }
+
+                return log;
+            }
+
+            setEnemyIntent(enemy) {
+                const moves = [
+                    { intent: 'attack', damage: 6, weight: 40, name: 'Dark Bolt' },
+                    { intent: 'defend', block: 8, weight: 30, name: 'Defend' },
+                    { intent: 'attack', damage: 9, weight: 30, name: 'Shadow Strike' }
+                ];
+                
+                const totalWeight = moves.reduce((sum, m) => sum + m.weight, 0);
+                let random = Math.random() * totalWeight;
+                
+                for (const move of moves) {
+                    random -= move.weight;
+                    if (random <= 0) {
+                        enemy.intent = move;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Game state
+        let combat = null;
+        let selectedEnemyIndex = 0;
+
+        function initGame() {
+            const player = {
+                maxHp: 75,
+                currentHp: 75,
+                block: 0,
+                resolve: 3,
+                maxResolve: 3,
+                devotion: 0,
+                hand: [],
+                drawPile: [],
+                discardPile: []
+            };
+
+            // Create starter deck
+            for (let i = 0; i < 4; i++) {
+                player.drawPile.push({ ...CARDS.smite, instanceId: `smite_${i}` });
+                player.drawPile.push({ ...CARDS.shieldOfFaith, instanceId: `shield_${i}` });
+            }
+            player.drawPile.push({ ...CARDS.prayerOfMending, instanceId: 'prayer_0' });
+            player.drawPile.push({ ...CARDS.consecrate, instanceId: 'consecrate_0' });
+
+            const enemy = {
+                id: 'cultist',
+                name: 'Cultist',
+                maxHp: 42,
+                currentHp: 42,
+                block: 0,
+                intent: null
+            };
+
+            combat = new CombatEngine(player, [enemy]);
+            combat.startCombat();
+            
+            addLog('Combat begins! Tap cards to play them.');
+            render();
+        }
+
+        function render() {
+            const state = {
+                player: combat.player,
+                enemies: combat.enemies,
+                turn: combat.turn,
+                gameOver: combat.gameOver,
+                victory: combat.victory
+            };
+
+            // Render enemies
+            const enemiesDiv = document.getElementById('enemies');
+            enemiesDiv.innerHTML = state.enemies.map((enemy, index) => {
+                const hpPercent = (enemy.currentHp / enemy.maxHp) * 100;
+                const isDead = enemy.currentHp <= 0;
+                const isSelected = index === selectedEnemyIndex && !isDead;
+                
+                let intentText = '';
+                if (enemy.intent && !isDead) {
+                    if (enemy.intent.intent === 'attack') {
+                        intentText = `⚔️ Attack for ${enemy.intent.damage} damage`;
+                    } else if (enemy.intent.intent === 'defend') {
+                        intentText = `🛡️ Defend for ${enemy.intent.block} block`;
+                    }
+                }
+                
+                return `
+                    <div class="enemy ${isDead ? 'dead' : ''} ${isSelected ? 'selected' : ''}" 
+                         onclick="selectEnemy(${index})">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div class="enemy-name">${enemy.name}</div>
+                            ${enemy.block > 0 ? `<div class="block-display">🛡️ ${enemy.block}</div>` : ''}
+                        </div>
+                        <div class="hp-bar">
+                            <div class="hp-fill" style="width: ${hpPercent}%;"></div>
+                            <div class="hp-text">${enemy.currentHp} / ${enemy.maxHp}</div>
+                        </div>
+                        ${!isDead && enemy.intent ? `<div class="intent">${intentText}</div>` : ''}
+                    </div>
+                `;
+            }).join('');
+
+            // Render player stats
+            const player = state.player;
+            document.getElementById('player-hp').textContent = `${player.currentHp}/${player.maxHp}`;
+            document.getElementById('player-block').textContent = player.block;
+            document.getElementById('player-resolve').textContent = `${player.resolve}/${player.maxResolve}`;
+            document.getElementById('player-devotion').textContent = player.devotion;
+
+            // Render hand
+            const handDiv = document.getElementById('hand');
+            handDiv.innerHTML = player.hand.map((card, index) => {
+                const canPlay = card.cost <= player.resolve && !state.gameOver;
+                const typeClass = card.type.toLowerCase();
+                
+                return `
+                    <div class="card ${typeClass} ${!canPlay ? 'unplayable' : ''}" 
+                         onclick="playCard(${index})">
+                        <div class="card-header">
+                            <div class="card-name">${card.name}</div>
+                            <div class="card-cost">${card.cost}</div>
+                        </div>
+                        <div class="card-type">${card.type}</div>
+                        <div class="card-description">${card.description}</div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('draw-count').textContent = player.drawPile.length;
+            document.getElementById('discard-count').textContent = player.discardPile.length;
+            document.getElementById('turn-count').textContent = state.turn;
+
+            if (state.gameOver) {
+                showGameOver(state.victory);
+            }
+        }
+
+        window.playCard = function(cardIndex) {
+            if (combat.gameOver) return;
+            
+            const result = combat.playCard(cardIndex, selectedEnemyIndex);
+            if (result.success) {
+                result.log.forEach(msg => addLog(msg));
+                render();
+            } else {
+                addLog('Cannot play that card', true);
+            }
+        };
+
+        window.selectEnemy = function(index) {
+            if (combat.enemies[index].currentHp > 0) {
+                selectedEnemyIndex = index;
+                render();
+            }
+        };
+
+        document.getElementById('end-turn-btn').addEventListener('click', () => {
+            if (combat.gameOver) return;
+            const log = combat.endTurn();
+            log.forEach(msg => addLog(msg));
+            render();
+        });
+
+        document.getElementById('restart-btn').addEventListener('click', () => {
+            document.getElementById('combat-log').innerHTML = '';
+            const gameOverDiv = document.querySelector('.game-over');
+            if (gameOverDiv) gameOverDiv.remove();
+            initGame();
+        });
+
+        function addLog(message, isError = false) {
+            const logDiv = document.getElementById('combat-log');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            if (isError) entry.style.color = '#e74c3c';
+            entry.textContent = message;
+            logDiv.appendChild(entry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function showGameOver(victory) {
+            const div = document.createElement('div');
+            div.className = `game-over ${victory ? 'victory' : 'defeat'}`;
+            div.innerHTML = `
+                <h2>${victory ? '🎉 VICTORY! 🎉' : '💀 DEFEAT 💀'}</h2>
+                <p style="font-size: 1em; margin: 15px 0;">
+                    ${victory ? 'You defeated the Cultist!' : 'You were defeated...'}
+                </p>
+                <button onclick="location.reload()" style="margin-top: 10px;">New Combat</button>
+            `;
+            document.body.appendChild(div);
+        }
+
+        // Start game on load
+        initGame();
+    </script>
+</body>
+</html>

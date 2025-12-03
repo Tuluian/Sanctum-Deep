@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Sanctum Ruins</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body>
+    <div class="game-container">
+      <h1>⚔️ Sanctum Ruins ⚔️</h1>
+
+      <div class="combat-area">
+        <div class="enemy-area">
+          <h2 style="color: #ff6b6b">Enemies</h2>
+          <div id="enemies"></div>
+        </div>
+
+        <div class="player-area">
+          <h2 style="color: #6495ed">The Cleric</h2>
+          <div class="player-stats">
+            <div class="stat-box">
+              <div class="stat-label">Health</div>
+              <div class="stat-value" id="player-hp">75/75</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">Block</div>
+              <div class="stat-value" id="player-block">0</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">Resolve</div>
+              <div class="stat-value" id="player-resolve">3/3</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">Devotion</div>
+              <div class="stat-value" style="color: #ffd700" id="player-devotion">0</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hand-area">
+        <div class="hand-title">Your Hand</div>
+        <div class="cards" id="hand"></div>
+        <div class="piles">
+          <div class="pile">Draw: <span id="draw-count">0</span></div>
+          <div class="pile">Discard: <span id="discard-count">0</span></div>
+          <div class="pile">Turn: <span id="turn-count">1</span></div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button id="end-turn-btn">End Turn</button>
+        <button id="restart-btn" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white">
+          Restart
+        </button>
+      </div>
+
+      <div class="log-area">
+        <div class="log-title">Combat Log</div>
+        <div id="combat-log"></div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

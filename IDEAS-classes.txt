@@ -1,0 +1,88 @@
+Thematic Angles
+Option 1: Planar Wanderers
+
+You're traversing dying planes of existence, collecting echoes of power
+Classes: Voidcaller (summons entities from between planes), Chronarch (time manipulation), Soulweaver (life/death transfer)
+Resource: Aether (cosmic energy)
+Status effects: Phased (dodge next attack), Entropy (hp decay), Temporal Lock, Void-touched
+Cards represent fragments of reality you're stitching together
+
+Option 2: Pact Magic/Demon Bargaining
+
+You've made pacts with otherworldly entities, building power through deals
+Classes: Diabolist (infernal pacts), Fey-bound (nature/trickery), Celestial Channeler (divine/radiant)
+Resource: Favor or Essence
+Unique mechanic: Cards have costs AND prices (immediate cost vs long-term consequence)
+Status effects: Indebted, Blessed, Cursed, Marked, Enraptured
+Riffs on Faustian bargains - power now, suffering later (or clever ways to dodge it)
+
+Option 3: Elemental Dominion
+
+Four primal forces in conflict, you're channeling their raw power
+Classes: Flameheart (fire/passion), Tidecaller (water/adaptation), Earthshaper (stone/endurance), Stormkin (air/chaos)
+Resource: Mana with elemental attunement
+Mechanic: Cards have elemental alignments, chaining same element = bonuses, mixing elements = different effects
+Status effects: Burning, Drenched, Petrified, Conducting, Resonance
+
+Option 4: Grimoire Mages
+
+You're a mage with a sentient spellbook, learning forbidden magic
+Classes: Blood Scribe (sacrifice HP for power), Runesmith (rune combos), Wild Scholer (chaos magic), Necroscribe (undead/curses)
+Resource: Ink or Mana
+Mechanic: Cards can be "annotated" during run (add notes that modify effects)
+Your deck IS your grimoire literally
+Status effects: Hemorrhaging, Inscribed, Maddened, Hex-marked, Transcribed
+
+Option 5: Dungeon Delvers in a Living Dungeon
+
+The dungeon itself is a entity, rooms shift, it's testing you
+Classes: Tomb Raider (traps/tools), Dungeon Knight (defensive juggernaut), Shadow Stalker (stealth/ambush), Lorekeeper (knowledge/preparation)
+Resource: Stamina or Resolve
+Mechanic: Environmental cards shuffle into your deck based on room type
+Status effects: Exhausted, Prepared, Trapped, Hidden, Illuminated
+
+My Recommendation: Pact Magic (Option 2)
+Here's why it works:
+The Hook
+Every card represents a pact or deal. Playing cards might have deferred costs - maybe "Infernal Strength" gives you +3 strength this combat but adds a Curse card to your deck, or "Fey Bargain" draws 3 cards but you take 2 damage at the start of next turn.
+Classes (Revised)
+The Diabolist
+
+Makes deals with devils for raw power
+Starter deck focuses on high-impact cards with drawbacks
+Mechanic: Contracts - some powers last until you fulfill a condition
+Example: "Deal with the Pit Lord" - +2 Strength until you fall below 50% HP
+
+The Oathbound
+
+Bound by celestial vows, righteous but rigid
+Starter deck has cards that work in sequences (Vow → Judgment → Absolution chains)
+Mechanic: Oaths - powerful effects but locks you into playing certain card types
+Example: "Oath of Valor" - Next 3 attack cards deal double damage, but you can't defend
+
+The Fey-Touched
+
+Deals with capricious fey entities, trickery and chaos
+Starter deck has random effects and card manipulation
+Mechanic: Whimsy - cards have multiple possible outcomes
+Example: "Pixie's Gift" - Draw 2 cards OR gain 8 block OR deal 6 damage (chosen randomly)
+
+Resource: Essence (3 per turn base)
+More mystical than mana, represents your soul's capacity for bargaining
+Status Effects (Renamed)
+
+Indebted: Take X damage at end of combat (replaces Poison concept)
+Blessed: Heal X at end of turn
+Hexed: Deal 25% less damage (replaces Weak)
+Exposed: Take 50% more damage (replaces Vulnerable)
+Bound: Cannot play certain card types
+Empowered: Increase effectiveness of next card
+Marked: Enemy focuses you, can't gain block from cards
+
+Unique Mechanics
+
+Bargain cards: High power but add negative cards to deck
+Pact tokens: Accumulate through run, spend for powerful relics at special nodes
+Soul weight: Some cards cost HP instead of Essence
+
+Does this direction feel more distinct? Want to drill into one of these themes or mix elements?
