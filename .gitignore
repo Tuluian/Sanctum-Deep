@@ -28,6 +28,10 @@ coverage/
 
 # BMAD web bundles (not needed in repo)
 web-bundles/
+.bmad-core/
+.bmad-creative-writing/
+.bmad-infrastructure-devops/
+.claude/
 
 # Personal notes
 NOTES/
