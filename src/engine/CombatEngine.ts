@@ -10,6 +10,7 @@ import {
   Enemy,
   EnemyDefinition,
   EnemyIntent,
+  EnemyMove,
   EndTurnResult,
   IntentType,
   PlayerState,
@@ -19,8 +20,12 @@ import {
 export class CombatEngine {
   private state: CombatState;
   private listeners: CombatEventListener[] = [];
+  private enemyDefinitions: Map<string, EnemyDefinition>;
 
   constructor(player: PlayerState, enemyDefinitions: EnemyDefinition[]) {
+    // Store definitions for intent selection
+    this.enemyDefinitions = new Map(enemyDefinitions.map((def) => [def.id, def]));
+
     const enemies: Enemy[] = enemyDefinitions.map((def) => ({
       id: def.id,
       name: def.name,
@@ -29,6 +34,11 @@ export class CombatEngine {
       block: 0,
       intent: null,
       statusEffects: [],
+      might: 0,
+      untargetable: false,
+      isElite: def.isElite || false,
+      phase: 0,
+      usedAbilities: [],
     }));
 
     this.state = {
@@ -119,31 +129,135 @@ export class CombatEngine {
 
   // Enemy intent
   private setEnemyIntent(enemy: Enemy): void {
-    // Find enemy definition to get moves
-    // For now, use hardcoded moves (will be refactored with enemy data)
-    const moves = [
-      { intent: IntentType.ATTACK, damage: 6, weight: 40, name: 'Dark Bolt' },
-      { intent: IntentType.DEFEND, block: 8, weight: 30, name: 'Defend' },
-      { intent: IntentType.ATTACK, damage: 9, weight: 30, name: 'Shadow Strike' },
-    ];
+    const definition = this.enemyDefinitions.get(enemy.id);
+    if (!definition) {
+      // Fallback if no definition found
+      enemy.intent = {
+        intent: IntentType.ATTACK,
+        damage: 5,
+        name: 'Attack',
+        moveId: 'fallback_attack',
+      };
+      this.emit(CombatEventType.ENEMY_INTENT_SET, { enemyId: enemy.id, intent: enemy.intent });
+      return;
+    }
 
-    const totalWeight = moves.reduce((sum, m) => sum + m.weight, 0);
+    // Determine which move set to use (phases or default)
+    let moves = definition.moves;
+    if (definition.phases && definition.phases.length > enemy.phase) {
+      moves = definition.phases[enemy.phase].moves;
+    }
+
+    if (moves.length === 0) {
+      enemy.intent = {
+        intent: IntentType.ATTACK,
+        damage: 5,
+        name: 'Attack',
+        moveId: 'fallback_attack',
+      };
+      this.emit(CombatEventType.ENEMY_INTENT_SET, { enemyId: enemy.id, intent: enemy.intent });
+      return;
+    }
+
+    // Filter out once-per-combat abilities that have been used
+    const availableMoves = moves.filter(m =>
+      !m.oncePerCombat || !enemy.usedAbilities.includes(m.id)
+    );
+
+    // If no moves available, use a default attack
+    if (availableMoves.length === 0) {
+      enemy.intent = {
+        intent: IntentType.ATTACK,
+        damage: 5,
+        name: 'Attack',
+        moveId: 'fallback_attack',
+      };
+      this.emit(CombatEventType.ENEMY_INTENT_SET, { enemyId: enemy.id, intent: enemy.intent });
+      return;
+    }
+
+    const totalWeight = availableMoves.reduce((sum, m) => sum + m.weight, 0);
     let random = Math.random() * totalWeight;
 
-    for (const move of moves) {
+    for (const move of availableMoves) {
       random -= move.weight;
       if (random <= 0) {
-        enemy.intent = {
-          intent: move.intent,
-          damage: move.damage,
-          block: move.block,
-          name: move.name,
-        };
+        enemy.intent = this.createIntentFromMove(move);
         break;
       }
     }
 
+    // Fallback if loop didn't set intent
+    if (!enemy.intent) {
+      enemy.intent = this.createIntentFromMove(availableMoves[0]);
+    }
+
     this.emit(CombatEventType.ENEMY_INTENT_SET, { enemyId: enemy.id, intent: enemy.intent });
+  }
+
+  private createIntentFromMove(move: EnemyMove): EnemyIntent {
+    return {
+      intent: move.intent,
+      damage: move.damage,
+      block: move.block,
+      name: move.name,
+      moveId: move.id,
+      times: move.times,
+      heal: move.heal,
+      selfDamage: move.selfDamage,
+      buffType: move.buffType,
+      buffAmount: move.buffAmount,
+      debuffType: move.debuffType,
+      debuffDuration: move.debuffDuration,
+      summons: move.summons,
+      oncePerCombat: move.oncePerCombat,
+    };
+  }
+
+  // Check and handle phase transitions
+  private checkPhaseTransition(enemy: Enemy): void {
+    const definition = this.enemyDefinitions.get(enemy.id);
+    if (!definition?.phaseThresholds) return;
+
+    const hpPercent = enemy.currentHp / enemy.maxHp;
+    let newPhase = 0;
+
+    for (let i = 0; i < definition.phaseThresholds.length; i++) {
+      if (hpPercent <= definition.phaseThresholds[i]) {
+        newPhase = i + 1; // Phase 0 is default, phase 1+ triggered by thresholds
+      }
+    }
+
+    if (newPhase > enemy.phase) {
+      enemy.phase = newPhase;
+      this.emit(CombatEventType.ENEMY_PHASE_CHANGED, { enemyId: enemy.id, phase: newPhase });
+      this.log(`${enemy.name} enters phase ${newPhase + 1}!`);
+      // Immediately set new intent based on new phase
+      this.setEnemyIntent(enemy);
+    }
+  }
+
+  // Add enemy to combat (for summoning)
+  addEnemy(definition: EnemyDefinition): void {
+    const enemy: Enemy = {
+      id: definition.id,
+      name: definition.name,
+      maxHp: definition.maxHp,
+      currentHp: definition.maxHp,
+      block: 0,
+      intent: null,
+      statusEffects: [],
+      might: 0,
+      untargetable: false,
+      isElite: definition.isElite || false,
+      phase: 0,
+      usedAbilities: [],
+    };
+
+    this.state.enemies.push(enemy);
+    this.enemyDefinitions.set(definition.id, definition);
+    this.setEnemyIntent(enemy);
+    this.emit(CombatEventType.ENEMY_SUMMONED, { enemy });
   }
 
   // Card playing
@@ -166,7 +280,7 @@ export class CombatEngine {
 
   getValidTargets(): number[] {
     return this.state.enemies
-      .map((enemy, index) => (enemy.currentHp > 0 ? index : -1))
+      .map((enemy, index) => (enemy.currentHp > 0 && !enemy.untargetable ? index : -1))
       .filter((index) => index !== -1);
   }
 
@@ -222,11 +336,19 @@ export class CombatEngine {
 
   private executeEffect(effect: { type: EffectType; amount: number }, target?: Enemy): string | null {
     switch (effect.type) {
-      case EffectType.DAMAGE:
+      case EffectType.DAMAGE: {
         if (target) {
-          return this.dealDamageToEnemy(target, effect.amount);
+          // Apply empowered attack bonus
+          let damageAmount = effect.amount;
+          if (this.state.player.empoweredAttack > 0) {
+            damageAmount += this.state.player.empoweredAttack;
+            this.state.player.empoweredAttack = 0;
+            this.emit(CombatEventType.PLAYER_EMPOWERED_CHANGED, { empoweredAttack: 0 });
+          }
+          return this.dealDamageToEnemy(target, damageAmount);
         }
         return null;
+      }
 
       case EffectType.BLOCK:
         this.state.player.block += effect.amount;
@@ -250,6 +372,19 @@ export class CombatEngine {
         this.emit(CombatEventType.PLAYER_DEVOTION_CHANGED, { devotion: this.state.player.devotion });
         return 'Gained 1 Devotion';
 
+      case EffectType.GAIN_FORTIFY: {
+        const fortifyGain = Math.min(effect.amount, this.state.player.maxFortify - this.state.player.fortify);
+        this.state.player.fortify += fortifyGain;
+        this.emit(CombatEventType.PLAYER_FORTIFY_CHANGED, { fortify: this.state.player.fortify });
+        return `Gained ${fortifyGain} Fortify`;
+      }
+
+      case EffectType.APPLY_STATUS:
+        // For now, APPLY_STATUS with amount means Empowered Attack
+        this.state.player.empoweredAttack += effect.amount;
+        this.emit(CombatEventType.PLAYER_EMPOWERED_CHANGED, { empoweredAttack: this.state.player.empoweredAttack });
+        return `Your next attack deals +${effect.amount} damage`;
+
       default:
         return null;
     }
@@ -272,23 +407,40 @@ export class CombatEngine {
 
     if (enemy.currentHp <= 0) {
       this.emit(CombatEventType.ENEMY_DIED, { enemyId: enemy.id });
+    } else {
+      // Check for phase transitions when damage is dealt
+      this.checkPhaseTransition(enemy);
     }
 
     return `Dealt ${damage} damage to ${enemy.name}`;
   }
 
-  private dealDamageToPlayer(damage: number): { blocked: number; hpDamage: number } {
-    const blocked = Math.min(damage, this.state.player.block);
-    this.state.player.block = Math.max(0, this.state.player.block - damage);
+  private dealDamageToPlayer(damage: number): { blocked: number; fortifyAbsorbed: number; hpDamage: number } {
+    let remaining = damage;
 
-    const hpDamage = damage - blocked;
+    // Fortify absorbs first
+    const fortifyAbsorbed = Math.min(remaining, this.state.player.fortify);
+    this.state.player.fortify -= fortifyAbsorbed;
+    remaining -= fortifyAbsorbed;
+
+    if (fortifyAbsorbed > 0) {
+      this.emit(CombatEventType.PLAYER_FORTIFY_CHANGED, { fortify: this.state.player.fortify });
+    }
+
+    // Block absorbs second
+    const blocked = Math.min(remaining, this.state.player.block);
+    this.state.player.block -= blocked;
+    remaining -= blocked;
+
+    // Remaining hits HP
+    const hpDamage = remaining;
     this.state.player.currentHp = Math.max(0, this.state.player.currentHp - hpDamage);
 
     this.emit(CombatEventType.PLAYER_HP_CHANGED, { hp: this.state.player.currentHp });
     this.emit(CombatEventType.PLAYER_BLOCK_CHANGED, { block: this.state.player.block });
-    this.emit(CombatEventType.PLAYER_DAMAGED, { damage, blocked, hpDamage });
+    this.emit(CombatEventType.PLAYER_DAMAGED, { damage, blocked, fortifyAbsorbed, hpDamage });
 
-    return { blocked, hpDamage };
+    return { blocked, fortifyAbsorbed, hpDamage };
   }
 
   // End turn
@@ -310,20 +462,131 @@ export class CombatEngine {
     for (const enemy of this.state.enemies) {
       if (enemy.currentHp <= 0) continue;
 
-      // Reset enemy block at start of their turn
+      // Reset enemy block and untargetable at start of their turn
       enemy.block = 0;
+      enemy.untargetable = false;
       this.emit(CombatEventType.ENEMY_BLOCK_CHANGED, { enemyId: enemy.id, block: 0 });
 
       const intent = enemy.intent as EnemyIntent;
       if (!intent) continue;
 
-      if (intent.intent === IntentType.ATTACK && intent.damage) {
-        const result = this.dealDamageToPlayer(intent.damage);
-        log.push(`${enemy.name} dealt ${intent.damage} damage (${result.hpDamage} to HP)`);
-      } else if (intent.intent === IntentType.DEFEND && intent.block) {
-        enemy.block += intent.block;
-        this.emit(CombatEventType.ENEMY_BLOCK_CHANGED, { enemyId: enemy.id, block: enemy.block });
-        log.push(`${enemy.name} gained ${intent.block} block`);
+      // Apply might bonus to damage if applicable
+      const mightBonus = enemy.might;
+      enemy.might = 0; // Reset might after using
+
+      switch (intent.intent) {
+        case IntentType.ATTACK:
+          if (intent.damage) {
+            const totalDamage = intent.damage + mightBonus;
+            const result = this.dealDamageToPlayer(totalDamage);
+            log.push(`${enemy.name} dealt ${totalDamage} damage (${result.hpDamage} to HP)`);
+            // Handle lifesteal (attack with heal)
+            if (intent.heal && intent.heal > 0) {
+              const healAmount = Math.min(intent.heal, enemy.maxHp - enemy.currentHp);
+              enemy.currentHp += healAmount;
+              log.push(`${enemy.name} healed ${healAmount} HP`);
+            }
+          }
+          break;
+
+        case IntentType.MULTI_ATTACK:
+          if (intent.damage && intent.times) {
+            for (let i = 0; i < intent.times; i++) {
+              const totalDamage = intent.damage + mightBonus;
+              const result = this.dealDamageToPlayer(totalDamage);
+              log.push(`${enemy.name} dealt ${totalDamage} damage (${result.hpDamage} to HP)`);
+              // Check if player died mid-attack
+              if (this.state.player.currentHp <= 0) break;
+            }
+          }
+          break;
+
+        case IntentType.DEFEND:
+          if (intent.block) {
+            enemy.block += intent.block;
+            this.emit(CombatEventType.ENEMY_BLOCK_CHANGED, { enemyId: enemy.id, block: enemy.block });
+            log.push(`${enemy.name} gained ${intent.block} block`);
+          }
+          break;
+
+        case IntentType.BUFF:
+          // Self-buff (e.g., Phase makes enemy untargetable)
+          enemy.untargetable = true;
+          log.push(`${enemy.name} phases out and becomes untargetable!`);
+          break;
+
+        case IntentType.BUFF_ALLY:
+          // Buff another enemy
+          if (intent.buffAmount) {
+            const aliveAllies = this.state.enemies.filter(e => e.currentHp > 0 && e.id !== enemy.id);
+            if (aliveAllies.length > 0) {
+              const target = aliveAllies[Math.floor(Math.random() * aliveAllies.length)];
+              target.might += intent.buffAmount;
+              log.push(`${enemy.name} buffed ${target.name} (+${intent.buffAmount} Might)`);
+            } else {
+              // No allies to buff, attacks instead
+              log.push(`${enemy.name} has no allies to buff`);
+            }
+          }
+          break;
+
+        case IntentType.DEBUFF:
+          // Apply debuff to player
+          if (intent.debuffType && intent.debuffDuration) {
+            const existingEffect = this.state.player.statusEffects.find(e => e.type === intent.debuffType);
+            if (existingEffect) {
+              existingEffect.duration = Math.max(existingEffect.duration || 0, intent.debuffDuration);
+            } else {
+              this.state.player.statusEffects.push({
+                type: intent.debuffType,
+                amount: 1,
+                duration: intent.debuffDuration,
+              });
+            }
+            log.push(`${enemy.name} applied ${intent.debuffType} to you for ${intent.debuffDuration} turns`);
+          }
+          break;
+
+        case IntentType.HEAL:
+          // Heal an ally (or self if no allies)
+          if (intent.heal) {
+            const aliveAllies = this.state.enemies.filter(e => e.currentHp > 0 && e.id !== enemy.id);
+            let healTarget = enemy;
+            if (aliveAllies.length > 0) {
+              // Heal the most damaged ally
+              healTarget = aliveAllies.reduce((most, curr) =>
+                (curr.maxHp - curr.currentHp) > (most.maxHp - most.currentHp) ? curr : most
+              );
+            }
+            const healAmount = Math.min(intent.heal, healTarget.maxHp - healTarget.currentHp);
+            healTarget.currentHp += healAmount;
+            log.push(`${enemy.name} healed ${healTarget.name} for ${healAmount} HP`);
+
+            // Handle self-damage (Sacrifice ability)
+            if (intent.selfDamage) {
+              enemy.currentHp = Math.max(0, enemy.currentHp - intent.selfDamage);
+              log.push(`${enemy.name} took ${intent.selfDamage} self-damage`);
+            }
+          }
+          break;
+
+        case IntentType.SUMMON:
+          // Summon enemies
+          if (intent.summons && intent.summons.length > 0) {
+            // Track this as a used ability if once-per-combat
+            if (intent.oncePerCombat) {
+              enemy.usedAbilities.push(intent.moveId);
+            }
+
+            for (const summonId of intent.summons) {
+              const summonDef = this.enemyDefinitions.get(summonId);
+              if (summonDef) {
+                this.addEnemy(summonDef);
+                log.push(`${enemy.name} summoned ${summonDef.name}!`);
+              }
+            }
+          }
+          break;
       }
 
       // Set next intent

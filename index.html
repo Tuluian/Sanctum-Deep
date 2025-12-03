@@ -7,8 +7,38 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   </head>
   <body>
-    <div class="game-container">
+    <!-- Screen container for menu system -->
+    <div id="screen-container"></div>
+
+    <!-- Combat UI (hidden until combat starts) -->
+    <div id="combat-screen" class="game-container" style="display: none">
       <h1>⚔️ Sanctum Ruins ⚔️</h1>
+
+      <!-- Combat Arena Visualization -->
+      <div class="arena-container">
+        <div class="dungeon-scene">
+          <!-- Background layers -->
+          <div class="scene-layer scene-back-wall"></div>
+          <div class="scene-layer scene-side-wall left"></div>
+          <div class="scene-layer scene-side-wall right"></div>
+          <div class="scene-layer scene-floor"></div>
+
+          <!-- Atmospheric effects -->
+          <div class="torch torch-left"></div>
+          <div class="torch torch-right"></div>
+          <div class="scene-fog"></div>
+
+          <!-- Enemy slots (positioned in the room) -->
+          <div class="enemy-slots" id="enemy-slots">
+            <!-- Enemies will be rendered here by JS -->
+          </div>
+
+          <!-- Player silhouette (back view) -->
+          <div class="player-silhouette">
+            <div class="player-figure"></div>
+          </div>
+        </div>
+      </div>
 
       <div class="combat-area">
         <div class="enemy-area">
@@ -17,15 +47,12 @@
         </div>
 
         <div class="player-area">
-          <h2 style="color: #6495ed">The Cleric</h2>
+          <h2 style="color: #6495ed" id="player-class-name">The Cleric</h2>
           <div class="player-stats">
             <div class="stat-box">
               <div class="stat-label">Health</div>
               <div class="stat-value" id="player-hp">75/75</div>
-            </div>
-            <div class="stat-box">
-              <div class="stat-label">Block</div>
-              <div class="stat-value" id="player-block">0</div>
+              <div class="block-display" id="player-block">🛡️ 0</div>
             </div>
             <div class="stat-box">
               <div class="stat-label">Resolve</div>
@@ -51,8 +78,8 @@
 
       <div class="controls">
         <button id="end-turn-btn">End Turn</button>
-        <button id="restart-btn" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white">
-          Restart
+        <button id="abandon-btn" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white">
+          Abandon Run
         </button>
       </div>
 

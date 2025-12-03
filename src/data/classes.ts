@@ -20,7 +20,9 @@ export const CLASSES: Record<CharacterClassId, CharacterClass> = {
     maxHp: 80,
     maxResolve: 3,
     starterDeckRecipe: [
-      // TODO: Add knight cards
+      { cardId: 'sword_strike', count: 5 },
+      { cardId: 'raise_shield', count: 4 },
+      { cardId: 'bulwark_stance', count: 1 },
     ],
   },
   [CharacterClassId.DIABOLIST]: {
@@ -30,9 +32,9 @@ export const CLASSES: Record<CharacterClassId, CharacterClass> = {
     maxResolve: 3,
     starterDeckRecipe: [],
   },
-  [CharacterClassId.OATHBOUND]: {
-    id: CharacterClassId.OATHBOUND,
-    name: 'The Oathbound',
+  [CharacterClassId.OATHSWORN]: {
+    id: CharacterClassId.OATHSWORN,
+    name: 'The Oathsworn',
     maxHp: 75,
     maxResolve: 3,
     starterDeckRecipe: [],

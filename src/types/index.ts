@@ -61,7 +61,11 @@ export enum IntentType {
   ATTACK = 'attack',
   DEFEND = 'defend',
   BUFF = 'buff',
+  BUFF_ALLY = 'buff_ally',
   DEBUFF = 'debuff',
+  HEAL = 'heal',
+  MULTI_ATTACK = 'multi_attack',
+  SUMMON = 'summon',
   UNKNOWN = 'unknown',
 }
 
@@ -72,6 +76,21 @@ export interface EnemyMove {
   damage?: number;
   block?: number;
   weight: number;
+  // New properties for advanced moves
+  times?: number; // For multi-attack
+  heal?: number; // For heal/lifesteal
+  selfDamage?: number; // For sacrifice abilities
+  buffType?: StatusType; // For buff moves
+  buffAmount?: number;
+  debuffType?: StatusType; // For debuff moves
+  debuffDuration?: number;
+  // Elite abilities
+  summons?: string[]; // Enemy IDs to summon
+  oncePerCombat?: boolean; // Can only be used once
+}
+
+export interface EnemyPhase {
+  moves: EnemyMove[];
 }
 
 export interface EnemyDefinition {
@@ -79,6 +98,10 @@ export interface EnemyDefinition {
   name: string;
   maxHp: number;
   moves: EnemyMove[];
+  // Elite properties
+  isElite?: boolean;
+  phaseThresholds?: number[]; // HP percentages that trigger phase changes (e.g., [0.5] = phase 2 at 50%)
+  phases?: EnemyPhase[]; // Different move sets per phase
 }
 
 export interface EnemyIntent {
@@ -86,6 +109,18 @@ export interface EnemyIntent {
   damage?: number;
   block?: number;
   name: string;
+  moveId: string; // For tracking once-per-combat abilities
+  // New properties for advanced moves
+  times?: number;
+  heal?: number;
+  selfDamage?: number;
+  buffType?: StatusType;
+  buffAmount?: number;
+  debuffType?: StatusType;
+  debuffDuration?: number;
+  // Elite abilities
+  summons?: string[];
+  oncePerCombat?: boolean;
 }
 
 export interface Enemy {
@@ -96,6 +131,12 @@ export interface Enemy {
   block: number;
   intent: EnemyIntent | null;
   statusEffects: StatusEffect[];
+  might: number; // Bonus damage from buffs
+  untargetable: boolean; // Cannot be targeted by attacks
+  // Elite properties
+  isElite: boolean;
+  phase: number; // Current phase (0-indexed)
+  usedAbilities: string[]; // Track once-per-combat abilities used
 }
 
 // Player Types
@@ -113,6 +154,8 @@ export interface PlayerState {
   // Class-specific
   devotion: number;
   fortify: number;
+  maxFortify: number;
+  empoweredAttack: number;
 }
 
 // Character Classes
@@ -120,7 +163,7 @@ export enum CharacterClassId {
   CLERIC = 'cleric',
   DUNGEON_KNIGHT = 'dungeon_knight',
   DIABOLIST = 'diabolist',
-  OATHBOUND = 'oathbound',
+  OATHSWORN = 'oathsworn',
   FEY_TOUCHED = 'fey_touched',
 }
 
@@ -165,12 +208,16 @@ export enum CombatEventType {
   PLAYER_BLOCK_CHANGED = 'PLAYER_BLOCK_CHANGED',
   PLAYER_RESOLVE_CHANGED = 'PLAYER_RESOLVE_CHANGED',
   PLAYER_DEVOTION_CHANGED = 'PLAYER_DEVOTION_CHANGED',
+  PLAYER_FORTIFY_CHANGED = 'PLAYER_FORTIFY_CHANGED',
+  PLAYER_EMPOWERED_CHANGED = 'PLAYER_EMPOWERED_CHANGED',
   CARD_PLAYED = 'CARD_PLAYED',
   CARD_DRAWN = 'CARD_DRAWN',
   ENEMY_DAMAGED = 'ENEMY_DAMAGED',
   ENEMY_BLOCK_CHANGED = 'ENEMY_BLOCK_CHANGED',
   ENEMY_DIED = 'ENEMY_DIED',
   ENEMY_INTENT_SET = 'ENEMY_INTENT_SET',
+  ENEMY_PHASE_CHANGED = 'ENEMY_PHASE_CHANGED',
+  ENEMY_SUMMONED = 'ENEMY_SUMMONED',
   PLAYER_DAMAGED = 'PLAYER_DAMAGED',
   COMBAT_LOG = 'COMBAT_LOG',
   GAME_OVER = 'GAME_OVER',

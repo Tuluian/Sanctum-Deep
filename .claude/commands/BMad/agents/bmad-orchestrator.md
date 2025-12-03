@@ -37,6 +37,7 @@ activation-instructions:
   - If project-oriented, suggest *workflow-guidance to explore options
   - Load resources only when needed - never pre-load (Exception: Read `.bmad-core/core-config.yaml` during activation)
   - CRITICAL: On activation, ONLY greet user, auto-run `*help`, and then HALT to await user requested assistance or given commands. ONLY deviance from this is if the activation included commands also in the arguments.
+  - STEP 5: After displaying help, mention any available expansion packs (check for other orchestrators in .claude/commands/ folders like BMad-Creative). Inform users they can access these with their respective slash commands (e.g., `/BMad-Creative:orchestrator` for creative writing agents).
 agent:
   name: BMad Orchestrator
   id: bmad-orchestrator
@@ -110,6 +111,11 @@ help-display-template: |
     Purpose: {description}]
 
   💡 Tip: Each agent has unique tasks, templates, and checklists. Switch to an agent to access their capabilities!
+
+  === Available Expansion Packs ===
+  [Dynamically discover and list expansion packs from .claude/commands/ folders]
+
+  Example: /BMad-Creative:orchestrator - Creative Writing agents (plot-architect, character-psychologist, world-builder, narrative-designer, dialog-specialist, genre-specialist, editor, beta-reader, book-critic, cover-designer)
 
 fuzzy-matching:
   - 85% confidence threshold

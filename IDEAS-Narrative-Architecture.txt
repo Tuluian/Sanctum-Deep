@@ -1,0 +1,251 @@
+ 🏗️ SANCTUM RUINS: NARRATIVE ARCHITECTURE
+
+  THE PROBLEM WITH YOUR CURRENT STORY
+
+  You have:
+  - A "sentient dungeon that tests worthy souls"
+  - Classes with mechanics but no soul
+  - "Pact Magic" theme that's underexplored
+
+  What's missing:
+  - Why does the dungeon exist?
+  - What happens to those who succeed?
+  - Who were you before you entered?
+  - Why should the player care about winning?
+
+  ---
+  THE CORE PREMISE: THE HOOK
+
+  "The Sanctum doesn't kill the unworthy. It becomes them."
+
+  The Truth: The Sanctum Ruins is a prison built to contain The Hollow God — an entity that consumes identity. Every soul that    
+   fails inside the dungeon doesn't die. They're absorbed. The enemies you fight? They were delvers once. The bosses? They        
+  were heroes.
+
+  The Twist: When you win, you don't escape. You become The Warden — bound to the Sanctum for eternity, using the power you       
+  gained to ensure the Hollow God stays sealed. The dungeon "tests" you because it needs a replacement. The previous Warden is    
+   dying, and without a successor, the prison fails.
+
+  The Player's Journey: You're not a hero seeking treasure. You're a desperate soul who made a pact to enter — trading your       
+  past life for the chance of something more. Each class represents a different reason for entering, a different pact made.       
+
+  ---
+  THREE-ACT STRUCTURE (Within Each Run)
+
+● ACT 1: THE ENTRANCE HALLS — "What You Were"
+
+  Narrative Theme: Memory and Loss
+
+  The Entrance Halls are filled with the recently absorbed — cultists who sought power, skeletons of adventurers, zombies who     
+  remember nothing. These enemies attack reflexively, echoes of their former selves.
+
+  The Bonelord (Boss): Once a legendary knight who entered 300 years ago. He was consumed, but his pride was so strong that he    
+   retained something. He guards the entrance not to stop you, but because he forgot any other purpose. Defeating him is an       
+  act of mercy.
+
+  Player Experience: Disorientation. Fragments of your own memories surface. You question whether you can trust your own mind.    
+
+  ---
+  ACT 2: THE SUNKEN CRYPTS — "What You Became"
+
+  Narrative Theme: Corruption and Bargains
+
+  The deeper chambers hold those who survived longer before failing — dark mages who bargained with the Hollow God,
+  aberrations formed from merged souls, gargoyles that were once stone guardians driven mad.
+
+  The Drowned King (Boss): A monarch who entered to save his kingdom from plague. He made a pact with the Hollow God — his        
+  soul for his kingdom's survival. The kingdom lived. He didn't. Now he guards the path to the core, still believing he's
+  protecting his people, which exist only in his shattered memories.
+
+  Player Experience: Temptation. You're offered shortcuts, power at costs. The dungeon whispers that you could stop here,
+  become powerful, rest...
+
+  ---
+  ACT 3: THE SANCTUM CORE — "What You Must Choose"
+
+  Narrative Theme: Sacrifice and Purpose
+
+  The core holds the oldest failures — beings so warped they're barely recognizable as having once been human. Demons formed      
+  from concentrated malice. Angels corrupted by the Hollow God's touch.
+
+  The Hollow God (Final Boss): Not a creature, but an absence. A void that hungers for identity. Fighting it means pieces of      
+  yourself are stripped away. Your cards become corrupted. Your abilities falter. Victory isn't about killing it — it's about     
+  refusing to be consumed.
+
+  Player Experience: The revelation. You realize the Warden was guiding you all along. Winning means taking their place. The      
+  ending isn't triumph — it's acceptance.
+
+  ---
+  CLASS NARRATIVE ARCS
+
+● Each class has a reason for entering and a personal arc:
+
+  THE CLERIC (Free)
+
+  - Why They Entered: Their god fell silent. The church sent them to investigate rumors that the Sanctum holds a fragment of      
+  divine power. The truth? Their god was a previous Warden who finally faded.
+  - Arc: From faithful servant to reluctant deity. Do they take the Warden's mantle and become what they worshipped?
+  - Devotion Mechanic (Story Tie-in): Healing generates faith. But faith in what? As you progress, Devotion could represent       
+  self-belief rather than divine connection.
+
+  THE DUNGEON KNIGHT (Free)
+
+  - Why They Entered: They were part of the Order of the Sealed Gate — an organization that guards the Sanctum's entrance.        
+  They entered because their mentor went in years ago and never returned. They want answers.
+  - Arc: From duty-bound soldier to understanding that some prisons require willing prisoners.
+  - Fortify Mechanic (Story Tie-in): The persistent block represents mental fortitude. They endure not through faith but
+  through sheer will.
+
+  THE DIABOLIST (Premium)
+
+  - Why They Entered: They made a contract with a devil to escape death. The devil's price? Enter the Sanctum and bring back a    
+   piece of the Hollow God. The devil wants to become a new Hollow God.
+  - Arc: Discovering that your contractor is the true villain. Do you complete the contract or betray the devil?
+  - Contracts Mechanic (Story Tie-in): Every curse card in your deck is a clause in your infernal contract. The more powerful     
+  you become, the more you owe.
+
+  THE OATHBOUND (Premium)
+
+  - Why They Entered: They swore a sacred vow to destroy the Sanctum completely, ending the cycle of Wardens forever. They        
+  believe the system is corrupt — why should anyone sacrifice themselves eternally?
+  - Arc: Learning that without the Warden, the Hollow God escapes. Is their righteous crusade worth releasing cosmic horror?      
+  - Vows Mechanic (Story Tie-in): Vows represent their rigid worldview. Power comes from commitment, but commitment can become    
+   a prison.
+
+  THE FEY-TOUCHED (Premium)
+
+  - Why They Entered: They didn't choose to. A fey lord lost a bet and the price was their mortal champion. They were thrown      
+  into the Sanctum as payment for a fairy's gambling debt.
+  - Arc: From unwilling pawn to someone who embraces chaos. The fey lord wants them to fail, because a soul consumed by the       
+  Hollow God means the debt is voided.
+  - Whimsy Mechanic (Story Tie-in): Randomness represents the fey lord's interference. Are the chaotic outcomes help or
+  sabotage?
+
+  ---
+  THE SANCTUM AS CHARACTER
+
+● The dungeon isn't just a setting — it's a character with wants and needs:
+
+  The Sanctum's Voice
+
+  Throughout the run, the dungeon speaks through:
+  - Shrine Events: The Warden communicates through ancient altars
+  - Card Flavor Text: Cards reference the dungeon's history
+  - Boss Dialogue: Each boss reveals lore through combat barks
+  - Environmental Messages: Room descriptions change based on progress
+
+  The Warden's Presence
+
+  The current Warden (dying, desperate) appears at key moments:
+  - First Elite: "You have strength. But strength wasn't enough for me either."
+  - Act 2 Boss: "The Drowned King was my friend once. End his suffering."
+  - Act 3 Entry: "I cannot hold much longer. You must choose."
+
+  Roguelike Justification
+
+  Why do you keep coming back after death? The Sanctum rejects impure souls. When you die, you're expelled — but marked. The      
+  mark draws you back. Each run is another attempt. The dungeon wants a worthy successor, so it allows return.
+
+  ---
+  NARRATIVE MECHANICS — WHERE STORY MEETS GAMEPLAY
+
+● 1. Memory Fragments (Collectible Lore)
+
+  After certain combats, gain a Memory Fragment — a snippet of lore from a consumed soul. Collecting all fragments from an act    
+   reveals deeper story. These don't affect gameplay but reward curious players.
+
+  2. The Warden's Gifts
+
+  At specific map nodes, the Warden offers a choice:
+  - Take power (relic) but see a vision of a past Warden's failure
+  - Refuse, keeping your resolve but gaining less
+
+  This creates moral texture without judgment.
+
+  3. Enemy Redemption
+
+  Elite enemies have names and histories shown briefly before combat:
+  - "Ser Aldric, the Unyielding — Entered 47 years ago seeking glory"
+  - "High Cultist Mira — Entered 12 years ago seeking resurrection for her child"
+
+  This makes kills feel meaningful, not just mechanical.
+
+  4. The Final Choice
+
+  On defeating the Hollow God, the player faces the ultimate decision:
+
+  Option A: Become the Warden
+  - Epilogue shows your character sealing the dungeon, waiting for the next worthy soul
+  - Unlocks that character's "Warden" card back cosmetic
+
+  Option B: Destroy the Seal (Unlocked after winning with all 5 classes)
+  - The Hollow God is released
+  - A new ending where you fight alongside ghosts of all 5 characters to seal it permanently
+  - True ending: The cycle is broken, but at what cost?
+
+  ---
+  SHRINE EVENTS — NARRATIVE MOMENTS
+
+  Rework your shrine events to carry story weight:
+
+  | Shrine              | Choice                 | Story Hook
+                 |
+  |---------------------|------------------------|----------------------------------------------------------------------------    
+  ---------------|
+  | Ancient Altar       | Sacrifice HP for power | The Warden whispers: "I gave everything. So must you."
+                 |
+  | Forgotten Grimoire  | Transform cards        | The book was written by a mage who entered centuries ago. Her soul is in       
+  the ink.         |
+  | Cursed Idol         | Power + curses         | This idol was carved by the Hollow God's first victim, trying to remember      
+  their own face. |
+  | Mysterious Fountain | Random reward          | The water flows from the core. Drinking it gives memories that aren't
+  yours.              |
+  | Memory Well         | View lore OR heal      | See a memory of a past delver's final moments. Gain understanding or turn      
+  away.           |
+
+  ---
+  SUGGESTED CARD FLAVOR TEXT
+
+  Weave story into cards:
+
+  Cleric - Smite: "The light doesn't come from above anymore. It comes from within."
+
+  Dungeon Knight - Fortified Guard: "The Order taught us to hold the line. They didn't mention we'd become it."
+
+  Diabolist - Blood Pact: "The contract specified 'a life.' It didn't specify whose."
+
+  Oathbound - Oath of Valor: "My vows were meant to protect. Now they only sharpen my sword."
+
+  Fey-Touched - Pixie's Gift: "The fey call it a gift. They have a strange sense of humor."
+
+  ---
+  META-NARRATIVE ACROSS RUNS
+
+● For post-MVP, consider:
+
+  1. Persistent World State
+  - Bosses remember being defeated: "You again. Perhaps this time I'll remember why I fight."
+  - The Warden's dialogue changes based on your run history
+  - Ghosts of your previous failed runs appear as background elements
+
+  2. Unlockable Lore Journal
+  - Pieced together from Memory Fragments
+  - Reveals the full history of the Sanctum, past Wardens, the origin of the Hollow God
+
+  3. Character-Specific Endings
+  - Each class has unique epilogue text based on their arc
+  - Achieving true ending requires understanding all five perspectives
+
+  ---
+  SUMMARY: THE NARRATIVE ELEVATOR PITCH
+
+  "In Sanctum Ruins, you don't fight to escape — you fight to become the prison. Every enemy was once a hero. Every boss was      
+  once a friend. The dungeon isn't evil; it's necessary. And when you win, you learn why."
+
+  ---
+  This narrative framework gives Sanctum Ruins:
+  1. Emotional stakes beyond survival
+  2. Mystery that unfolds across runs
+  3. Class identity tied to story, not just mechanics
+  4. Moral complexity without moralizing
+  5. Replayability through narrative discovery

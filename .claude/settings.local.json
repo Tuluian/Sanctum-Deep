@@ -7,7 +7,14 @@
       "Bash(npm run build:*)",
       "Bash(npm run dev:*)",
       "Bash(git init:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(cat:*)",
+      "Bash(mkdir:*)",
+      "Bash(npm run lint)",
+      "Bash(npm run test:run:*)",
+      "SlashCommand(/BMad-Creative:orchestrator)",
+      "Bash(grep:*)",
+      "Bash(xargs -I {} sh -c 'echo \"\"\"\"=== {} ===\"\"\"\" && grep \"\"\"\"## Status:\"\"\"\" {}')"
     ],
     "deny": [],
     "ask": []

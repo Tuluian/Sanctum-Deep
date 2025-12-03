@@ -85,4 +85,18 @@ Bargain cards: High power but add negative cards to deck
 Pact tokens: Accumulate through run, spend for powerful relics at special nodes
 Soul weight: Some cards cost HP instead of Essence
 
-Does this direction feel more distinct? Want to drill into one of these themes or mix elements?
+-----------------
+
+OTHER IDEAS:
+Celestial - divine spells
+Summoner - Shields go to their minions, which must be defeated first always.
+Bargainer - Demon uses Favor, card has a cost and a PRICE (long-term detrimental upkeep that must be paid)
+Tidecaller - water aligned - "Drown" enemies under 5% HP and gain gold
+Shadow Stalker
+Oathsworn
+Goblin - Goes 'goblin' mode - Goblin-core, Gobbles
+
+-----------------
+
+Should be third person, camera behind the player back, looking forward at enemies. Similar to SHADOWGATE.
+    Chests in the room unlock upon clear.
