@@ -7,6 +7,7 @@ import {
   PlayerState,
   EnemyDefinition,
   CharacterClassId,
+  IntentType,
 } from '@/types';
 import {
   FEY_TOUCHED_STARTER_CARDS,
@@ -22,7 +23,7 @@ const TEST_ENEMY: EnemyDefinition = {
   name: 'Test Enemy',
   maxHp: 100,
   moves: [
-    { id: 'attack', name: 'Attack', intent: 0, damage: 5, weight: 1 },
+    { id: 'attack', name: 'Attack', intent: IntentType.ATTACK, damage: 5, weight: 1 },
   ],
 };
 

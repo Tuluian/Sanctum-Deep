@@ -33,6 +33,7 @@ function createMockPlayerState(overrides: Partial<PlayerState> = {}): PlayerStat
     vowsActivatedThisCombat: 0,
     luck: 0,
     maxLuck: 10,
+    guaranteedBest: false,
     ...overrides,
   };
 }

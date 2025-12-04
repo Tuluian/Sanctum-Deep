@@ -37,6 +37,7 @@ function createDiabolistPlayerState(overrides: Partial<PlayerState> = {}): Playe
     vowsActivatedThisCombat: 0,
     luck: 0,
     maxLuck: 10,
+    guaranteedBest: false,
     ...overrides,
   };
 }

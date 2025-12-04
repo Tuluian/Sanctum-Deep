@@ -36,6 +36,7 @@ function createKnightPlayerState(overrides: Partial<PlayerState> = {}): PlayerSt
     vowsActivatedThisCombat: 0,
     luck: 0,
     maxLuck: 10,
+    guaranteedBest: false,
     ...overrides,
   };
 }
