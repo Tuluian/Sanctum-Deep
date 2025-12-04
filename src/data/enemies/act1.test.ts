@@ -257,7 +257,8 @@ describe('Story 2.2: Act 1 Common Enemies', () => {
       const state = engine.getState();
       const impaired = state.player.statusEffects.find(e => e.type === StatusType.IMPAIRED);
       expect(impaired).toBeDefined();
-      expect(impaired?.duration).toBe(2);
+      // Duration decremented from 2 to 1 at end of turn
+      expect(impaired?.duration).toBe(1);
     });
   });
 

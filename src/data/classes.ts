@@ -4,7 +4,7 @@ import { getCardById } from './cards';
 export const CLASSES: Record<CharacterClassId, CharacterClass> = {
   [CharacterClassId.CLERIC]: {
     id: CharacterClassId.CLERIC,
-    name: 'The Cleric',
+    name: 'Cleric',
     maxHp: 75,
     maxResolve: 3,
     starterDeckRecipe: [
@@ -16,7 +16,7 @@ export const CLASSES: Record<CharacterClassId, CharacterClass> = {
   },
   [CharacterClassId.DUNGEON_KNIGHT]: {
     id: CharacterClassId.DUNGEON_KNIGHT,
-    name: 'The Dungeon Knight',
+    name: 'Dungeon Knight',
     maxHp: 80,
     maxResolve: 3,
     starterDeckRecipe: [
@@ -27,21 +27,21 @@ export const CLASSES: Record<CharacterClassId, CharacterClass> = {
   },
   [CharacterClassId.DIABOLIST]: {
     id: CharacterClassId.DIABOLIST,
-    name: 'The Diabolist',
+    name: 'Diabolist',
     maxHp: 70,
     maxResolve: 3,
     starterDeckRecipe: [],
   },
   [CharacterClassId.OATHSWORN]: {
     id: CharacterClassId.OATHSWORN,
-    name: 'The Oathsworn',
+    name: 'Oathsworn',
     maxHp: 75,
     maxResolve: 3,
     starterDeckRecipe: [],
   },
   [CharacterClassId.FEY_TOUCHED]: {
     id: CharacterClassId.FEY_TOUCHED,
-    name: 'The Fey-Touched',
+    name: 'Fey-Touched',
     maxHp: 65,
     maxResolve: 3,
     starterDeckRecipe: [],

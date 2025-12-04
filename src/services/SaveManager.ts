@@ -117,12 +117,21 @@ class SaveManagerClass {
     this.applySettings();
   }
 
+  private settingsChangeCallbacks: Array<() => void> = [];
+
+  onSettingsChange(callback: () => void): void {
+    this.settingsChangeCallbacks.push(callback);
+  }
+
   private applySettings(): void {
     // Apply animation speed as CSS variable
     document.documentElement.style.setProperty(
       '--animation-speed',
       String(1 / this.saveData.settings.animationSpeed)
     );
+
+    // Notify listeners
+    this.settingsChangeCallbacks.forEach((cb) => cb());
   }
 
   // Run management

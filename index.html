@@ -12,7 +12,6 @@
 
     <!-- Combat UI (hidden until combat starts) -->
     <div id="combat-screen" class="game-container" style="display: none">
-      <h1>⚔️ Sanctum Ruins ⚔️</h1>
 
       <!-- Combat Arena Visualization -->
       <div class="arena-container">
@@ -40,19 +39,30 @@
         </div>
       </div>
 
-      <div class="combat-area">
-        <div class="enemy-area">
-          <h2 style="color: #ff6b6b">Enemies</h2>
-          <div id="enemies"></div>
+      <!-- Hand title and turn info -->
+      <div class="hand-header">
+        <div class="hand-title">Your Hand</div>
+        <div class="piles">
+          <div class="pile">Draw: <span id="draw-count">0</span></div>
+          <div class="pile">Discard: <span id="discard-count">0</span></div>
+          <div class="pile">Turn: <span id="turn-count">1</span></div>
         </div>
+      </div>
 
+      <!-- Card hand -->
+      <div class="hand-area">
+        <div class="cards" id="hand"></div>
+      </div>
+
+      <!-- Player stats -->
+      <div class="combat-area">
         <div class="player-area">
-          <h2 style="color: #6495ed" id="player-class-name">The Cleric</h2>
+          <h2 style="color: #6495ed" id="player-class-name">Cleric</h2>
           <div class="player-stats">
-            <div class="stat-box">
+            <div class="stat-box health-box">
               <div class="stat-label">Health</div>
-              <div class="stat-value" id="player-hp">75/75</div>
               <div class="block-display" id="player-block">🛡️ 0</div>
+              <div class="stat-value" id="player-hp">75/75</div>
             </div>
             <div class="stat-box">
               <div class="stat-label">Resolve</div>
@@ -66,18 +76,12 @@
         </div>
       </div>
 
-      <div class="hand-area">
-        <div class="hand-title">Your Hand</div>
-        <div class="cards" id="hand"></div>
-        <div class="piles">
-          <div class="pile">Draw: <span id="draw-count">0</span></div>
-          <div class="pile">Discard: <span id="discard-count">0</span></div>
-          <div class="pile">Turn: <span id="turn-count">1</span></div>
-        </div>
-      </div>
+      <!-- Hidden element for enemy data (used by renderer) -->
+      <div id="enemies" style="display: none;"></div>
 
       <div class="controls">
         <button id="end-turn-btn">End Turn</button>
+        <button id="combat-settings-btn" class="icon-btn">Settings</button>
         <button id="abandon-btn" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white">
           Abandon Run
         </button>

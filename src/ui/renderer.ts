@@ -109,30 +109,49 @@ export class CombatRenderer {
         const isSelected = index === this.selectedEnemyIndex && !isDead;
 
         let intentDisplay = '';
+        let intentClass = '';
         if (enemy.intent && !isDead) {
           if (enemy.intent.intent === IntentType.ATTACK) {
-            intentDisplay = `⚔️ ${enemy.intent.damage}`;
+            const times = enemy.intent.times ? `x${enemy.intent.times}` : '';
+            intentDisplay = `⚔️ ${enemy.intent.damage}${times}`;
           } else if (enemy.intent.intent === IntentType.DEFEND) {
             intentDisplay = `🛡️ ${enemy.intent.block}`;
           } else if (enemy.intent.intent === IntentType.BUFF) {
             intentDisplay = `⬆️`;
           } else if (enemy.intent.intent === IntentType.DEBUFF) {
             intentDisplay = `⬇️`;
+          } else if (enemy.intent.intent === IntentType.CHARGING) {
+            intentDisplay = `⚡ ${enemy.intent.name}`;
+            intentClass = 'charging';
+          } else if (enemy.intent.intent === IntentType.COMMAND) {
+            intentDisplay = `📢 Command`;
+          } else if (enemy.intent.intent === IntentType.SUMMON) {
+            intentDisplay = `👻 Summon`;
+          } else if (enemy.intent.intent === IntentType.MULTI_ATTACK) {
+            intentDisplay = `⚔️ ${enemy.intent.damage}x${enemy.intent.times}`;
           } else {
             intentDisplay = `❓`;
           }
         }
 
+        // Boss-specific styling
+        const isBoss = enemy.isBoss;
+        const bossClass = isBoss ? 'boss' : '';
+        const phaseIndicator = isBoss && enemy.phase > 0 ? `<div class="boss-phase">Phase ${enemy.phase + 1}</div>` : '';
+
         return `
-          <div class="arena-enemy ${isDead ? 'dead' : ''} ${isSelected ? 'selected' : ''}"
+          <div class="arena-enemy ${isDead ? 'dead' : ''} ${isSelected ? 'selected' : ''} ${bossClass}"
                onclick="selectEnemy(${index})"
                data-enemy-id="${enemy.id}">
-            ${!isDead && enemy.intent ? `<div class="arena-enemy-intent">${intentDisplay}</div>` : ''}
-            <div class="enemy-figure"></div>
-            <div class="arena-enemy-hp">
+            ${phaseIndicator}
+            ${!isDead && enemy.intent ? `<div class="arena-enemy-intent ${intentClass}">${intentDisplay}</div>` : ''}
+            ${enemy.block > 0 ? `<div class="arena-enemy-block">🛡️ ${enemy.block}</div>` : ''}
+            <div class="arena-enemy-name">${isBoss ? '☠️ ' : ''}${enemy.name}</div>
+            <div class="arena-enemy-hp ${isBoss ? 'boss-hp' : ''}">
               <div class="arena-enemy-hp-fill" style="width: ${hpPercent}%;"></div>
+              <div class="arena-enemy-hp-text">${enemy.currentHp}/${enemy.maxHp}</div>
             </div>
-            <div class="arena-enemy-name">${enemy.name}</div>
+            <div class="enemy-figure ${isBoss ? 'boss-figure' : ''}"></div>
           </div>
         `;
       })
@@ -235,6 +254,8 @@ export class CombatRenderer {
 
     if (targetEnemy) {
       setTimeout(() => {
+        // Show slash effect
+        this.showSlashEffect(targetEnemy as HTMLElement);
         targetEnemy.classList.add('hit');
         setTimeout(() => targetEnemy.classList.remove('hit'), 400);
       }, 200);
@@ -253,9 +274,28 @@ export class CombatRenderer {
 
     if (playerSilhouette) {
       setTimeout(() => {
+        // Show slash effect on player
+        this.showSlashEffect(playerSilhouette as HTMLElement);
         playerSilhouette.classList.add('hit');
         setTimeout(() => playerSilhouette.classList.remove('hit'), 500);
       }, 250);
     }
+  }
+
+  private showSlashEffect(target: HTMLElement): void {
+    // Create slash element
+    const slash = document.createElement('div');
+    slash.className = 'slash-effect diagonal';
+    target.appendChild(slash);
+
+    // Trigger animation
+    requestAnimationFrame(() => {
+      slash.classList.add('active');
+    });
+
+    // Remove after animation
+    setTimeout(() => {
+      slash.remove();
+    }, 400);
   }
 }

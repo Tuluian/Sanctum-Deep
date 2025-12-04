@@ -5,6 +5,7 @@ import { createMainMenuScreen } from '@/ui/screens/MainMenuScreen';
 import { createClassSelectScreen } from '@/ui/screens/ClassSelectScreen';
 import { createSettingsScreen } from '@/ui/screens/SettingsScreen';
 import { SaveManager } from '@/services/SaveManager';
+import { AudioManager } from '@/services/AudioManager';
 import { createStarterDeck, CLASSES } from '@/data/classes';
 import { ACT1_ENEMIES } from '@/data/enemies/act1';
 import { CardType, CharacterClassId, CombatEventType, PlayerState } from '@/types';
@@ -22,8 +23,26 @@ class Game {
     this.screenManager = new ScreenManager('screen-container');
     this.combatScreen = document.getElementById('combat-screen')!;
 
+    this.setupAudio();
     this.setupScreens();
     this.setupCombatEventListeners();
+  }
+
+  private setupAudio(): void {
+    // Initialize audio on first user interaction
+    const initAudio = () => {
+      AudioManager.init();
+      AudioManager.playMusic('menu');
+      document.removeEventListener('click', initAudio);
+      document.removeEventListener('keydown', initAudio);
+    };
+    document.addEventListener('click', initAudio);
+    document.addEventListener('keydown', initAudio);
+
+    // Update audio when settings change
+    SaveManager.onSettingsChange(() => {
+      AudioManager.applyVolumeSettings();
+    });
   }
 
   private setupScreens(): void {
@@ -65,9 +84,15 @@ class Game {
 
       const result = this.combat.playCard(cardIndex, targetEnemy);
       if (result.success) {
-        // Play attack animation for attack cards
-        if (card && card.type === CardType.ATTACK) {
-          this.renderer.playPlayerAttackAnimation(targetEnemy);
+        // Play sound and animation based on card type
+        if (card) {
+          AudioManager.playSfx('card-play');
+          if (card.type === CardType.ATTACK) {
+            this.renderer.playPlayerAttackAnimation(targetEnemy);
+            setTimeout(() => AudioManager.playSfx('hit'), 200);
+          } else if (card.type === CardType.SKILL) {
+            AudioManager.playSfx('spell');
+          }
         }
 
         result.log.forEach((msg) => this.renderer.addLog(msg));
@@ -126,6 +151,31 @@ class Game {
         this.abandonRun();
       }
     });
+
+    // Settings button in combat
+    document.getElementById('combat-settings-btn')?.addEventListener('click', () => {
+      this.showCombatSettings();
+    });
+  }
+
+  private showCombatSettings(): void {
+    // Hide combat screen and show settings
+    this.combatScreen.style.display = 'none';
+    document.getElementById('screen-container')!.style.display = 'block';
+
+    // Navigate to settings with a custom back handler
+    const settings = createSettingsScreen({
+      onBack: () => {
+        // Return to combat
+        this.screenManager.navigateTo('main-menu', true);
+        document.getElementById('screen-container')!.style.display = 'none';
+        this.combatScreen.style.display = 'block';
+      },
+    });
+
+    // Replace the settings screen with our custom one
+    this.screenManager.register(settings);
+    this.screenManager.navigateTo('settings');
   }
 
   private startNewRun(classId: CharacterClassId): void {
@@ -213,6 +263,9 @@ class Game {
     const state = this.combat.getState();
     const victory = state.victory;
 
+    // Play victory/defeat music
+    AudioManager.playMusic(victory ? 'victory' : 'defeat');
+
     // Update save data
     if (victory) {
       // For MVP, winning one combat ends the run
@@ -223,6 +276,7 @@ class Game {
 
     // Show game over with callback to return to menu
     this.renderer.showGameOver(victory, () => {
+      this.renderer.removeGameOver();
       this.hideCombatScreen();
       this.screenManager.navigateTo('main-menu', true);
     });
@@ -238,11 +292,13 @@ class Game {
   private showCombatScreen(): void {
     this.combatScreen.style.display = 'block';
     document.getElementById('screen-container')!.style.display = 'none';
+    AudioManager.playMusic('combat');
   }
 
   private hideCombatScreen(): void {
     this.combatScreen.style.display = 'none';
     document.getElementById('screen-container')!.style.display = 'block';
+    AudioManager.playMusic('menu');
   }
 
   private render(): void {

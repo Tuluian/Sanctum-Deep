@@ -14,7 +14,9 @@
       "Bash(npm run test:run:*)",
       "SlashCommand(/BMad-Creative:orchestrator)",
       "Bash(grep:*)",
-      "Bash(xargs -I {} sh -c 'echo \"\"\"\"=== {} ===\"\"\"\" && grep \"\"\"\"## Status:\"\"\"\" {}')"
+      "Bash(xargs -I {} sh -c 'echo \"\"\"\"=== {} ===\"\"\"\" && grep \"\"\"\"## Status:\"\"\"\" {}')",
+      "Bash(dir /s /b \"C:\\Users\\C\\Sanctum-Deep\\public\\audio\\*.ogg\")",
+      "Bash(cd:*)"
     ],
     "deny": [],
     "ask": []

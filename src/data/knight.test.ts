@@ -77,7 +77,7 @@ describe('Story 2.1: Dungeon Knight Class & Fortify Mechanic', () => {
 
     it('should have correct Knight name', () => {
       const knight = CLASSES[CharacterClassId.DUNGEON_KNIGHT];
-      expect(knight.name).toBe('The Dungeon Knight');
+      expect(knight.name).toBe('Dungeon Knight');
     });
   });
 
@@ -130,15 +130,15 @@ describe('Story 2.1: Dungeon Knight Class & Fortify Mechanic', () => {
       expect(shield.effects[0].amount).toBe(6);
     });
 
-    it('Bulwark Stance should grant 8 block and +3 empowered', () => {
+    it('Bulwark Stance should grant 8 block and 1 Fortify', () => {
       const bulwark = KNIGHT_CARDS.bulwark_stance;
       expect(bulwark.type).toBe(CardType.SKILL);
       expect(bulwark.cost).toBe(1);
       expect(bulwark.effects.length).toBe(2);
       expect(bulwark.effects[0].type).toBe(EffectType.BLOCK);
       expect(bulwark.effects[0].amount).toBe(8);
-      expect(bulwark.effects[1].type).toBe(EffectType.APPLY_STATUS);
-      expect(bulwark.effects[1].amount).toBe(3);
+      expect(bulwark.effects[1].type).toBe(EffectType.GAIN_FORTIFY);
+      expect(bulwark.effects[1].amount).toBe(1);
     });
   });
 

@@ -33,9 +33,9 @@ h1 {
 
 .arena-container {
   width: 100%;
-  max-width: 800px;
+  max-width: 1000px;
   margin: 0 auto 20px auto;
-  border-radius: 12px;
+  border-radius: 14px;
   overflow: hidden;
   border: 3px solid #4a3728;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), inset 0 0 60px rgba(0, 0, 0, 0.4);
@@ -44,7 +44,7 @@ h1 {
 .dungeon-scene {
   position: relative;
   width: 100%;
-  height: 280px;
+  height: 400px;
   background: linear-gradient(180deg, #0a0a0f 0%, #1a1520 50%, #2a2030 100%);
   overflow: hidden;
 }
@@ -195,14 +195,14 @@ h1 {
 /* Enemy slots container */
 .enemy-slots {
   position: absolute;
-  top: 15%;
-  left: 20%;
-  right: 20%;
-  height: 50%;
+  top: 50%;
+  left: 15%;
+  right: 15%;
+  transform: translateY(-60%);
   display: flex;
   justify-content: center;
-  align-items: flex-end;
-  gap: 20px;
+  align-items: flex-start;
+  gap: 40px;
 }
 
 /* Individual enemy in arena */
@@ -213,6 +213,12 @@ h1 {
   align-items: center;
   cursor: pointer;
   transition: transform 0.2s ease;
+  gap: 15px;
+}
+
+/* Spacer between HP bar and figure to clear the head */
+.arena-enemy .enemy-figure {
+  margin-top: 30px;
 }
 
 .arena-enemy:hover:not(.dead) {
@@ -230,8 +236,8 @@ h1 {
 
 /* Enemy figure (silhouette - ready for image override) */
 .enemy-figure {
-  width: 60px;
-  height: 80px;
+  width: 70px;
+  height: 95px;
   background: linear-gradient(180deg, #1a1a1a 0%, #2a2a2a 100%);
   border-radius: 30% 30% 40% 40%;
   position: relative;
@@ -242,17 +248,19 @@ h1 {
   background-size: contain;
   background-position: center bottom;
   background-repeat: no-repeat;
+  order: 3;
+  margin-top: 25px; /* Extra space so head doesn't overlap HP bar */
 }
 
 /* Enemy head */
 .enemy-figure::before {
   content: '';
   position: absolute;
-  top: -25px;
+  top: -5px;
   left: 50%;
   transform: translateX(-50%);
-  width: 30px;
-  height: 30px;
+  width: 35px;
+  height: 35px;
   background: linear-gradient(180deg, #1a1a1a 0%, #2a2a2a 100%);
   border-radius: 50%;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
@@ -262,11 +270,11 @@ h1 {
 .enemy-figure::after {
   content: '';
   position: absolute;
-  top: -18px;
+  top: 3px;
   left: 50%;
   transform: translateX(-50%);
-  width: 20px;
-  height: 6px;
+  width: 24px;
+  height: 8px;
   background: radial-gradient(ellipse at 25% 50%, #ff3333 0%, #ff3333 30%, transparent 31%),
               radial-gradient(ellipse at 75% 50%, #ff3333 0%, #ff3333 30%, transparent 31%);
   filter: blur(1px);
@@ -324,15 +332,95 @@ h1 {
   animation: enemyAttack 0.4s ease-out;
 }
 
-/* Enemy HP bar in arena */
-.arena-enemy-hp {
+/* Slash effect for attacks */
+@keyframes slashAnimation {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(-45deg) scale(0.3);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(-45deg) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(-45deg) scale(1.2);
+  }
+}
+
+.slash-effect {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 80px;
+  height: 80px;
+  pointer-events: none;
+  z-index: 100;
+  opacity: 0;
+}
+
+.slash-effect.active {
+  animation: slashAnimation 0.35s ease-out forwards;
+}
+
+.slash-effect::before,
+.slash-effect::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.9) 40%, rgba(255, 220, 100, 1) 50%, rgba(255, 255, 255, 0.9) 60%, transparent 100%);
+  border-radius: 2px;
+  box-shadow: 0 0 10px rgba(255, 220, 100, 0.8), 0 0 20px rgba(255, 180, 50, 0.5);
+}
+
+.slash-effect::before {
   width: 70px;
-  height: 6px;
-  background: #1a1a1a;
-  border-radius: 3px;
-  margin-top: 8px;
+  height: 4px;
+  transform: translate(-50%, -50%) rotate(0deg);
+}
+
+.slash-effect::after {
+  width: 70px;
+  height: 4px;
+  transform: translate(-50%, -50%) rotate(90deg);
+}
+
+/* Single diagonal slash variant */
+.slash-effect.diagonal::before {
+  width: 90px;
+  height: 5px;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.slash-effect.diagonal::after {
+  display: none;
+}
+
+/* Enemy name tag in arena - above the figure */
+.arena-enemy-name {
+  font-size: 0.9em;
+  color: #ff6b6b;
+  text-shadow: 1px 1px 2px black;
+  text-align: center;
+  max-width: 120px;
+  white-space: nowrap;
   overflow: hidden;
-  border: 1px solid #333;
+  text-overflow: ellipsis;
+  font-weight: bold;
+  order: 1;
+}
+
+/* Enemy HP bar in arena - above the figure */
+.arena-enemy-hp {
+  width: 100px;
+  height: 12px;
+  background: #1a1a1a;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 2px solid #333;
+  position: relative;
+  order: 2;
 }
 
 .arena-enemy-hp-fill {
@@ -341,31 +429,152 @@ h1 {
   transition: width 0.3s ease;
 }
 
-/* Enemy name tag in arena */
-.arena-enemy-name {
-  font-size: 0.7em;
-  color: #ff6b6b;
+.arena-enemy-hp-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.65em;
+  font-weight: bold;
+  color: white;
   text-shadow: 1px 1px 2px black;
-  margin-top: 4px;
-  text-align: center;
-  max-width: 80px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+}
+
+/* Enemy block display in arena */
+.arena-enemy-block {
+  position: absolute;
+  top: 30px;
+  right: -15px;
+  background: rgba(100, 149, 237, 0.8);
+  border: 2px solid #6495ed;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.7em;
+  font-weight: bold;
+  color: white;
+  z-index: 5;
 }
 
 /* Enemy intent icon in arena */
 .arena-enemy-intent {
-  position: absolute;
-  top: -45px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.8);
-  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.85);
+  padding: 5px 10px;
   border-radius: 4px;
-  font-size: 0.75em;
+  font-size: 0.8em;
   white-space: nowrap;
   border: 1px solid #555;
+  margin-bottom: 8px;
+  order: 0;
+}
+
+/* Charging intent animation */
+.arena-enemy-intent.charging {
+  background: linear-gradient(135deg, #4a1a4a 0%, #2a0a2a 100%);
+  border: 2px solid #9b59b6;
+  animation: chargePulse 1s ease-in-out infinite;
+}
+
+@keyframes chargePulse {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(155, 89, 182, 0.5);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(155, 89, 182, 0.9), 0 0 40px rgba(155, 89, 182, 0.4);
+    transform: scale(1.05);
+  }
+}
+
+/* ===== BOSS STYLING ===== */
+
+/* Boss enemy - larger and more menacing */
+.arena-enemy.boss {
+  transform: scale(1.3);
+  z-index: 5;
+}
+
+.arena-enemy.boss:hover:not(.dead) {
+  transform: scale(1.35);
+}
+
+.arena-enemy.boss.selected:not(.dead) {
+  filter: drop-shadow(0 0 20px rgba(155, 89, 182, 0.9));
+}
+
+/* Boss figure - larger with unique glow */
+.boss-figure {
+  width: 90px !important;
+  height: 120px !important;
+  background: linear-gradient(180deg, #2a1a2a 0%, #1a0a1a 100%) !important;
+  box-shadow:
+    0 6px 12px rgba(0, 0, 0, 0.8),
+    inset 0 -15px 30px rgba(0, 0, 0, 0.5),
+    0 0 30px rgba(155, 89, 182, 0.3) !important;
+}
+
+/* Boss head */
+.boss-figure::before {
+  width: 45px !important;
+  height: 45px !important;
+  top: -10px !important;
+}
+
+/* Boss eyes - more intense purple glow */
+.boss-figure::after {
+  width: 32px !important;
+  height: 10px !important;
+  top: 0px !important;
+  background: radial-gradient(ellipse at 25% 50%, #9b59b6 0%, #9b59b6 30%, transparent 31%),
+              radial-gradient(ellipse at 75% 50%, #9b59b6 0%, #9b59b6 30%, transparent 31%) !important;
+  filter: blur(2px) !important;
+  animation: bossEyeGlow 1.5s ease-in-out infinite !important;
+}
+
+@keyframes bossEyeGlow {
+  0%, 100% { opacity: 0.7; filter: blur(2px); }
+  50% { opacity: 1; filter: blur(1px) drop-shadow(0 0 8px #9b59b6); }
+}
+
+/* Boss HP bar - wider with different color */
+.boss-hp {
+  width: 140px !important;
+  height: 16px !important;
+  border: 2px solid #9b59b6 !important;
+}
+
+.boss-hp .arena-enemy-hp-fill {
+  background: linear-gradient(90deg, #9b59b6, #8e44ad) !important;
+}
+
+/* Boss phase indicator */
+.boss-phase {
+  position: absolute;
+  top: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+  padding: 3px 10px;
+  border-radius: 10px;
+  font-size: 0.7em;
+  font-weight: bold;
+  color: white;
+  text-shadow: 1px 1px 2px black;
+  white-space: nowrap;
+  border: 1px solid #c39bd3;
+  z-index: 10;
+  animation: phasePulse 2s ease-in-out infinite;
+}
+
+@keyframes phasePulse {
+  0%, 100% { box-shadow: 0 0 5px rgba(155, 89, 182, 0.5); }
+  50% { box-shadow: 0 0 15px rgba(155, 89, 182, 0.8); }
+}
+
+/* Boss name styling */
+.arena-enemy.boss .arena-enemy-name {
+  color: #c39bd3;
+  font-size: 1em;
+  max-width: 150px;
 }
 
 /* Player silhouette (back view) */
@@ -450,18 +659,9 @@ h1 {
   margin-bottom: 15px;
 }
 
-.enemy-area,
 .player-area {
   border-radius: 8px;
   padding: 15px;
-}
-
-.enemy-area {
-  background: rgba(139, 0, 0, 0.2);
-  border: 2px solid #8b0000;
-}
-
-.player-area {
   background: rgba(25, 118, 210, 0.2);
   border: 2px solid #1976d2;
 }
@@ -560,6 +760,30 @@ h2 {
   font-size: 1.4em;
   font-weight: bold;
   color: #f4d03f;
+}
+
+/* Hand header with title and turn info */
+.hand-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  margin-bottom: 10px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  border: 1px solid #444;
+}
+
+.hand-header .hand-title {
+  font-size: 1.1em;
+  color: #f4d03f;
+  margin: 0;
+}
+
+.hand-header .piles {
+  display: flex;
+  gap: 10px;
+  margin: 0;
 }
 
 .hand-area {
@@ -684,6 +908,19 @@ button:active {
   transform: scale(0.98);
 }
 
+button.icon-btn {
+  flex: 0 0 auto;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #555 0%, #444 100%);
+  color: #e0e0e0;
+  border: 2px solid #666;
+}
+
+button.icon-btn:hover {
+  border-color: #f4d03f;
+  background: linear-gradient(135deg, #666 0%, #555 100%);
+}
+
 .log-area {
   background: rgba(0, 0, 0, 0.6);
   border: 2px solid #555;
@@ -773,10 +1010,17 @@ button:active {
   font-size: 0.9em;
 }
 
-/* Player block within health stat box */
-.stat-box .block-display {
-  margin-top: 6px;
-  font-size: 1em;
+/* Health box with block in top-right */
+.stat-box.health-box {
+  position: relative;
+}
+
+.stat-box.health-box .block-display {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 0.85em;
+  padding: 2px 6px;
 }
 
 /* Responsive adjustments */

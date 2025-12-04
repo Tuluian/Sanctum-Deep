@@ -13,11 +13,11 @@ export interface ClassSelectCallbacks {
 
 const CLASS_DESCRIPTIONS: Record<CharacterClassId, { desc: string; mechanic: string }> = {
   [CharacterClassId.CLERIC]: {
-    desc: 'Attrition warfare through sustained healing.',
-    mechanic: 'Devotion: Healing generates power for stronger abilities.',
+    desc: 'Attrition warfare through sustained self-healing.',
+    mechanic: 'Devotion: Healing generates power for stronger spells.',
   },
   [CharacterClassId.DUNGEON_KNIGHT]: {
-    desc: 'Balanced offense and defense with persistent protection.',
+    desc: 'Balanced offense and defense with damage protection.',
     mechanic: 'Fortify: Block that persists between turns (caps at 15).',
   },
   [CharacterClassId.DIABOLIST]: {
@@ -26,7 +26,7 @@ const CLASS_DESCRIPTIONS: Record<CharacterClassId, { desc: string; mechanic: str
   },
   [CharacterClassId.OATHSWORN]: {
     desc: 'Combo chains through sacred commitments.',
-    mechanic: 'Vows: Declare restrictions for powerful sustained effects.',
+    mechanic: 'Vows: Declare restrictions on self for sustained power.',
   },
   [CharacterClassId.FEY_TOUCHED]: {
     desc: 'Embrace chaos with unpredictable outcomes.',
@@ -47,7 +47,7 @@ export function createClassSelectScreen(callbacks: ClassSelectCallbacks): Screen
     element.innerHTML = `
       <header class="screen-header">
         <button class="back-btn" id="btn-back">← Back</button>
-        <h2>Choose Your Path</h2>
+        <h2>Choose Your Class</h2>
         <div class="header-spacer"></div>
       </header>
 

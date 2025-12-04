@@ -17,5 +17,5 @@ app.get('*', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Sanctum Ruins running on port ${PORT}`);
+  console.log(`Sanctum Ruins is running on port ${PORT}`);
 });

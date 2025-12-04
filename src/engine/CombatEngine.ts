@@ -15,6 +15,7 @@ import {
   IntentType,
   PlayerState,
   PlayCardResult,
+  StatusType,
 } from '@/types';
 
 export class CombatEngine {
@@ -37,6 +38,7 @@ export class CombatEngine {
       might: 0,
       untargetable: false,
       isElite: def.isElite || false,
+      isBoss: def.isBoss || false,
       phase: 0,
       usedAbilities: [],
     }));
@@ -129,7 +131,21 @@ export class CombatEngine {
 
   // Enemy intent
   private setEnemyIntent(enemy: Enemy): void {
-    const definition = this.enemyDefinitions.get(enemy.id);
+    // Handle charging - if enemy is charging, show charging intent
+    if (enemy.charging) {
+      enemy.intent = {
+        intent: IntentType.CHARGING,
+        damage: enemy.charging.chargedMove.damage,
+        name: `${enemy.charging.chargedMove.name} (${enemy.charging.turnsRemaining})`,
+        moveId: enemy.charging.chargedMove.id,
+      };
+      this.emit(CombatEventType.ENEMY_INTENT_SET, { enemyId: enemy.id, intent: enemy.intent });
+      return;
+    }
+
+    // Get base ID for definition lookup (strip instance suffix)
+    const baseId = enemy.id.replace(/_\d+$/, '');
+    const definition = this.enemyDefinitions.get(baseId) || this.enemyDefinitions.get(enemy.id);
     if (!definition) {
       // Fallback if no definition found
       enemy.intent = {
@@ -211,6 +227,9 @@ export class CombatEngine {
       debuffDuration: move.debuffDuration,
       summons: move.summons,
       oncePerCombat: move.oncePerCombat,
+      chargeTurns: move.chargeTurns,
+      commandMinions: move.commandMinions,
+      resurrectMinions: move.resurrectMinions,
     };
   }
 
@@ -238,26 +257,45 @@ export class CombatEngine {
   }
 
   // Add enemy to combat (for summoning)
-  addEnemy(definition: EnemyDefinition): void {
+  addEnemy(definition: EnemyDefinition, currentHp?: number): void {
+    // Generate unique instance ID if enemy already exists
+    let instanceId = definition.id;
+    const existingCount = this.state.enemies.filter(e => e.id.startsWith(definition.id)).length;
+    if (existingCount > 0) {
+      instanceId = `${definition.id}_${existingCount}`;
+    }
+
     const enemy: Enemy = {
-      id: definition.id,
+      id: instanceId,
       name: definition.name,
       maxHp: definition.maxHp,
-      currentHp: definition.maxHp,
+      currentHp: currentHp ?? definition.maxHp,
       block: 0,
       intent: null,
       statusEffects: [],
       might: 0,
       untargetable: false,
       isElite: definition.isElite || false,
+      isBoss: definition.isBoss || false,
       phase: 0,
       usedAbilities: [],
     };
 
     this.state.enemies.push(enemy);
-    this.enemyDefinitions.set(definition.id, definition);
+    // Store definition with base ID for intent lookup
+    if (!this.enemyDefinitions.has(definition.id)) {
+      this.enemyDefinitions.set(definition.id, definition);
+    }
     this.setEnemyIntent(enemy);
     this.emit(CombatEventType.ENEMY_SUMMONED, { enemy });
+  }
+
+  // Track dead minions for resurrection
+  private deadMinions: { definition: EnemyDefinition; maxHp: number }[] = [];
+
+  // Register a minion definition for potential summoning
+  registerMinionDefinition(definition: EnemyDefinition): void {
+    this.enemyDefinitions.set(definition.id, definition);
   }
 
   // Card playing
@@ -296,6 +334,12 @@ export class CombatEngine {
 
     if (card.cost > this.state.player.resolve) {
       return { success: false, message: 'Insufficient Resolve', log: [] };
+    }
+
+    // Check Bound status - cannot play Attack cards
+    const boundEffect = this.state.player.statusEffects.find(e => e.type === StatusType.BOUND);
+    if (boundEffect && card.type === CardType.ATTACK) {
+      return { success: false, message: 'You are Bound and cannot play Attack cards!', log: [] };
     }
 
     const target = this.state.enemies[targetIndex];
@@ -407,6 +451,14 @@ export class CombatEngine {
 
     if (enemy.currentHp <= 0) {
       this.emit(CombatEventType.ENEMY_DIED, { enemyId: enemy.id });
+      // Track dead minions for potential resurrection (not bosses)
+      if (!enemy.isBoss) {
+        const baseId = enemy.id.replace(/_\d+$/, '');
+        const definition = this.enemyDefinitions.get(baseId) || this.enemyDefinitions.get(enemy.id);
+        if (definition) {
+          this.deadMinions.push({ definition, maxHp: enemy.maxHp });
+        }
+      }
     } else {
       // Check for phase transitions when damage is dealt
       this.checkPhaseTransition(enemy);
@@ -571,13 +623,22 @@ export class CombatEngine {
           break;
 
         case IntentType.SUMMON:
-          // Summon enemies
-          if (intent.summons && intent.summons.length > 0) {
-            // Track this as a used ability if once-per-combat
-            if (intent.oncePerCombat) {
-              enemy.usedAbilities.push(intent.moveId);
-            }
+          // Track this as a used ability if once-per-combat
+          if (intent.oncePerCombat) {
+            enemy.usedAbilities.push(intent.moveId);
+          }
 
+          // Handle resurrect minions
+          if (intent.resurrectMinions && this.deadMinions.length > 0) {
+            for (const deadMinion of this.deadMinions) {
+              const resurrectedHp = Math.floor(deadMinion.maxHp * 0.5);
+              this.addEnemy(deadMinion.definition, resurrectedHp);
+              log.push(`${enemy.name} resurrected ${deadMinion.definition.name} at ${resurrectedHp} HP!`);
+            }
+            this.deadMinions = [];
+          }
+          // Summon new enemies
+          else if (intent.summons && intent.summons.length > 0) {
             for (const summonId of intent.summons) {
               const summonDef = this.enemyDefinitions.get(summonId);
               if (summonDef) {
@@ -587,6 +648,83 @@ export class CombatEngine {
             }
           }
           break;
+
+        case IntentType.CHARGING:
+          // Start or continue charging
+          if (!enemy.charging && intent.chargeTurns) {
+            // Start charging - find the move definition
+            const baseId = enemy.id.replace(/_\d+$/, '');
+            const def = this.enemyDefinitions.get(baseId) || this.enemyDefinitions.get(enemy.id);
+            if (def) {
+              const moves = def.phases?.[enemy.phase]?.moves || def.moves;
+              const chargeMove = moves.find(m => m.id === intent.moveId);
+              if (chargeMove) {
+                enemy.charging = {
+                  turnsRemaining: intent.chargeTurns,
+                  chargedMove: chargeMove,
+                };
+                log.push(`${enemy.name} is charging ${chargeMove.name}!`);
+              }
+            }
+          } else if (enemy.charging) {
+            enemy.charging.turnsRemaining--;
+            if (enemy.charging.turnsRemaining <= 0) {
+              // Execute the charged attack!
+              const chargedDamage = enemy.charging.chargedMove.damage || 0;
+              this.dealDamageToPlayer(chargedDamage + mightBonus);
+              log.push(`${enemy.name} unleashes ${enemy.charging.chargedMove.name} for ${chargedDamage + mightBonus} damage!`);
+              enemy.charging = undefined;
+            } else {
+              log.push(`${enemy.name} continues charging... (${enemy.charging.turnsRemaining} turn${enemy.charging.turnsRemaining > 1 ? 's' : ''} remaining)`);
+            }
+          }
+          break;
+
+        case IntentType.COMMAND:
+          // Dark Command - all minions attack immediately
+          if (intent.commandMinions) {
+            const minions = this.state.enemies.filter(e => e.currentHp > 0 && e.id !== enemy.id && !e.isBoss);
+            if (minions.length > 0) {
+              log.push(`${enemy.name} commands all minions to attack!`);
+              for (const minion of minions) {
+                // Minions use a basic attack (6 damage default)
+                const minionDamage = 6 + minion.might;
+                minion.might = 0;
+                const result = this.dealDamageToPlayer(minionDamage);
+                log.push(`${minion.name} attacks for ${minionDamage} damage (${result.hpDamage} to HP)`);
+                if (this.state.player.currentHp <= 0) break;
+              }
+            } else {
+              log.push(`${enemy.name} commands... but has no minions!`);
+            }
+          }
+          break;
+      }
+
+      // Handle attack with debuff (like Death Grip)
+      if (intent.intent === IntentType.ATTACK && intent.debuffType && intent.debuffDuration) {
+        const existingEffect = this.state.player.statusEffects.find(e => e.type === intent.debuffType);
+        if (existingEffect) {
+          existingEffect.duration = Math.max(existingEffect.duration || 0, intent.debuffDuration);
+        } else {
+          this.state.player.statusEffects.push({
+            type: intent.debuffType,
+            amount: 1,
+            duration: intent.debuffDuration,
+          });
+        }
+        log.push(`${enemy.name} applied ${intent.debuffType} for ${intent.debuffDuration} turn(s)`);
+      }
+
+      // Handle buff with block (like Unholy Vigor)
+      if (intent.intent === IntentType.BUFF && intent.block) {
+        enemy.block += intent.block;
+        this.emit(CombatEventType.ENEMY_BLOCK_CHANGED, { enemyId: enemy.id, block: enemy.block });
+        log.push(`${enemy.name} gained ${intent.block} block`);
+      }
+      if (intent.intent === IntentType.BUFF && intent.buffType && intent.buffAmount) {
+        enemy.might += intent.buffAmount;
+        log.push(`${enemy.name} gained +${intent.buffAmount} Might!`);
       }
 
       // Set next intent
@@ -596,6 +734,18 @@ export class CombatEngine {
     // Reset player block AFTER all enemy attacks
     this.state.player.block = 0;
     this.emit(CombatEventType.PLAYER_BLOCK_CHANGED, { block: 0 });
+
+    // Decrement status effect durations and remove expired ones
+    this.state.player.statusEffects = this.state.player.statusEffects.filter(effect => {
+      if (effect.duration !== undefined) {
+        effect.duration--;
+        if (effect.duration <= 0) {
+          log.push(`${effect.type} wore off`);
+          return false;
+        }
+      }
+      return true;
+    });
 
     // Check defeat
     if (this.state.player.currentHp <= 0) {

@@ -8,11 +8,29 @@ export enum CardType {
 
 export enum EffectType {
   DAMAGE = 'DAMAGE',
+  DAMAGE_ALL = 'DAMAGE_ALL',
   BLOCK = 'BLOCK',
   HEAL = 'HEAL',
   APPLY_STATUS = 'APPLY_STATUS',
   GAIN_DEVOTION = 'GAIN_DEVOTION',
   GAIN_FORTIFY = 'GAIN_FORTIFY',
+  DRAW_CARDS = 'DRAW_CARDS',
+  // Conditional effects
+  HEAL_OR_BLOCK = 'HEAL_OR_BLOCK', // Heal X, if full HP gain X block instead
+  // Devotion spending
+  SPEND_DEVOTION_DAMAGE = 'SPEND_DEVOTION_DAMAGE', // Spend X devotion for bonus damage
+  // Knight effects
+  DAMAGE_EQUAL_BLOCK = 'DAMAGE_EQUAL_BLOCK',
+  DAMAGE_EQUAL_FORTIFY = 'DAMAGE_EQUAL_FORTIFY',
+  BLOCK_EQUAL_FORTIFY = 'BLOCK_EQUAL_FORTIFY',
+  DOUBLE_FORTIFY = 'DOUBLE_FORTIFY',
+}
+
+export enum CardRarity {
+  STARTER = 'starter',
+  COMMON = 'common',
+  UNCOMMON = 'uncommon',
+  RARE = 'rare',
 }
 
 export interface CardEffect {
@@ -28,6 +46,12 @@ export interface CardDefinition {
   cost: number;
   description: string;
   effects: CardEffect[];
+  rarity?: CardRarity;
+  classId?: CharacterClassId;
+  exhaust?: boolean;
+  // For spend devotion effects
+  devotionCost?: number;
+  devotionBonus?: CardEffect[];
 }
 
 export interface Card extends CardDefinition {
@@ -66,6 +90,8 @@ export enum IntentType {
   HEAL = 'heal',
   MULTI_ATTACK = 'multi_attack',
   SUMMON = 'summon',
+  CHARGING = 'charging',
+  COMMAND = 'command',
   UNKNOWN = 'unknown',
 }
 
@@ -87,6 +113,10 @@ export interface EnemyMove {
   // Elite abilities
   summons?: string[]; // Enemy IDs to summon
   oncePerCombat?: boolean; // Can only be used once
+  // Boss abilities
+  chargeTurns?: number; // Number of turns to charge before executing
+  commandMinions?: boolean; // Makes all minions attack
+  resurrectMinions?: boolean; // Resurrects dead minions
 }
 
 export interface EnemyPhase {
@@ -102,6 +132,8 @@ export interface EnemyDefinition {
   isElite?: boolean;
   phaseThresholds?: number[]; // HP percentages that trigger phase changes (e.g., [0.5] = phase 2 at 50%)
   phases?: EnemyPhase[]; // Different move sets per phase
+  // Boss properties
+  isBoss?: boolean;
 }
 
 export interface EnemyIntent {
@@ -121,6 +153,15 @@ export interface EnemyIntent {
   // Elite abilities
   summons?: string[];
   oncePerCombat?: boolean;
+  // Boss abilities
+  chargeTurns?: number;
+  commandMinions?: boolean;
+  resurrectMinions?: boolean;
+}
+
+export interface ChargingState {
+  turnsRemaining: number;
+  chargedMove: EnemyMove;
 }
 
 export interface Enemy {
@@ -137,6 +178,9 @@ export interface Enemy {
   isElite: boolean;
   phase: number; // Current phase (0-indexed)
   usedAbilities: string[]; // Track once-per-combat abilities used
+  // Boss properties
+  isBoss: boolean;
+  charging?: ChargingState; // For charge-up attacks
 }
 
 // Player Types
@@ -239,4 +283,31 @@ export interface PlayCardResult {
 
 export interface EndTurnResult {
   log: string[];
+}
+
+// Map Types
+export enum NodeType {
+  COMBAT = 'COMBAT',
+  ELITE = 'ELITE',
+  CAMPFIRE = 'CAMPFIRE',
+  MERCHANT = 'MERCHANT',
+  SHRINE = 'SHRINE',
+  BOSS = 'BOSS',
+}
+
+export interface MapNode {
+  id: string;
+  type: NodeType;
+  row: number;
+  column: number;
+  act: number;
+  connections: string[]; // IDs of nodes in next row this connects to
+  visited: boolean;
+}
+
+export interface FloorMap {
+  act: number;
+  rows: MapNode[][];
+  bossNode: MapNode;
+  seed: string;
 }

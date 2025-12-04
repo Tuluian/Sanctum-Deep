@@ -20,7 +20,7 @@ describe('Story 1.3: Cleric Starter Deck & Devotion', () => {
 
     it('should have correct Cleric name', () => {
       const cleric = CLASSES[CharacterClassId.CLERIC];
-      expect(cleric.name).toBe('The Cleric');
+      expect(cleric.name).toBe('Cleric');
     });
 
     it('should retrieve Cleric by ID', () => {

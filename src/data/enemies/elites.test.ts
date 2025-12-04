@@ -345,7 +345,8 @@ describe('Story 2.3: Act 1 Elite Enemies', () => {
       const state = engine.getState();
       const impaired = state.player.statusEffects.find(e => e.type === StatusType.IMPAIRED);
       expect(impaired).toBeDefined();
-      expect(impaired?.duration).toBe(2);
+      // Duration decremented from 2 to 1 at end of turn
+      expect(impaired?.duration).toBe(1);
     });
 
     it('High Cultist Mass Hex should apply Sundered', () => {
@@ -372,7 +373,8 @@ describe('Story 2.3: Act 1 Elite Enemies', () => {
       const state = engine.getState();
       const sundered = state.player.statusEffects.find(e => e.type === StatusType.SUNDERED);
       expect(sundered).toBeDefined();
-      expect(sundered?.duration).toBe(2);
+      // Duration decremented from 2 to 1 at end of turn
+      expect(sundered?.duration).toBe(1);
     });
   });
 
