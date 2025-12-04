@@ -27,22 +27,19 @@ export function createMainMenuScreen(
             <h2 class="logo-sub">RUINS</h2>
           </div>
           <div class="menu-status">
-            <span class="soul-echoes">🔮 ${soulEchoes}</span>
+            <span class="soul-echoes">${soulEchoes} Soul Echoes</span>
           </div>
         </div>
 
         <nav class="menu-buttons">
           <button class="menu-btn primary" id="btn-new-run">
-            <span class="btn-icon">⚔️</span>
             <span class="btn-text">New Run</span>
           </button>
           <button class="menu-btn ${hasRun ? '' : 'disabled'}" id="btn-continue" ${hasRun ? '' : 'disabled'}>
-            <span class="btn-icon">📜</span>
             <span class="btn-text">Continue</span>
             <span class="btn-subtitle">${hasRun ? 'Run in progress' : 'No save found'}</span>
           </button>
           <button class="menu-btn" id="btn-settings">
-            <span class="btn-icon">⚙️</span>
             <span class="btn-text">Settings</span>
           </button>
         </nav>

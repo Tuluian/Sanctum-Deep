@@ -38,6 +38,11 @@ export interface RunSaveData {
   playerMaxHp: number;
   gold: number;
   startTime: number;
+  // Map progression
+  mapSeed: string;
+  currentNodeId: string;
+  visitedNodeIds: string[];
+  inCombat: boolean; // True if player is mid-combat (reload should return to map)
 }
 
 export interface SaveData {
@@ -143,7 +148,7 @@ class SaveManagerClass {
     return this.saveData.run ? { ...this.saveData.run } : null;
   }
 
-  startNewRun(classId: CharacterClassId, maxHp: number): void {
+  startNewRun(classId: CharacterClassId, maxHp: number, mapSeed: string, startNodeId: string): void {
     this.saveData.run = {
       classId,
       currentAct: 1,
@@ -151,9 +156,34 @@ class SaveManagerClass {
       playerMaxHp: maxHp,
       gold: 0,
       startTime: Date.now(),
+      mapSeed,
+      currentNodeId: startNodeId,
+      visitedNodeIds: [],
+      inCombat: false,
     };
     this.saveData.meta.statistics.totalRuns++;
     this.saveNow();
+  }
+
+  setInCombat(inCombat: boolean): void {
+    if (this.saveData.run) {
+      this.saveData.run.inCombat = inCombat;
+      this.saveNow();
+    }
+  }
+
+  markNodeVisited(nodeId: string): void {
+    if (this.saveData.run && !this.saveData.run.visitedNodeIds.includes(nodeId)) {
+      this.saveData.run.visitedNodeIds.push(nodeId);
+      this.saveNow();
+    }
+  }
+
+  setCurrentNode(nodeId: string): void {
+    if (this.saveData.run) {
+      this.saveData.run.currentNodeId = nodeId;
+      this.saveNow();
+    }
   }
 
   updateRun(updates: Partial<RunSaveData>): void {
@@ -167,12 +197,10 @@ class SaveManagerClass {
     if (this.saveData.run) {
       if (victory) {
         this.saveData.meta.statistics.totalWins++;
-        // Award Soul Echoes for winning
-        this.saveData.meta.soulEchoes += 50;
+        // Soul Echoes already awarded per-combat via addSoulEchoes()
       } else {
         this.saveData.meta.statistics.totalDeaths++;
-        // Small consolation prize
-        this.saveData.meta.soulEchoes += 10;
+        // No Soul Echoes on defeat to prevent grinding
       }
       this.saveData.run = null;
       this.saveNow();

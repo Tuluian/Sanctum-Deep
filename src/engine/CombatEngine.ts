@@ -1,5 +1,6 @@
 import {
   Card,
+  CardDefinition,
   CardType,
   CombatEvent,
   CombatEventListener,
@@ -16,7 +17,12 @@ import {
   PlayerState,
   PlayCardResult,
   StatusType,
+  Vow,
+  VowBonusType,
+  VowRestrictionType,
+  WhimsyEffect,
 } from '@/types';
+import { getCardById, OATHSWORN_VOWS } from '@/data/cards';
 
 export class CombatEngine {
   private state: CombatState;
@@ -41,6 +47,8 @@ export class CombatEngine {
       isBoss: def.isBoss || false,
       phase: 0,
       usedAbilities: [],
+      summonCooldown: 0,
+      justSummoned: false,
     }));
 
     this.state = {
@@ -108,6 +116,14 @@ export class CombatEngine {
       if (card) {
         this.state.player.hand.push(card);
         this.emit(CombatEventType.CARD_DRAWN, { card });
+
+        // Handle on-draw effects (e.g., Pain curse)
+        if (card.onDraw && card.onDraw.length > 0) {
+          for (const effect of card.onDraw) {
+            this.executeEffect(effect, undefined);
+          }
+          this.log(`${card.name} triggers on draw!`);
+        }
       }
     }
   }
@@ -175,10 +191,25 @@ export class CombatEngine {
       return;
     }
 
-    // Filter out once-per-combat abilities that have been used
-    const availableMoves = moves.filter(m =>
-      !m.oncePerCombat || !enemy.usedAbilities.includes(m.id)
-    );
+    // Count current minions (non-boss, non-elite enemies that are alive)
+    const currentMinionCount = this.state.enemies.filter(
+      e => e.currentHp > 0 && !e.isBoss && !e.isElite && e.id !== enemy.id
+    ).length;
+    const maxMinions = 3;
+
+    // Filter out unavailable moves
+    const availableMoves = moves.filter(m => {
+      // Filter once-per-combat abilities that have been used
+      if (m.oncePerCombat && enemy.usedAbilities.includes(m.id)) {
+        return false;
+      }
+      // Filter summon moves if on cooldown or at max minions
+      if (m.intent === IntentType.SUMMON) {
+        if (enemy.summonCooldown > 0) return false;
+        if (currentMinionCount >= maxMinions) return false;
+      }
+      return true;
+    });
 
     // If no moves available, use a default attack
     if (availableMoves.length === 0) {
@@ -279,6 +310,8 @@ export class CombatEngine {
       isBoss: definition.isBoss || false,
       phase: 0,
       usedAbilities: [],
+      summonCooldown: 0,
+      justSummoned: true, // Skip first turn
     };
 
     this.state.enemies.push(enemy);
@@ -303,12 +336,20 @@ export class CombatEngine {
     if (!this.canPlayerAct()) return false;
     const card = this.state.player.hand[cardIndex];
     if (!card) return false;
-    return card.cost <= this.state.player.resolve;
+    // Cannot play unplayable cards (Curses)
+    if (card.unplayable) return false;
+    // Check Resolve cost
+    if (card.cost > this.state.player.resolve) return false;
+    // Check HP cost (cannot play if it would kill you)
+    if (card.hpCost && card.hpCost >= this.state.player.currentHp) return false;
+    // Check requiresVow (Oathsworn mechanic)
+    if (card.requiresVow && !this.state.player.activeVow) return false;
+    return true;
   }
 
   getPlayableCards(): number[] {
     return this.state.player.hand
-      .map((card, index) => (card.cost <= this.state.player.resolve ? index : -1))
+      .map((_, index) => (this.canPlayCard(index) ? index : -1))
       .filter((index) => index !== -1);
   }
 
@@ -332,8 +373,23 @@ export class CombatEngine {
       return { success: false, message: 'Invalid card', log: [] };
     }
 
+    // Check unplayable (Curses)
+    if (card.unplayable) {
+      return { success: false, message: 'This card cannot be played', log: [] };
+    }
+
     if (card.cost > this.state.player.resolve) {
       return { success: false, message: 'Insufficient Resolve', log: [] };
+    }
+
+    // Check HP cost
+    if (card.hpCost && card.hpCost >= this.state.player.currentHp) {
+      return { success: false, message: 'Not enough HP to pay the cost', log: [] };
+    }
+
+    // Check requiresVow (Oathsworn mechanic)
+    if (card.requiresVow && !this.state.player.activeVow) {
+      return { success: false, message: 'Requires an active Vow', log: [] };
     }
 
     // Check Bound status - cannot play Attack cards
@@ -347,22 +403,48 @@ export class CombatEngine {
       return { success: false, message: 'Invalid target', log: [] };
     }
 
-    // Deduct cost
+    // Deduct Resolve cost
     this.state.player.resolve -= card.cost;
     this.emit(CombatEventType.PLAYER_RESOLVE_CHANGED, { resolve: this.state.player.resolve });
+
+    // Pay HP cost if applicable
+    if (card.hpCost) {
+      this.state.player.currentHp -= card.hpCost;
+      this.emit(CombatEventType.PLAYER_HP_CHANGED, { hp: this.state.player.currentHp });
+      this.log(`Paid ${card.hpCost} HP to play ${card.name}`);
+    }
 
     // Remove from hand
     this.state.player.hand.splice(cardIndex, 1);
 
     // Execute effects
     const log: string[] = [];
-    for (const effect of card.effects) {
-      const result = this.executeEffect(effect, target);
-      if (result) log.push(result);
+
+    // Handle Whimsy cards (Fey-Touched mechanic)
+    if (card.whimsy && card.whimsy.length > 0) {
+      const whimsyResult = this.resolveWhimsy(card.whimsy, target, card.type === CardType.ATTACK);
+      log.push(...whimsyResult);
+    } else {
+      // Normal effect execution
+      for (const effect of card.effects) {
+        const result = this.executeEffect(effect, target, card.type === CardType.ATTACK);
+        if (result) log.push(result);
+      }
     }
 
-    // Move to discard
-    this.state.player.discardPile.push(card);
+    // Handle vow activation (Oathsworn mechanic)
+    if (card.activatesVow) {
+      const vowResult = this.activateVow(card.activatesVow);
+      if (vowResult) log.push(vowResult);
+    }
+
+    // Move to discard (or exhaust for Power cards or cards with exhaust property)
+    if (card.type === CardType.POWER || card.exhaust) {
+      // Powers and cards with exhaust property don't go to discard, they're consumed
+      this.state.player.exhaustPile.push(card);
+    } else {
+      this.state.player.discardPile.push(card);
+    }
 
     this.emit(CombatEventType.CARD_PLAYED, { card, targetIndex });
 
@@ -378,7 +460,7 @@ export class CombatEngine {
     return { success: true, log };
   }
 
-  private executeEffect(effect: { type: EffectType; amount: number }, target?: Enemy): string | null {
+  private executeEffect(effect: { type: EffectType; amount: number; cardId?: string }, target?: Enemy, isAttack: boolean = false): string | null {
     switch (effect.type) {
       case EffectType.DAMAGE: {
         if (target) {
@@ -389,15 +471,46 @@ export class CombatEngine {
             this.state.player.empoweredAttack = 0;
             this.emit(CombatEventType.PLAYER_EMPOWERED_CHANGED, { empoweredAttack: 0 });
           }
-          return this.dealDamageToEnemy(target, damageAmount);
+          // Apply Vow damage bonus (Oathsworn)
+          if (isAttack && this.state.player.activeVow?.bonus.type === VowBonusType.DAMAGE_BOOST) {
+            damageAmount += this.state.player.activeVow.bonus.amount;
+          }
+          const result = this.dealDamageToEnemy(target, damageAmount);
+          // Consume a Vow charge if this is an attack
+          if (isAttack) {
+            this.consumeVowCharge();
+          }
+          return result;
         }
         return null;
       }
 
-      case EffectType.BLOCK:
+      case EffectType.DAMAGE_ALL: {
+        const aliveEnemies = this.state.enemies.filter(e => e.currentHp > 0);
+        let damageAmount = effect.amount;
+        // Apply Vow damage bonus for AoE attacks too
+        if (isAttack && this.state.player.activeVow?.bonus.type === VowBonusType.DAMAGE_BOOST) {
+          damageAmount += this.state.player.activeVow.bonus.amount;
+        }
+        for (const enemy of aliveEnemies) {
+          this.dealDamageToEnemy(enemy, damageAmount);
+        }
+        // Consume a Vow charge if this is an attack
+        if (isAttack) {
+          this.consumeVowCharge();
+        }
+        return `Dealt ${damageAmount} damage to all enemies`;
+      }
+
+      case EffectType.BLOCK: {
+        // Check if gaining block would break a Vow
+        if (this.state.player.activeVow?.restriction.type === VowRestrictionType.NO_BLOCK) {
+          this.breakVow('Gained block while under ' + this.state.player.activeVow.name);
+        }
         this.state.player.block += effect.amount;
         this.emit(CombatEventType.PLAYER_BLOCK_CHANGED, { block: this.state.player.block });
         return `Gained ${effect.amount} block`;
+      }
 
       case EffectType.HEAL: {
         const heal = Math.min(effect.amount, this.state.player.maxHp - this.state.player.currentHp);
@@ -429,8 +542,380 @@ export class CombatEngine {
         this.emit(CombatEventType.PLAYER_EMPOWERED_CHANGED, { empoweredAttack: this.state.player.empoweredAttack });
         return `Your next attack deals +${effect.amount} damage`;
 
+      // Diabolist effects
+      case EffectType.LOSE_HP: {
+        this.state.player.currentHp = Math.max(0, this.state.player.currentHp - effect.amount);
+        this.emit(CombatEventType.PLAYER_HP_CHANGED, { hp: this.state.player.currentHp });
+        this.emit(CombatEventType.PLAYER_DAMAGED, { damage: effect.amount, blocked: 0, fortifyAbsorbed: 0, hpDamage: effect.amount });
+        return `Lost ${effect.amount} HP`;
+      }
+
+      case EffectType.ADD_CARD_TO_DECK: {
+        if (!effect.cardId) return null;
+        const cardDef = getCardById(effect.cardId);
+        if (!cardDef) return null;
+        const newCard = this.createCardInstance(cardDef);
+        // Shuffle into draw pile
+        this.state.player.drawPile.push(newCard);
+        this.state.player.drawPile = this.shuffle(this.state.player.drawPile);
+        // Track Soul Debt for curses
+        if (cardDef.type === CardType.CURSE) {
+          this.state.player.soulDebt++;
+          this.emit(CombatEventType.PLAYER_SOUL_DEBT_CHANGED, { soulDebt: this.state.player.soulDebt });
+        }
+        this.emit(CombatEventType.CARD_ADDED, { card: newCard, destination: 'deck' });
+        return `Added ${cardDef.name} to deck`;
+      }
+
+      case EffectType.ADD_CARD_TO_DISCARD: {
+        if (!effect.cardId) return null;
+        const cardDef = getCardById(effect.cardId);
+        if (!cardDef) return null;
+        const newCard = this.createCardInstance(cardDef);
+        this.state.player.discardPile.push(newCard);
+        // Track Soul Debt for curses
+        if (cardDef.type === CardType.CURSE) {
+          this.state.player.soulDebt++;
+          this.emit(CombatEventType.PLAYER_SOUL_DEBT_CHANGED, { soulDebt: this.state.player.soulDebt });
+        }
+        this.emit(CombatEventType.CARD_ADDED, { card: newCard, destination: 'discard' });
+        return `Added ${cardDef.name} to discard pile`;
+      }
+
+      case EffectType.ADD_CARD_TO_HAND: {
+        if (!effect.cardId) return null;
+        const cardDef = getCardById(effect.cardId);
+        if (!cardDef) return null;
+        const newCard = this.createCardInstance(cardDef);
+        this.state.player.hand.push(newCard);
+        // Track Soul Debt for curses
+        if (cardDef.type === CardType.CURSE) {
+          this.state.player.soulDebt++;
+          this.emit(CombatEventType.PLAYER_SOUL_DEBT_CHANGED, { soulDebt: this.state.player.soulDebt });
+        }
+        this.emit(CombatEventType.CARD_ADDED, { card: newCard, destination: 'hand' });
+        return `Added ${cardDef.name} to hand`;
+      }
+
+      // Fey-Touched effects
+      case EffectType.GAIN_LUCK: {
+        const gainAmount = Math.min(effect.amount, this.state.player.maxLuck - this.state.player.luck);
+        this.state.player.luck += gainAmount;
+        this.emit(CombatEventType.LUCK_CHANGED, { luck: this.state.player.luck });
+        return `Gained ${gainAmount} Luck`;
+      }
+
+      // Extended Diabolist effects (Card Pool)
+      case EffectType.GAIN_RESOLVE: {
+        this.state.player.resolve += effect.amount;
+        this.emit(CombatEventType.PLAYER_RESOLVE_CHANGED, { resolve: this.state.player.resolve });
+        return `Gained ${effect.amount} Resolve`;
+      }
+
+      case EffectType.DAMAGE_PER_CURSE: {
+        const curseCount = this.countCursesInDeck();
+        const damage = curseCount * effect.amount;
+        if (target && damage > 0) {
+          return this.dealDamageToEnemy(target, damage);
+        }
+        return `Dealt ${damage} damage (${curseCount} curses × ${effect.amount})`;
+      }
+
+      case EffectType.BLOCK_PER_CURSE: {
+        const curseCount = this.countCursesInDeck();
+        // Special case for Debt Collector: amount 0 means "6 if 5+ curses"
+        if (effect.amount === 0 && curseCount >= 5) {
+          this.state.player.block += 6;
+          this.emit(CombatEventType.PLAYER_BLOCK_CHANGED, { block: this.state.player.block });
+          return `Gained 6 bonus block (5+ curses)`;
+        }
+        const blockGain = curseCount * effect.amount;
+        this.state.player.block += blockGain;
+        this.emit(CombatEventType.PLAYER_BLOCK_CHANGED, { block: this.state.player.block });
+        return `Gained ${blockGain} block (${curseCount} curses × ${effect.amount})`;
+      }
+
+      case EffectType.EXHAUST_CURSE_FROM_HAND: {
+        const curseIndex = this.state.player.hand.findIndex(c => c.type === CardType.CURSE);
+        if (curseIndex === -1) {
+          return 'No curse to exhaust';
+        }
+        const curse = this.state.player.hand.splice(curseIndex, 1)[0];
+        this.state.player.exhaustPile.push(curse);
+        return `Exhausted ${curse.name}`;
+      }
+
+      case EffectType.DAMAGE_IF_LOW_HP: {
+        if (!target) return null;
+        const hpPercent = this.state.player.currentHp / this.state.player.maxHp;
+        const damage = hpPercent < 0.5 ? effect.amount : 10;
+        return this.dealDamageToEnemy(target, damage);
+      }
+
+      case EffectType.LOSE_MAX_HP: {
+        this.state.player.maxHp = Math.max(1, this.state.player.maxHp - effect.amount);
+        if (this.state.player.currentHp > this.state.player.maxHp) {
+          this.state.player.currentHp = this.state.player.maxHp;
+        }
+        this.emit(CombatEventType.PLAYER_HP_CHANGED, { hp: this.state.player.currentHp, maxHp: this.state.player.maxHp });
+        return `Lost ${effect.amount} max HP`;
+      }
+
+      case EffectType.HEAL_EQUAL_DAMAGE: {
+        if (!target) return null;
+        // Deal damage and heal for that amount
+        const damageDealt = Math.min(effect.amount, target.currentHp + target.block);
+        this.dealDamageToEnemy(target, effect.amount);
+        const heal = Math.min(damageDealt, this.state.player.maxHp - this.state.player.currentHp);
+        this.state.player.currentHp += heal;
+        this.emit(CombatEventType.PLAYER_HP_CHANGED, { hp: this.state.player.currentHp });
+        return `Dealt ${effect.amount} damage and healed ${heal} HP`;
+      }
+
+      case EffectType.CONDITIONAL_HEAL: {
+        // Mark that heal should trigger if enemy dies this turn
+        // This is tracked and processed later when enemy dies
+        this.pendingConditionalHeal = effect.amount;
+        return `Will heal ${effect.amount} HP if an enemy dies`;
+      }
+
+      case EffectType.DRAW_CARDS: {
+        this.drawCards(effect.amount);
+        return `Drew ${effect.amount} cards`;
+      }
+
+      // Oathsworn Card Pool effects
+      case EffectType.DAMAGE_IF_VOW: {
+        if (!this.state.player.activeVow) return null;
+        if (target) {
+          return this.dealDamageToEnemy(target, effect.amount);
+        }
+        return null;
+      }
+
+      case EffectType.BLOCK_PER_VOW_TURN: {
+        if (!this.state.player.activeVow?.currentCharges) return null;
+        // How many turns the Vow has been active = original charges - current charges
+        const turnsActive = (this.state.player.activeVow.charges || 0) - this.state.player.activeVow.currentCharges;
+        const blockGain = turnsActive * effect.amount;
+        if (blockGain > 0) {
+          this.state.player.block += blockGain;
+          this.emit(CombatEventType.PLAYER_BLOCK_CHANGED, { block: this.state.player.block });
+          return `Gained ${blockGain} block (${turnsActive} turns × ${effect.amount})`;
+        }
+        return null;
+      }
+
+      case EffectType.EXTEND_VOW: {
+        if (!this.state.player.activeVow) {
+          return 'No active Vow to extend';
+        }
+        if (this.state.player.activeVow.currentCharges !== undefined) {
+          this.state.player.activeVow.currentCharges += effect.amount;
+          return `Extended Vow by ${effect.amount} charge(s)`;
+        }
+        return null;
+      }
+
+      case EffectType.END_VOW_SAFE: {
+        if (!this.state.player.activeVow) {
+          return 'No active Vow to end';
+        }
+        const vowName = this.state.player.activeVow.name;
+        this.state.player.activeVow = null;
+        this.emit(CombatEventType.VOW_EXPIRED, { safe: true });
+        return `${vowName} ended safely`;
+      }
+
+      case EffectType.CONSUME_VOW_CHARGE: {
+        if (!this.state.player.activeVow?.currentCharges) {
+          return 'No Vow charges to consume';
+        }
+        this.consumeVowCharge();
+        return `Consumed ${effect.amount} Vow charge(s)`;
+      }
+
+      case EffectType.DAMAGE_PER_VOW_ACTIVATED: {
+        const vowsActivated = this.state.player.vowsActivatedThisCombat || 0;
+        const damage = vowsActivated * effect.amount;
+        if (target && damage > 0) {
+          return this.dealDamageToEnemy(target, damage);
+        }
+        return `Dealt ${damage} damage (${vowsActivated} vows × ${effect.amount})`;
+      }
+
+      case EffectType.HEAL_PER_VOW_CHARGE: {
+        const charges = this.state.player.activeVow?.currentCharges || 0;
+        const healAmount = charges * effect.amount;
+        // End the Vow
+        if (this.state.player.activeVow) {
+          this.emit(CombatEventType.VOW_EXPIRED, { safe: true });
+          this.state.player.activeVow = null;
+        }
+        if (healAmount > 0) {
+          const heal = Math.min(healAmount, this.state.player.maxHp - this.state.player.currentHp);
+          this.state.player.currentHp += heal;
+          this.emit(CombatEventType.PLAYER_HP_CHANGED, { hp: this.state.player.currentHp });
+          return `Healed ${heal} HP (${charges} charges × ${effect.amount})`;
+        }
+        return 'Vow ended, no healing';
+      }
+
+      case EffectType.BLOCK_IF_NO_VOW: {
+        if (this.state.player.activeVow) return null;
+        this.state.player.block += effect.amount;
+        this.emit(CombatEventType.PLAYER_BLOCK_CHANGED, { block: this.state.player.block });
+        return `Gained ${effect.amount} bonus block (no Vow active)`;
+      }
+
+      case EffectType.APPLY_BOUND: {
+        if (target) {
+          // Apply Bound status to enemy - prevents their attack card equivalent
+          const existingBound = target.statusEffects.find(e => e.type === StatusType.BOUND);
+          if (existingBound) {
+            existingBound.duration = Math.max(existingBound.duration || 0, effect.amount);
+          } else {
+            target.statusEffects.push({
+              type: StatusType.BOUND,
+              amount: 1,
+              duration: effect.amount,
+            });
+          }
+          return `Applied Bound to ${target.name} for ${effect.amount} turn(s)`;
+        }
+        return null;
+      }
+
+      case EffectType.RESET_VOW_CHARGES: {
+        // This is handled specially after damage - mark that we want to reset if kills
+        this.pendingVowReset = true;
+        return null;
+      }
+
+      // Fey-Touched Card Pool effects
+      case EffectType.DAMAGE_RANDOM_ENEMY: {
+        const aliveEnemies = this.state.enemies.filter(e => e.currentHp > 0);
+        if (aliveEnemies.length === 0) return null;
+        const randomEnemy = aliveEnemies[Math.floor(Math.random() * aliveEnemies.length)];
+        return this.dealDamageToEnemy(randomEnemy, effect.amount);
+      }
+
+      case EffectType.BLOCK_IF_LUCK: {
+        if (this.state.player.luck > 5) {
+          this.state.player.block += effect.amount;
+          this.emit(CombatEventType.PLAYER_BLOCK_CHANGED, { block: this.state.player.block });
+          return `Gained ${effect.amount} bonus block (Luck > 5)`;
+        }
+        return null;
+      }
+
+      case EffectType.SPEND_ALL_LUCK: {
+        const luckSpent = this.state.player.luck;
+        if (luckSpent === 0) return 'No Luck to spend';
+
+        this.state.player.luck = 0;
+        this.emit(CombatEventType.LUCK_CHANGED, { luck: 0 });
+
+        // Deal damage and gain block per Luck spent
+        const damageAmount = luckSpent * effect.amount;
+        const blockAmount = luckSpent * effect.amount;
+
+        this.state.player.block += blockAmount;
+        this.emit(CombatEventType.PLAYER_BLOCK_CHANGED, { block: this.state.player.block });
+
+        // Deal damage to selected target
+        if (target) {
+          this.dealDamageToEnemy(target, damageAmount);
+        }
+
+        return `Spent ${luckSpent} Luck for ${damageAmount} damage and ${blockAmount} block`;
+      }
+
+      case EffectType.SET_GUARANTEED_BEST: {
+        this.state.player.guaranteedBest = true;
+        return 'Next Whimsy is guaranteed best outcome';
+      }
+
       default:
         return null;
+    }
+  }
+
+  // Track pending conditional heal (Grim Harvest)
+  private pendingConditionalHeal: number = 0;
+  // Track pending vow reset (Celestial Chain)
+  private pendingVowReset: boolean = false;
+
+  // Count curses in the entire deck (hand + draw + discard)
+  private countCursesInDeck(): number {
+    const allCards = [
+      ...this.state.player.hand,
+      ...this.state.player.drawPile,
+      ...this.state.player.discardPile,
+    ];
+    return allCards.filter(c => c.type === CardType.CURSE).length;
+  }
+
+  private instanceCounter = 0;
+
+  private createCardInstance(cardDef: CardDefinition): Card {
+    return {
+      ...cardDef,
+      instanceId: `${cardDef.id}_${this.instanceCounter++}`,
+    };
+  }
+
+  // Vow system methods (Oathsworn)
+  private activateVow(vowId: string): string | null {
+    const vowDef = OATHSWORN_VOWS[vowId];
+    if (!vowDef) return null;
+
+    // Create a new vow instance with current charges
+    const vow: Vow = {
+      ...vowDef,
+      currentCharges: vowDef.charges,
+    };
+
+    this.state.player.activeVow = vow;
+    // Track vows activated this combat
+    this.state.player.vowsActivatedThisCombat = (this.state.player.vowsActivatedThisCombat || 0) + 1;
+    this.emit(CombatEventType.VOW_ACTIVATED, { vow });
+    this.log(`${vow.name} activated: ${vow.restriction.description}`);
+    return `Activated ${vow.name}`;
+  }
+
+  private breakVow(reason: string): void {
+    const vow = this.state.player.activeVow;
+    if (!vow) return;
+
+    this.emit(CombatEventType.VOW_BROKEN, { vow, reason });
+    this.log(`${vow.name} broken: ${reason}`);
+
+    // Apply break penalty
+    if (vow.breakPenalty) {
+      for (const effect of vow.breakPenalty) {
+        this.executeEffect(effect, undefined, false);
+      }
+    }
+
+    this.state.player.activeVow = null;
+  }
+
+  private consumeVowCharge(): void {
+    const vow = this.state.player.activeVow;
+    if (!vow || vow.currentCharges === undefined) return;
+
+    vow.currentCharges--;
+    this.emit(CombatEventType.VOW_CHARGE_USED, {
+      vow,
+      remainingCharges: vow.currentCharges,
+    });
+
+    // Check if vow expires naturally (no penalty)
+    if (vow.currentCharges <= 0) {
+      this.emit(CombatEventType.VOW_EXPIRED, { vow });
+      this.log(`${vow.name} expired naturally`);
+      this.state.player.activeVow = null;
     }
   }
 
@@ -459,12 +944,95 @@ export class CombatEngine {
           this.deadMinions.push({ definition, maxHp: enemy.maxHp });
         }
       }
+      // Handle conditional heal (Grim Harvest)
+      if (this.pendingConditionalHeal > 0) {
+        const heal = Math.min(this.pendingConditionalHeal, this.state.player.maxHp - this.state.player.currentHp);
+        this.state.player.currentHp += heal;
+        this.emit(CombatEventType.PLAYER_HP_CHANGED, { hp: this.state.player.currentHp });
+        this.log(`Grim Harvest: Healed ${heal} HP`);
+        this.pendingConditionalHeal = 0;
+      }
+      // Handle pending Vow reset (Celestial Chain)
+      if (this.pendingVowReset && this.state.player.activeVow) {
+        this.state.player.activeVow.currentCharges = this.state.player.activeVow.charges;
+        this.log(`Vow charges reset to ${this.state.player.activeVow.charges}!`);
+        this.pendingVowReset = false;
+      }
     } else {
       // Check for phase transitions when damage is dealt
       this.checkPhaseTransition(enemy);
     }
 
     return `Dealt ${damage} damage to ${enemy.name}`;
+  }
+
+  // Whimsy system (Fey-Touched)
+  private resolveWhimsy(whimsy: WhimsyEffect[], target: Enemy | undefined, isAttack: boolean): string[] {
+    let selectedIndex = 0;
+
+    // Check for guaranteed best outcome (Luck Surge)
+    if (this.state.player.guaranteedBest) {
+      // Find the "best" outcome - for now, take the one with highest total effect amount
+      selectedIndex = this.getBestWhimsyIndex(whimsy);
+      this.state.player.guaranteedBest = false;
+      this.log('Luck Surge: Guaranteed best outcome!');
+    } else {
+      // Calculate total weight
+      const totalWeight = whimsy.reduce((sum, w) => sum + w.weight, 0);
+
+      // Select outcome based on weights
+      let roll = Math.random() * totalWeight;
+      for (let i = 0; i < whimsy.length; i++) {
+        roll -= whimsy[i].weight;
+        if (roll <= 0) {
+          selectedIndex = i;
+          break;
+        }
+      }
+    }
+
+    const selected = whimsy[selectedIndex];
+    this.emit(CombatEventType.WHIMSY_RESOLVED, {
+      selected,
+      allOutcomes: whimsy,
+      selectedIndex,
+    });
+
+    this.log(`Whimsy: ${selected.description}`);
+
+    // Execute the selected effects
+    const log: string[] = [];
+    for (const effect of selected.effects) {
+      const result = this.executeEffect(effect, target, isAttack);
+      if (result) log.push(result);
+    }
+
+    return log;
+  }
+
+  // Find the best Whimsy outcome based on effect amounts
+  private getBestWhimsyIndex(whimsy: WhimsyEffect[]): number {
+    let bestIndex = 0;
+    let bestScore = -Infinity;
+
+    for (let i = 0; i < whimsy.length; i++) {
+      const outcome = whimsy[i];
+      // Score is sum of positive amounts minus negative effects (like LOSE_HP)
+      let score = 0;
+      for (const effect of outcome.effects) {
+        if (effect.type === EffectType.LOSE_HP) {
+          score -= effect.amount;
+        } else {
+          score += effect.amount;
+        }
+      }
+      if (score > bestScore) {
+        bestScore = score;
+        bestIndex = i;
+      }
+    }
+
+    return bestIndex;
   }
 
   private dealDamageToPlayer(damage: number): { blocked: number; fortifyAbsorbed: number; hpDamage: number } {
@@ -514,10 +1082,22 @@ export class CombatEngine {
     for (const enemy of this.state.enemies) {
       if (enemy.currentHp <= 0) continue;
 
+      // Skip turn if just summoned (they act next turn)
+      if (enemy.justSummoned) {
+        enemy.justSummoned = false;
+        log.push(`${enemy.name} is preparing...`);
+        continue;
+      }
+
       // Reset enemy block and untargetable at start of their turn
       enemy.block = 0;
       enemy.untargetable = false;
       this.emit(CombatEventType.ENEMY_BLOCK_CHANGED, { enemyId: enemy.id, block: 0 });
+
+      // Decrement summon cooldown
+      if (enemy.summonCooldown > 0) {
+        enemy.summonCooldown--;
+      }
 
       const intent = enemy.intent as EnemyIntent;
       if (!intent) continue;
@@ -622,32 +1202,58 @@ export class CombatEngine {
           }
           break;
 
-        case IntentType.SUMMON:
+        case IntentType.SUMMON: {
           // Track this as a used ability if once-per-combat
           if (intent.oncePerCombat) {
             enemy.usedAbilities.push(intent.moveId);
           }
 
+          // Count current minions
+          const currentMinionCount = this.state.enemies.filter(
+            e => e.currentHp > 0 && !e.isBoss && !e.isElite && e.id !== enemy.id
+          ).length;
+          const maxMinions = 3;
+          const summonCooldownTurns = 5;
+
           // Handle resurrect minions
           if (intent.resurrectMinions && this.deadMinions.length > 0) {
+            let summoned = 0;
             for (const deadMinion of this.deadMinions) {
+              if (currentMinionCount + summoned >= maxMinions) {
+                log.push(`${enemy.name} cannot summon more minions!`);
+                break;
+              }
               const resurrectedHp = Math.floor(deadMinion.maxHp * 0.5);
               this.addEnemy(deadMinion.definition, resurrectedHp);
               log.push(`${enemy.name} resurrected ${deadMinion.definition.name} at ${resurrectedHp} HP!`);
+              summoned++;
             }
             this.deadMinions = [];
+            if (summoned > 0) {
+              enemy.summonCooldown = summonCooldownTurns;
+            }
           }
           // Summon new enemies
           else if (intent.summons && intent.summons.length > 0) {
+            let summoned = 0;
             for (const summonId of intent.summons) {
+              if (currentMinionCount + summoned >= maxMinions) {
+                log.push(`${enemy.name} cannot summon more minions!`);
+                break;
+              }
               const summonDef = this.enemyDefinitions.get(summonId);
               if (summonDef) {
                 this.addEnemy(summonDef);
                 log.push(`${enemy.name} summoned ${summonDef.name}!`);
+                summoned++;
               }
+            }
+            if (summoned > 0) {
+              enemy.summonCooldown = summonCooldownTurns;
             }
           }
           break;
+        }
 
         case IntentType.CHARGING:
           // Start or continue charging

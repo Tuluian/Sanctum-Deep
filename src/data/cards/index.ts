@@ -9,11 +9,35 @@ import {
   KNIGHT_STARTER_CARDS,
   KNIGHT_REWARD_POOL,
 } from './knight';
+import {
+  DIABOLIST_CARDS,
+  DIABOLIST_STARTER_CARDS,
+  DIABOLIST_REWARD_POOL,
+  DIABOLIST_CURSES,
+  PAIN_CURSE,
+  WEAKNESS_CURSE,
+  DOOM_CURSE,
+  TORMENT_CURSE,
+} from './diabolist';
+import {
+  OATHSWORN_CARDS,
+  OATHSWORN_STARTER_CARDS,
+  OATHSWORN_REWARD_POOL,
+  OATHSWORN_VOWS,
+} from './oathsworn';
+import {
+  FEY_TOUCHED_CARDS,
+  FEY_TOUCHED_STARTER_CARDS,
+  FEY_TOUCHED_REWARD_POOL,
+} from './fey_touched';
 
 // All cards indexed by ID
 export const ALL_CARDS: Record<string, CardDefinition> = {
   ...CLERIC_CARDS,
   ...KNIGHT_CARDS,
+  ...DIABOLIST_CARDS,
+  ...OATHSWORN_CARDS,
+  ...FEY_TOUCHED_CARDS,
 };
 
 export function getCardById(id: string): CardDefinition | undefined {
@@ -27,6 +51,12 @@ export function getClassRewardPool(classId: CharacterClassId): CardDefinition[] 
       return CLERIC_REWARD_POOL;
     case CharacterClassId.DUNGEON_KNIGHT:
       return KNIGHT_REWARD_POOL;
+    case CharacterClassId.DIABOLIST:
+      return DIABOLIST_REWARD_POOL;
+    case CharacterClassId.OATHSWORN:
+      return OATHSWORN_REWARD_POOL;
+    case CharacterClassId.FEY_TOUCHED:
+      return FEY_TOUCHED_REWARD_POOL;
     default:
       return [];
   }
@@ -82,4 +112,19 @@ export {
   KNIGHT_CARDS,
   KNIGHT_STARTER_CARDS,
   KNIGHT_REWARD_POOL,
+  DIABOLIST_CARDS,
+  DIABOLIST_STARTER_CARDS,
+  DIABOLIST_REWARD_POOL,
+  DIABOLIST_CURSES,
+  PAIN_CURSE,
+  WEAKNESS_CURSE,
+  DOOM_CURSE,
+  TORMENT_CURSE,
+  OATHSWORN_CARDS,
+  OATHSWORN_STARTER_CARDS,
+  OATHSWORN_REWARD_POOL,
+  OATHSWORN_VOWS,
+  FEY_TOUCHED_CARDS,
+  FEY_TOUCHED_STARTER_CARDS,
+  FEY_TOUCHED_REWARD_POOL,
 };

@@ -11,30 +11,41 @@ export interface ClassSelectCallbacks {
   onSelectClass: (classId: CharacterClassId) => void;
 }
 
-const CLASS_DESCRIPTIONS: Record<CharacterClassId, { desc: string; mechanic: string }> = {
+const CLASS_DESCRIPTIONS: Record<CharacterClassId, { desc: string; mechanic: string; tooltip: string }> = {
   [CharacterClassId.CLERIC]: {
     desc: 'Attrition warfare through sustained self-healing.',
     mechanic: 'Devotion: Healing generates power for stronger spells.',
+    tooltip: 'Each point of healing generates 1 Devotion. Spend Devotion to power up certain cards for devastating bonus effects. Devotion persists between turns but resets each combat.',
   },
   [CharacterClassId.DUNGEON_KNIGHT]: {
     desc: 'Balanced offense and defense with damage protection.',
     mechanic: 'Fortify: Block that persists between turns (caps at 15).',
+    tooltip: 'Unlike normal Block which disappears at the start of your turn, Fortify stays permanently until used. Build up a defensive wall over multiple turns. Maximum of 15 Fortify at once.',
   },
   [CharacterClassId.DIABOLIST]: {
     desc: 'High risk/reward with infernal contracts.',
     mechanic: 'Contracts: Powerful cards that add Curses to your deck.',
+    tooltip: 'Contract cards offer immense power but add Curse cards to your deck. Curses clog your hand and often deal damage when drawn. Some cards can turn Curses into fuel for even more power.',
   },
   [CharacterClassId.OATHSWORN]: {
     desc: 'Combo chains through sacred commitments.',
     mechanic: 'Vows: Declare restrictions on self for sustained power.',
+    tooltip: 'Activate a Vow to gain a persistent bonus (like +2 damage), but you must follow a restriction (like "no Block cards"). Breaking a Vow triggers a harsh penalty. Vows have limited charges.',
   },
   [CharacterClassId.FEY_TOUCHED]: {
     desc: 'Embrace chaos with unpredictable outcomes.',
     mechanic: 'Whimsy: Cards with random but powerful effects.',
+    tooltip: 'Whimsy cards roll a random effect each time played. Build up Luck to increase your chances of the best outcomes, or spend Luck to guarantee the most powerful result.',
   },
 };
 
-const FREE_CLASSES = [CharacterClassId.CLERIC, CharacterClassId.DUNGEON_KNIGHT];
+const FREE_CLASSES = [
+  CharacterClassId.CLERIC,
+  CharacterClassId.DUNGEON_KNIGHT,
+  CharacterClassId.DIABOLIST,
+  CharacterClassId.OATHSWORN,
+  CharacterClassId.FEY_TOUCHED,
+];
 
 export function createClassSelectScreen(callbacks: ClassSelectCallbacks): Screen {
   const element = document.createElement('div');
@@ -73,8 +84,12 @@ export function createClassSelectScreen(callbacks: ClassSelectCallbacks): Screen
                 <p class="class-desc">${info.desc}</p>
                 ${isUnlocked ? `
                   <div class="class-mechanic">
-                    <strong>${info.mechanic.split(':')[0]}:</strong>
-                    ${info.mechanic.split(':')[1] || ''}
+                    <div class="mechanic-header">
+                      <strong>${info.mechanic.split(':')[0]}:</strong>
+                      <span class="mechanic-help">ⓘ</span>
+                      <div class="mechanic-tooltip">${info.tooltip}</div>
+                    </div>
+                    <span class="mechanic-desc">${info.mechanic.split(':')[1] || ''}</span>
                   </div>
                 ` : `
                   <button class="purchase-btn" disabled>Coming Soon</button>
@@ -87,7 +102,7 @@ export function createClassSelectScreen(callbacks: ClassSelectCallbacks): Screen
 
       <div class="class-action-bar ${selectedClass ? 'visible' : ''}">
         <button class="start-run-btn" id="btn-start" ${selectedClass ? '' : 'disabled'}>
-          Begin Descent
+          Enter the Sanctum
         </button>
       </div>
     `;

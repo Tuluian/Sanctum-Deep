@@ -1,6 +1,6 @@
 # Shrine Events: Narrative Design
 
-## Status: Draft
+## Status: Approved
 
 ## Story
 

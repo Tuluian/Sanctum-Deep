@@ -1,6 +1,6 @@
 # Relic Flavor Text Guide
 
-## Status: Draft
+## Status: Approved
 
 ## Story
 

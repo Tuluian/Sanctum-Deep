@@ -6,6 +6,8 @@ Load PM agent with 'prd' (or 'tech-spec' for small projects)
 
 Load Architect at 'create-architecture' (10+ stories only)
 
+Run game with 'npm run dev'
+
 Build: 
 Load SM agent → Run workflows for each story → Load DEV agent → Implement
 

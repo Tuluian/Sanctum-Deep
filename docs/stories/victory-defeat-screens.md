@@ -1,6 +1,6 @@
 # Victory and Defeat Screens
 
-## Status: Draft
+## Status: Approved
 
 ## Story
 

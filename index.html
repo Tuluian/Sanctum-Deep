@@ -36,6 +36,34 @@
           <div class="player-silhouette">
             <div class="player-figure"></div>
           </div>
+
+          <!-- Player HUD (bottom-left overlay) -->
+          <div class="player-hud">
+            <div class="hud-class-row">
+              <span class="hud-class-icon" id="hud-class-icon">✝️</span>
+              <span class="hud-class-name" id="hud-class-name">Cleric</span>
+            </div>
+            <div class="hud-stat-row">
+              <span class="hud-stat hud-hp" data-tooltip="Your health points. Reach 0 and the run ends.">
+                ❤️ <span id="hud-hp">75/75</span>
+              </span>
+              <span class="hud-stat hud-block" data-tooltip="Block absorbs incoming damage. Resets to 0 at the start of your turn.">
+                🛡️ <span id="hud-block">0</span>
+              </span>
+            </div>
+            <div class="hud-stat-row">
+              <span class="hud-stat hud-resolve" data-tooltip="Energy to play cards. Each card costs Resolve. Refills each turn.">
+                ⚡ <span id="hud-resolve">3/3</span>
+              </span>
+              <span class="hud-stat hud-specialty" id="hud-specialty-stat" data-tooltip="">
+                ✨ <span id="hud-devotion">0</span>
+              </span>
+            </div>
+            <!-- Status effects row (populated dynamically) -->
+            <div class="status-effects-row player-statuses" id="hud-status-effects" style="display: none;"></div>
+            <!-- Active Vow display (Oathsworn class) -->
+            <div class="vow-display" id="hud-vow" style="display: none;"></div>
+          </div>
         </div>
       </div>
 
@@ -54,27 +82,12 @@
         <div class="cards" id="hand"></div>
       </div>
 
-      <!-- Player stats -->
-      <div class="combat-area">
-        <div class="player-area">
-          <h2 style="color: #6495ed" id="player-class-name">Cleric</h2>
-          <div class="player-stats">
-            <div class="stat-box health-box">
-              <div class="stat-label">Health</div>
-              <div class="block-display" id="player-block">🛡️ 0</div>
-              <div class="stat-value" id="player-hp">75/75</div>
-            </div>
-            <div class="stat-box">
-              <div class="stat-label">Resolve</div>
-              <div class="stat-value" id="player-resolve">3/3</div>
-            </div>
-            <div class="stat-box">
-              <div class="stat-label">Devotion</div>
-              <div class="stat-value" style="color: #ffd700" id="player-devotion">0</div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <!-- Hidden elements for renderer compatibility -->
+      <span id="player-class-name" style="display:none">Cleric</span>
+      <span id="player-hp" style="display:none">75/75</span>
+      <span id="player-block" style="display:none">0</span>
+      <span id="player-resolve" style="display:none">3/3</span>
+      <span id="player-devotion" style="display:none">0</span>
 
       <!-- Hidden element for enemy data (used by renderer) -->
       <div id="enemies" style="display: none;"></div>

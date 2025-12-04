@@ -31,6 +31,11 @@ function createKnightPlayerState(overrides: Partial<PlayerState> = {}): PlayerSt
     fortify: 0,
     maxFortify: 15,
     empoweredAttack: 0,
+    soulDebt: 0,
+    activeVow: null,
+    vowsActivatedThisCombat: 0,
+    luck: 0,
+    maxLuck: 10,
     ...overrides,
   };
 }

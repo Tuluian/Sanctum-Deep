@@ -1,4 +1,90 @@
-import { CombatState, IntentType } from '@/types';
+import { CombatState, IntentType, StatusEffect, StatusType, Vow, VowBonusType, VowRestrictionType, CardType, EffectType, Card, PlayerState } from '@/types';
+
+// Status effect display info
+const STATUS_INFO: Record<StatusType, { icon: string; name: string; description: string; isDebuff: boolean }> = {
+  [StatusType.SUNDERED]: {
+    icon: '💔',
+    name: 'Sundered',
+    description: 'Takes 50% more damage from all sources.',
+    isDebuff: true,
+  },
+  [StatusType.IMPAIRED]: {
+    icon: '🦯',
+    name: 'Impaired',
+    description: 'Deals 25% less damage with attacks.',
+    isDebuff: true,
+  },
+  [StatusType.BLEEDING]: {
+    icon: '🩸',
+    name: 'Bleeding',
+    description: 'Takes damage at the start of each turn. Stacks decrease by 1 each turn.',
+    isDebuff: true,
+  },
+  [StatusType.CURSED]: {
+    icon: '☠️',
+    name: 'Cursed',
+    description: 'Cannot heal. Lasts until cleansed or combat ends.',
+    isDebuff: true,
+  },
+  [StatusType.BOUND]: {
+    icon: '⛓️',
+    name: 'Bound',
+    description: 'Cannot gain Block. Lasts for a number of turns.',
+    isDebuff: true,
+  },
+  [StatusType.BLESSED]: {
+    icon: '✨',
+    name: 'Blessed',
+    description: 'Heals at the start of each turn. Stacks decrease by 1 each turn.',
+    isDebuff: false,
+  },
+  [StatusType.EMPOWERED]: {
+    icon: '⚡',
+    name: 'Empowered',
+    description: 'Next attack deals bonus damage, then expires.',
+    isDebuff: false,
+  },
+  [StatusType.WARDED]: {
+    icon: '🔮',
+    name: 'Warded',
+    description: 'Immune to the next debuff applied. Consumed on use.',
+    isDebuff: false,
+  },
+  [StatusType.MIGHT]: {
+    icon: '💪',
+    name: 'Might',
+    description: 'Deals increased damage with all attacks.',
+    isDebuff: false,
+  },
+  [StatusType.RESILIENCE]: {
+    icon: '🛡️',
+    name: 'Resilience',
+    description: 'Takes reduced damage from all sources.',
+    isDebuff: false,
+  },
+};
+
+// Vow bonus display info
+const VOW_BONUS_INFO: Record<VowBonusType, string> = {
+  [VowBonusType.DAMAGE_BOOST]: 'Deal +{amount} damage with attacks',
+  [VowBonusType.BLOCK_PER_TURN]: 'Gain {amount} Block at start of turn',
+  [VowBonusType.DRAW_CARDS]: 'Draw {amount} extra card(s) each turn',
+  [VowBonusType.RESOLVE_BOOST]: '+{amount} max Resolve this combat',
+  [VowBonusType.THORNS]: 'Deal {amount} damage when attacked',
+  [VowBonusType.DOUBLE_BLOCK]: 'Block effects are doubled',
+  [VowBonusType.HEAL_ON_DAMAGE]: 'Heal {amount} when taking damage',
+};
+
+// Vow restriction display info
+const VOW_RESTRICTION_INFO: Record<VowRestrictionType, string> = {
+  [VowRestrictionType.NO_BLOCK]: 'Cannot play Block cards',
+  [VowRestrictionType.NO_ATTACK]: 'Cannot play Attack cards',
+  [VowRestrictionType.NO_SKILL]: 'Cannot play Skill cards',
+  [VowRestrictionType.MUST_ATTACK]: 'Must play an Attack card each turn',
+  [VowRestrictionType.NO_POWER]: 'Cannot play Power cards',
+  [VowRestrictionType.MIN_CARDS]: 'Must play at least {amount} cards per turn',
+  [VowRestrictionType.NO_HEAL]: 'Cannot heal',
+};
 
 export class CombatRenderer {
   private elements: {
@@ -13,6 +99,14 @@ export class CombatRenderer {
     discardCount: HTMLElement;
     turnCount: HTMLElement;
     combatLog: HTMLElement;
+    // HUD elements
+    hudHp: HTMLElement;
+    hudBlock: HTMLElement;
+    hudResolve: HTMLElement;
+    hudDevotion: HTMLElement;
+    hudClassName: HTMLElement;
+    hudClassIcon: HTMLElement;
+    playerHud: HTMLElement;
   };
 
   private onCardClick: (cardIndex: number) => void = () => {};
@@ -32,6 +126,14 @@ export class CombatRenderer {
       discardCount: document.getElementById('discard-count')!,
       turnCount: document.getElementById('turn-count')!,
       combatLog: document.getElementById('combat-log')!,
+      // HUD elements
+      hudHp: document.getElementById('hud-hp')!,
+      hudBlock: document.getElementById('hud-block')!,
+      hudResolve: document.getElementById('hud-resolve')!,
+      hudDevotion: document.getElementById('hud-devotion')!,
+      hudClassName: document.getElementById('hud-class-name')!,
+      hudClassIcon: document.getElementById('hud-class-icon')!,
+      playerHud: document.querySelector('.player-hud')!,
     };
 
     // Expose handlers globally for onclick attributes
@@ -57,6 +159,56 @@ export class CombatRenderer {
 
   getSelectedEnemy(): number {
     return this.selectedEnemyIndex;
+  }
+
+  private renderStatusEffects(effects: StatusEffect[]): string {
+    if (!effects || effects.length === 0) return '';
+
+    return effects
+      .map((effect) => {
+        const info = STATUS_INFO[effect.type];
+        if (!info) return '';
+
+        const stacks = effect.amount > 1 ? `×${effect.amount}` : '';
+        const duration = effect.duration ? ` (${effect.duration} turns)` : '';
+        const tooltipText = `${info.name}${stacks}: ${info.description}${duration}`;
+        const debuffClass = info.isDebuff ? 'debuff' : 'buff';
+
+        return `
+          <div class="status-effect ${debuffClass}" data-tooltip="${tooltipText}">
+            <span class="status-icon">${info.icon}</span>
+            ${effect.amount > 1 ? `<span class="status-stacks">${effect.amount}</span>` : ''}
+          </div>
+        `;
+      })
+      .join('');
+  }
+
+  private renderVow(vow: Vow | null): string {
+    if (!vow) return '';
+
+    // Get bonus description with amount substituted
+    const bonusTemplate = VOW_BONUS_INFO[vow.bonus.type] || 'Unknown bonus';
+    const bonusDesc = bonusTemplate.replace('{amount}', String(vow.bonus.amount));
+
+    // Get restriction description
+    const restrictionDesc = VOW_RESTRICTION_INFO[vow.restriction.type] || vow.restriction.description;
+
+    // Build charges display
+    const chargesDisplay = vow.charges !== undefined
+      ? ` (${vow.currentCharges ?? vow.charges}/${vow.charges} charges)`
+      : '';
+
+    // Build tooltip content
+    const tooltipText = `${vow.name}${chargesDisplay}\n\nBonus: ${bonusDesc}\nRestriction: ${restrictionDesc}\n\nBreaking this vow triggers a penalty!`;
+
+    return `
+      <div class="vow-badge" data-tooltip="${tooltipText.replace(/"/g, '&quot;')}">
+        <span class="vow-icon">⚔️</span>
+        <span class="vow-name">${vow.name}</span>
+        ${vow.charges !== undefined ? `<span class="vow-charges">${vow.currentCharges ?? vow.charges}</span>` : ''}
+      </div>
+    `;
   }
 
   render(state: CombatState): void {
@@ -101,6 +253,33 @@ export class CombatRenderer {
       .join('');
   }
 
+  private getIntentDescription(intent: CombatState['enemies'][0]['intent']): string {
+    if (!intent) return '';
+
+    switch (intent.intent) {
+      case IntentType.ATTACK:
+        return `Attacks for ${intent.damage} damage`;
+      case IntentType.MULTI_ATTACK:
+        return `Attacks ${intent.times} times for ${intent.damage} damage each (${intent.damage! * intent.times!} total)`;
+      case IntentType.DEFEND:
+        return `Gains ${intent.block} Block`;
+      case IntentType.BUFF:
+        return intent.buffType ? `Buffs self with ${intent.buffType}` : 'Strengthens itself';
+      case IntentType.DEBUFF:
+        return intent.debuffType ? `Applies ${intent.debuffType} to you` : 'Weakens you';
+      case IntentType.CHARGING:
+        return `Charging a powerful attack: ${intent.name}`;
+      case IntentType.COMMAND:
+        return 'Commands all minions to attack';
+      case IntentType.SUMMON:
+        return 'Summons reinforcements';
+      case IntentType.HEAL:
+        return intent.heal ? `Heals for ${intent.heal} HP` : 'Heals itself';
+      default:
+        return 'Unknown intent';
+    }
+  }
+
   private renderArenaEnemies(state: CombatState): void {
     this.elements.enemySlots.innerHTML = state.enemies
       .map((enemy, index) => {
@@ -110,27 +289,30 @@ export class CombatRenderer {
 
         let intentDisplay = '';
         let intentClass = '';
+        let intentDescription = '';
         if (enemy.intent && !isDead) {
+          intentDescription = this.getIntentDescription(enemy.intent);
+
           if (enemy.intent.intent === IntentType.ATTACK) {
             const times = enemy.intent.times ? `x${enemy.intent.times}` : '';
             intentDisplay = `⚔️ ${enemy.intent.damage}${times}`;
           } else if (enemy.intent.intent === IntentType.DEFEND) {
             intentDisplay = `🛡️ ${enemy.intent.block}`;
           } else if (enemy.intent.intent === IntentType.BUFF) {
-            intentDisplay = `⬆️`;
+            intentDisplay = `Buff`;
           } else if (enemy.intent.intent === IntentType.DEBUFF) {
-            intentDisplay = `⬇️`;
+            intentDisplay = `Debuff`;
           } else if (enemy.intent.intent === IntentType.CHARGING) {
-            intentDisplay = `⚡ ${enemy.intent.name}`;
+            intentDisplay = `${enemy.intent.name}`;
             intentClass = 'charging';
           } else if (enemy.intent.intent === IntentType.COMMAND) {
-            intentDisplay = `📢 Command`;
+            intentDisplay = `Command`;
           } else if (enemy.intent.intent === IntentType.SUMMON) {
-            intentDisplay = `👻 Summon`;
+            intentDisplay = `Summon`;
           } else if (enemy.intent.intent === IntentType.MULTI_ATTACK) {
             intentDisplay = `⚔️ ${enemy.intent.damage}x${enemy.intent.times}`;
           } else {
-            intentDisplay = `❓`;
+            intentDisplay = `?`;
           }
         }
 
@@ -139,18 +321,31 @@ export class CombatRenderer {
         const bossClass = isBoss ? 'boss' : '';
         const phaseIndicator = isBoss && enemy.phase > 0 ? `<div class="boss-phase">Phase ${enemy.phase + 1}</div>` : '';
 
+        // Intent tooltip HTML
+        const intentTooltip = intentDescription ? `<div class="intent-tooltip">${intentDescription}</div>` : '';
+
         return `
           <div class="arena-enemy ${isDead ? 'dead' : ''} ${isSelected ? 'selected' : ''} ${bossClass}"
                onclick="selectEnemy(${index})"
                data-enemy-id="${enemy.id}">
             ${phaseIndicator}
-            ${!isDead && enemy.intent ? `<div class="arena-enemy-intent ${intentClass}">${intentDisplay}</div>` : ''}
+            ${!isDead && enemy.intent ? `
+              <div class="arena-enemy-intent-wrapper">
+                <div class="arena-enemy-intent ${intentClass}">${intentDisplay}</div>
+                ${intentTooltip}
+              </div>
+            ` : ''}
             ${enemy.block > 0 ? `<div class="arena-enemy-block">🛡️ ${enemy.block}</div>` : ''}
-            <div class="arena-enemy-name">${isBoss ? '☠️ ' : ''}${enemy.name}</div>
+            <div class="arena-enemy-name">${enemy.name}</div>
             <div class="arena-enemy-hp ${isBoss ? 'boss-hp' : ''}">
               <div class="arena-enemy-hp-fill" style="width: ${hpPercent}%;"></div>
               <div class="arena-enemy-hp-text">${enemy.currentHp}/${enemy.maxHp}</div>
             </div>
+            ${enemy.statusEffects.length > 0 ? `
+              <div class="status-effects-row enemy-statuses">
+                ${this.renderStatusEffects(enemy.statusEffects)}
+              </div>
+            ` : ''}
             <div class="enemy-figure ${isBoss ? 'boss-figure' : ''}"></div>
           </div>
         `;
@@ -160,10 +355,127 @@ export class CombatRenderer {
 
   private renderPlayerStats(state: CombatState): void {
     const player = state.player;
+    // Update main stats area
     this.elements.playerHp.textContent = `${player.currentHp}/${player.maxHp}`;
     this.elements.playerBlock.textContent = `🛡️ ${player.block}`;
     this.elements.playerResolve.textContent = `${player.resolve}/${player.maxResolve}`;
     this.elements.playerDevotion.textContent = String(player.devotion);
+
+    // Update HUD overlay
+    this.elements.hudHp.textContent = `${player.currentHp}/${player.maxHp}`;
+    this.elements.hudBlock.textContent = String(player.block);
+    this.elements.hudResolve.textContent = `${player.resolve}/${player.maxResolve}`;
+    this.elements.hudDevotion.textContent = String(player.devotion);
+
+    // Update player status effects in HUD
+    const hudStatusContainer = document.getElementById('hud-status-effects');
+    if (hudStatusContainer) {
+      if (player.statusEffects.length > 0) {
+        hudStatusContainer.innerHTML = this.renderStatusEffects(player.statusEffects);
+        hudStatusContainer.style.display = 'flex';
+      } else {
+        hudStatusContainer.innerHTML = '';
+        hudStatusContainer.style.display = 'none';
+      }
+    }
+
+    // Update active Vow display in HUD (Oathsworn class)
+    const hudVowContainer = document.getElementById('hud-vow');
+    if (hudVowContainer) {
+      if (player.activeVow) {
+        hudVowContainer.innerHTML = this.renderVow(player.activeVow);
+        hudVowContainer.style.display = 'flex';
+      } else {
+        hudVowContainer.innerHTML = '';
+        hudVowContainer.style.display = 'none';
+      }
+    }
+
+    // Low HP warning effect (below 30%)
+    const hpPercent = player.currentHp / player.maxHp;
+    if (hpPercent <= 0.3) {
+      this.elements.playerHud.classList.add('low-hp');
+    } else {
+      this.elements.playerHud.classList.remove('low-hp');
+    }
+  }
+
+  /**
+   * Calculate damage modifier for attack cards based on active effects
+   */
+  private getDamageModifier(player: PlayerState): { flat: number; isBuffed: boolean; isDebuffed: boolean } {
+    let flat = 0;
+    let isBuffed = false;
+    let isDebuffed = false;
+
+    // Empowered attack bonus (one-time)
+    if (player.empoweredAttack > 0) {
+      flat += player.empoweredAttack;
+      isBuffed = true;
+    }
+
+    // Vow damage bonus (Oathsworn)
+    if (player.activeVow?.bonus.type === VowBonusType.DAMAGE_BOOST) {
+      flat += player.activeVow.bonus.amount;
+      isBuffed = true;
+    }
+
+    // IMPAIRED status (25% damage reduction) - check player status effects
+    const impaired = player.statusEffects.find(e => e.type === StatusType.IMPAIRED);
+    if (impaired) {
+      isDebuffed = true;
+    }
+
+    return { flat, isBuffed, isDebuffed };
+  }
+
+  /**
+   * Generate card description with modified damage values highlighted
+   */
+  private getModifiedCardDescription(card: Card, player: PlayerState): string {
+    const isAttackCard = card.type === CardType.ATTACK;
+    if (!isAttackCard) return card.description;
+
+    const modifier = this.getDamageModifier(player);
+
+    // No modifications? Return original
+    if (modifier.flat === 0 && !modifier.isDebuffed) {
+      return card.description;
+    }
+
+    // Find damage effects and calculate modified values
+    let modifiedDesc = card.description;
+
+    for (const effect of card.effects) {
+      if (effect.type === EffectType.DAMAGE || effect.type === EffectType.DAMAGE_ALL) {
+        const baseDamage = effect.amount;
+        let modifiedDamage = baseDamage + modifier.flat;
+
+        // Apply IMPAIRED reduction (25% less damage)
+        if (modifier.isDebuffed) {
+          modifiedDamage = Math.floor(modifiedDamage * 0.75);
+        }
+
+        // Determine highlight class
+        let highlightClass = '';
+        if (modifiedDamage > baseDamage) {
+          highlightClass = 'damage-buffed';
+        } else if (modifiedDamage < baseDamage) {
+          highlightClass = 'damage-debuffed';
+        }
+
+        if (highlightClass) {
+          // Replace the base damage number with highlighted modified value
+          // Match patterns like "Deal X damage" or "X damage"
+          const damageRegex = new RegExp(`\\b${baseDamage}\\b(?=\\s*damage)`, 'gi');
+          modifiedDesc = modifiedDesc.replace(damageRegex,
+            `<span class="${highlightClass}">${modifiedDamage}</span>`
+          );
+        }
+      }
+    }
+
+    return modifiedDesc;
   }
 
   private renderHand(state: CombatState): void {
@@ -172,6 +484,7 @@ export class CombatRenderer {
       .map((card, index) => {
         const canPlay = card.cost <= player.resolve && !state.gameOver;
         const typeClass = card.type.toLowerCase();
+        const modifiedDescription = this.getModifiedCardDescription(card, player);
 
         return `
           <div class="card ${typeClass} ${!canPlay ? 'unplayable' : ''}"
@@ -181,7 +494,7 @@ export class CombatRenderer {
               <div class="card-cost">${card.cost}</div>
             </div>
             <div class="card-type">${card.type}</div>
-            <div class="card-description">${card.description}</div>
+            <div class="card-description">${modifiedDescription}</div>
           </div>
         `;
       })
@@ -207,14 +520,12 @@ export class CombatRenderer {
     this.elements.combatLog.innerHTML = '';
   }
 
-  showGameOver(victory: boolean, onContinue?: () => void): void {
+  showGameOver(victory: boolean, soulEchoesEarned: number = 0, onContinue?: () => void): void {
     const existing = document.querySelector('.game-over');
     if (existing) existing.remove();
 
     const div = document.createElement('div');
     div.className = `game-over ${victory ? 'victory' : 'defeat'}`;
-
-    const soulEchoesEarned = victory ? 50 : 10;
 
     div.innerHTML = `
       <h2>${victory ? '🎉 VICTORY! 🎉' : '💀 DEFEAT 💀'}</h2>
@@ -224,7 +535,7 @@ export class CombatRenderer {
       <p style="font-size: 0.9em; color: #9b59b6; margin-bottom: 15px;">
         +${soulEchoesEarned} 🔮 Soul Echoes
       </p>
-      <button id="game-over-continue" style="margin-top: 10px;">Return to Menu</button>
+      <button id="game-over-continue" style="margin-top: 10px;">${victory ? 'Continue' : 'Return to Menu'}</button>
     `;
     document.body.appendChild(div);
 

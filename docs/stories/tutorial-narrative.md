@@ -1,6 +1,6 @@
 # Tutorial Narrative: First Contact
 
-## Status: Draft
+## Status: Approved
 
 ## Story
 

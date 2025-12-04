@@ -1,6 +1,6 @@
 # True Ending: The Breaking of the Cycle
 
-## Status: Draft
+## Status: Approved
 
 ## Story
 
