@@ -77,3 +77,91 @@ Weird Meta... if we decide to become the Warden - we could make a Warden class.
 Different color scheme cards for each class!!! (Look at Character-Image-Prompts.txt for color schemes)
 Give a running debug log for dev that tells me (and agents) everything that happens when a card is played or enemy acts.
 Unlock Tier 4 upgrades when finishing the game as a class
+
+
+First fix Heroku error pushing:
+PS C:\Users\C\Sanctum-Deep> git push heroku main
+Enumerating objects: 132, done.
+Counting objects: 100% (131/131), done.
+Delta compression using up to 16 threads
+Compressing objects: 100% (72/72), done.
+Writing objects: 100% (73/73), 13.78 MiB | 3.81 MiB/s, done.
+Total 73 (delta 44), reused 1 (delta 0), pack-reused 0
+remote: Updated 487 paths from d144831
+remote: Compressing source files... done.
+remote: Building source:
+remote: 
+remote: -----> Building on the Heroku-24 stack
+remote: -----> Using buildpack: heroku/nodejs
+remote: -----> Node.js app detected
+remote:        
+remote: -----> Creating runtime environment
+remote:
+remote:        NPM_CONFIG_LOGLEVEL=error
+remote:        NODE_VERBOSE=false
+remote:        NODE_ENV=production
+remote:        NODE_MODULES_CACHE=true
+remote:
+remote: -----> Installing binaries
+remote:        engines.node (package.json):   >=18.0.0
+remote:        engines.npm (package.json):    unspecified (use default)
+remote:
+remote:        Resolving node version >=18.0.0...
+remote:        Downloading and installing node 25.2.1...
+remote:        Validating checksum
+remote:        Using default npm version: 11.6.2
+remote:        
+remote: -----> Restoring cache
+remote:        - npm cache
+remote:        
+remote: -----> Installing dependencies
+remote:        Installing node modules
+remote:        
+remote:        added 126 packages, and audited 127 packages in 1s
+remote:
+remote:        27 packages are looking for funding
+remote:          run `npm fund` for details
+remote:
+remote:        5 moderate severity vulnerabilities
+remote:
+remote:        To address all issues (including breaking changes), run:
+remote:          npm audit fix --force
+remote:
+remote:        Run `npm audit` for details.
+remote:        
+remote: -----> Build
+remote:        Detected both "build" and "heroku-postbuild" scripts
+remote:        Running heroku-postbuild
+remote:        
+remote:        > sanctum-ruins@0.1.0 heroku-postbuild
+remote:        > npm run build
+remote:
+remote:        
+remote:        > sanctum-ruins@0.1.0 build
+remote:        > tsc && vite build
+remote:
+remote:        src/data/enemies/act3-boss.test.ts(518,11): error TS2739: Type '{ classId: CharacterClassId.CLERIC; maxHp: number; currentHp: number; block: number; resolve: number; maxResolve: number; hand: { id: string; instanceId: string; name: string; type: CardType.ATTACK; cost: number; description: string; effects: { ...; }[]; }[]; ... 20 more ...; permanentBlockBonus: number; }' is missing the following properties from type 'PlayerState': upgradeDamageBonus, upgradeBlockBonus
+remote: 
+remote: -----> Build failed
+remote:        
+remote:        We're sorry this build is failing! You can troubleshoot common issues here:
+remote:        https://devcenter.heroku.com/articles/troubleshooting-node-deploys
+remote:
+remote:        Some possible problems:
+remote:
+remote:        - Dangerous semver range (>) in engines.node
+remote:          https://devcenter.heroku.com/articles/nodejs-support#specifying-a-node-js-version
+remote:
+remote:        Love,
+remote:        Heroku
+remote:
+remote:  !     Push rejected, failed to compile Node.js app.
+remote: 
+remote:  !     Push failed
+remote: Verifying deploy...
+remote: 
+remote: !       Push rejected to sanctum-ruins.
+remote:
+To https://git.heroku.com/sanctum-ruins.git
+ ! [remote rejected] main -> main (pre-receive hook declined)
+error: failed to push some refs to 'https://git.heroku.com/sanctum-ruins.git'
