@@ -157,6 +157,11 @@ export class CombatEngine {
     }
   }
 
+  // Public method for drawing cards (e.g., from potions)
+  drawCardsPublic(count: number): void {
+    this.drawCards(count);
+  }
+
   // Combat initialization
   startCombat(): void {
     this.state.player.drawPile = this.shuffle([...this.state.player.drawPile]);
@@ -605,8 +610,12 @@ export class CombatEngine {
         if (this.state.player.activeVow?.restriction.type === VowRestrictionType.NO_BLOCK) {
           this.breakVow('Gained block while under ' + this.state.player.activeVow.name);
         }
-        this.state.player.block += effect.amount;
+        const blockAmount = effect.amount + this.state.player.permanentBlockBonus;
+        this.state.player.block += blockAmount;
         this.emit(CombatEventType.PLAYER_BLOCK_CHANGED, { block: this.state.player.block });
+        if (this.state.player.permanentBlockBonus > 0) {
+          return `Gained ${blockAmount} block (${effect.amount} + ${this.state.player.permanentBlockBonus} bonus)`;
+        }
         return `Gained ${effect.amount} block`;
       }
 
@@ -1066,6 +1075,12 @@ export class CombatEngine {
         this.emit(CombatEventType.PRICE_REMOVED, { allPrices: true });
         this.emit(CombatEventType.PLAYER_RESOLVE_CHANGED, { resolve: this.state.player.resolve, maxResolve: this.state.player.maxResolve });
         return `Removed all ${priceCount} Prices`;
+      }
+
+      case EffectType.PERMANENT_BLOCK_BONUS: {
+        this.state.player.permanentBlockBonus += effect.amount;
+        this.log(`All block from cards permanently increased by ${effect.amount}!`);
+        return `Permanently +${effect.amount} block on all cards`;
       }
 
       default:

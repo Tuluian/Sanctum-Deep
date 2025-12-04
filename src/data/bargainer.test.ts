@@ -42,6 +42,9 @@ function createTestPlayerState(overrides: Partial<PlayerState> = {}): PlayerStat
     favor: 0,
     activePrices: [],
     baseMaxResolve: 3,
+    permanentBlockBonus: 0,
+    upgradeDamageBonus: 0,
+    upgradeBlockBonus: 0,
     ...overrides,
   };
 }
@@ -74,9 +77,9 @@ describe('Story 6.3: Bargainer Class & Favor/Price System', () => {
   });
 
   describe('Bargainer Starter Deck Creation (AC: 1)', () => {
-    it('should create exactly 10 cards total', () => {
+    it('should create exactly 11 cards total', () => {
       const deck = createStarterDeck(CharacterClassId.BARGAINER);
-      expect(deck.length).toBe(10);
+      expect(deck.length).toBe(11);
     });
 
     it('should have 3 Dark Pact cards', () => {

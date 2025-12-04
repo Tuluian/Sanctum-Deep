@@ -494,47 +494,80 @@ export class CombatRenderer {
   }
 
   /**
-   * Generate card description with modified damage values highlighted
+   * Calculate block modifier based on active effects
    */
-  private getModifiedCardDescription(card: Card, player: PlayerState): string {
-    const isAttackCard = card.type === CardType.ATTACK;
-    if (!isAttackCard) return card.description;
+  private getBlockModifier(player: PlayerState): { flat: number; isBuffed: boolean } {
+    let flat = 0;
+    let isBuffed = false;
 
-    const modifier = this.getDamageModifier(player);
-
-    // No modifications? Return original
-    if (modifier.flat === 0 && !modifier.isDebuffed) {
-      return card.description;
+    // Permanent block bonus from cards like Iron Mastery
+    if (player.permanentBlockBonus > 0) {
+      flat += player.permanentBlockBonus;
+      isBuffed = true;
     }
 
-    // Find damage effects and calculate modified values
+    return { flat, isBuffed };
+  }
+
+  /**
+   * Generate card description with modified damage and block values highlighted
+   */
+  private getModifiedCardDescription(card: Card, player: PlayerState): string {
     let modifiedDesc = card.description;
+    const isAttackCard = card.type === CardType.ATTACK;
 
-    for (const effect of card.effects) {
-      if (effect.type === EffectType.DAMAGE || effect.type === EffectType.DAMAGE_ALL) {
-        const baseDamage = effect.amount;
-        let modifiedDamage = baseDamage + modifier.flat;
+    // Handle damage modifications for attack cards
+    if (isAttackCard) {
+      const damageModifier = this.getDamageModifier(player);
 
-        // Apply IMPAIRED reduction (25% less damage)
-        if (modifier.isDebuffed) {
-          modifiedDamage = Math.floor(modifiedDamage * 0.75);
+      if (damageModifier.flat !== 0 || damageModifier.isDebuffed) {
+        for (const effect of card.effects) {
+          if (effect.type === EffectType.DAMAGE || effect.type === EffectType.DAMAGE_ALL) {
+            const baseDamage = effect.amount;
+            let modifiedDamage = baseDamage + damageModifier.flat;
+
+            // Apply IMPAIRED reduction (25% less damage)
+            if (damageModifier.isDebuffed) {
+              modifiedDamage = Math.floor(modifiedDamage * 0.75);
+            }
+
+            // Determine highlight class
+            let highlightClass = '';
+            if (modifiedDamage > baseDamage) {
+              highlightClass = 'damage-buffed';
+            } else if (modifiedDamage < baseDamage) {
+              highlightClass = 'damage-debuffed';
+            }
+
+            if (highlightClass) {
+              // Replace the base damage number with highlighted modified value
+              // Match patterns like "Deal X damage" or "X damage"
+              const damageRegex = new RegExp(`\\b${baseDamage}\\b(?=\\s*damage)`, 'gi');
+              modifiedDesc = modifiedDesc.replace(damageRegex,
+                `<span class="${highlightClass}">${modifiedDamage}</span>`
+              );
+            }
+          }
         }
+      }
+    }
 
-        // Determine highlight class
-        let highlightClass = '';
-        if (modifiedDamage > baseDamage) {
-          highlightClass = 'damage-buffed';
-        } else if (modifiedDamage < baseDamage) {
-          highlightClass = 'damage-debuffed';
-        }
+    // Handle block modifications for any card with block effects
+    const blockModifier = this.getBlockModifier(player);
+    if (blockModifier.flat !== 0) {
+      for (const effect of card.effects) {
+        if (effect.type === EffectType.BLOCK) {
+          const baseBlock = effect.amount;
+          const modifiedBlock = baseBlock + blockModifier.flat;
 
-        if (highlightClass) {
-          // Replace the base damage number with highlighted modified value
-          // Match patterns like "Deal X damage" or "X damage"
-          const damageRegex = new RegExp(`\\b${baseDamage}\\b(?=\\s*damage)`, 'gi');
-          modifiedDesc = modifiedDesc.replace(damageRegex,
-            `<span class="${highlightClass}">${modifiedDamage}</span>`
-          );
+          if (modifiedBlock > baseBlock) {
+            // Replace the base block number with highlighted modified value
+            // Match patterns like "Gain X block" or "X block"
+            const blockRegex = new RegExp(`\\b${baseBlock}\\b(?=\\s*block)`, 'gi');
+            modifiedDesc = modifiedDesc.replace(blockRegex,
+              `<span class="block-buffed">${modifiedBlock}</span>`
+            );
+          }
         }
       }
     }

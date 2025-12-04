@@ -32,9 +32,9 @@ describe('Story 6.1: Celestial Class & Radiance Mechanic', () => {
   });
 
   describe('Celestial Starter Deck Creation (AC: 1)', () => {
-    it('should create exactly 10 cards total', () => {
+    it('should create exactly 11 cards total', () => {
       const deck = createStarterDeck(CharacterClassId.CELESTIAL);
-      expect(deck.length).toBe(10);
+      expect(deck.length).toBe(11);
     });
 
     it('should have 4 Holy Bolt cards', () => {
@@ -180,6 +180,9 @@ describe('Story 6.1: Celestial Class & Radiance Mechanic', () => {
         favor: 0,
         activePrices: [],
         baseMaxResolve: 3,
+        permanentBlockBonus: 0,
+        upgradeDamageBonus: 0,
+        upgradeBlockBonus: 0,
       };
     }
 
@@ -306,6 +309,9 @@ describe('Story 6.1: Celestial Class & Radiance Mechanic', () => {
         favor: 0,
         activePrices: [],
         baseMaxResolve: 3,
+        permanentBlockBonus: 0,
+        upgradeDamageBonus: 0,
+        upgradeBlockBonus: 0,
       };
     }
 

@@ -12,6 +12,7 @@ export const CLASSES: Record<CharacterClassId, CharacterClass> = {
       { cardId: 'shield_of_faith', count: 4 },
       { cardId: 'prayer_of_mending', count: 1 },
       { cardId: 'consecrate', count: 1 },
+      { cardId: 'divine_aegis', count: 1 },
     ],
   },
   [CharacterClassId.DUNGEON_KNIGHT]: {
@@ -23,6 +24,8 @@ export const CLASSES: Record<CharacterClassId, CharacterClass> = {
       { cardId: 'sword_strike', count: 5 },
       { cardId: 'raise_shield', count: 4 },
       { cardId: 'bulwark_stance', count: 1 },
+      { cardId: 'shield_bash', count: 1 },
+      { cardId: 'iron_mastery', count: 1 },
     ],
   },
   [CharacterClassId.DIABOLIST]: {
@@ -35,6 +38,7 @@ export const CLASSES: Record<CharacterClassId, CharacterClass> = {
       { cardId: 'dark_bargain', count: 3 },
       { cardId: 'blood_pact', count: 2 },
       { cardId: 'hellfire', count: 1 },
+      { cardId: 'hellforged_ward', count: 1 },
     ],
   },
   [CharacterClassId.OATHSWORN]: {
@@ -47,6 +51,7 @@ export const CLASSES: Record<CharacterClassId, CharacterClass> = {
       { cardId: 'sacred_shield', count: 3 },
       { cardId: 'oath_of_valor', count: 2 },
       { cardId: 'judgment', count: 1 },
+      { cardId: 'sanctified_bulwark', count: 1 },
     ],
   },
   [CharacterClassId.FEY_TOUCHED]: {
@@ -59,6 +64,7 @@ export const CLASSES: Record<CharacterClassId, CharacterClass> = {
       { cardId: 'glamour', count: 3 },
       { cardId: 'pixies_gift', count: 2 },
       { cardId: 'tricksters_trade', count: 1 },
+      { cardId: 'enchanted_ward', count: 1 },
     ],
   },
   [CharacterClassId.CELESTIAL]: {
@@ -71,6 +77,7 @@ export const CLASSES: Record<CharacterClassId, CharacterClass> = {
       { cardId: 'celestial_shield', count: 3 },
       { cardId: 'blessing', count: 2 },
       { cardId: 'smite_the_wicked_celestial', count: 1 },
+      { cardId: 'heavenly_barrier', count: 1 },
     ],
   },
   [CharacterClassId.SUMMONER]: {
@@ -84,6 +91,7 @@ export const CLASSES: Record<CharacterClassId, CharacterClass> = {
       { cardId: 'shield_minions', count: 2 },
       { cardId: 'rally', count: 1 },
       { cardId: 'soul_link', count: 1 },
+      { cardId: 'spirit_fortress', count: 1 },
     ],
   },
   [CharacterClassId.BARGAINER]: {
@@ -97,6 +105,7 @@ export const CLASSES: Record<CharacterClassId, CharacterClass> = {
       { cardId: 'collect_favor', count: 2 },
       { cardId: 'debt_collector', count: 1 },
       { cardId: 'blood_payment', count: 1 },
+      { cardId: 'infernal_bulwark', count: 1 },
     ],
   },
 };

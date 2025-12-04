@@ -1,3 +1,117 @@
+** Gemini is CRAZY for making enemy vectors!!!! HOWEVER... usage only resets every 24 hours so we have some waiting/payments to do.
+
+-----------------------
+UNIVERSAL STYLE TAG (add this to all prompts)
+
+STYLE BASE (paste start the the BEGINNING, then once at the END of each prompt):
+Full body from head to feet.
+-- PROMPT --
+high-detail vector illustration, bold outer line weight, simplified interior textures, clean game-ready silhouette, bold lines, subtle atmospheric texture, dramatic lighting built into the character only, no background, no floor, transparent background, game-ready asset, consistent art style, melancholy gothic-fantasy tone, Act-1 ‘forgotten pilgrims’ theme, faint hints of who they used to be, elegant but unsettling design
+
+need to finish these creatures for Act 1:
+
+6. Ghoul — “Starved Survivor”
+A twisted, emaciated humanoid ghoul formed from a desperate survivor who devoured others to live. Limbs long and tense, posture feral yet mournful. Mouth stretched but not grotesque—suggestive rather than gory. Remnants of clothing tied around its waist or arms. Eyes dim, unfocused, still searching for help it can no longer understand. STYLE BASE.
+
+7. Bone Archer — “Remnant Scout”
+A skeletal scout with light armor fragments, holding a spectral or bone-reinforced bow. Quiver of cracked arrows strapped across bone ribs. Faint inscriptions carved into the bow hinting at personal messages (“Run while you can”). Skull tilted with longing, like searching for the party they warned. Clean, dynamic silhouette with archer stance. STYLE BASE.
+
+8. Shade — “Memory-Thinned Mage”
+A ghost-thin silhouette of a mage whose body has partially unraveled into translucent shadow. Tattered robes float weightlessly, arcane sigils glitching across them. Hood or hair dissolves into negative space. Hands flicker like they are phasing in and out. Eyes faint pinpoints of sorrowful light. Shape drifting but readable. STYLE BASE.
+
+⭐ 1. Tomb Guardian (Phase-Based Elite)
+A towering skeletal guardian clad in stone-etched burial armor, each phase revealing more cracks and more spirit-light leaking through the joints. Phase 1: fully armored, shield raised. Phase 2: armor splitting, inner ghostfire visible. Phase 3: armor falling away, revealing a radiant skeletal interior engraved with cryptic runes of forgotten duties. Its posture is mournful, as if it doesn’t want to fight. STYLE BASE.
+
+⭐ 2. High Cultist Mira
+A tall, emaciated priestess whose robes flow like ink toward a spiraling void sigil behind her head. Half her face retains the softness of a healer; the other half is smoothed into void geometry. Hands extended, summoning glyphs of the Hollow God. Thin strands of memory-light peel from her body as if being consumed. STYLE BASE.
+
+ACT 1 — BOSS
+⭐ The Bonelord
+A colossal mass of bones fused from countless fallen pilgrims, forming a regal yet monstrous silhouette. Three skulls form the “crown,” each representing a fragment of the knight he once was. Wears remnants of royal armor cracked and melted together across the bone mass. Ghostly blue fire leaks from ribcage cavities, symbolizing the memories he cannot let go of. His stance is heavy, tragic, and ceremonial—like a king defending a throne long forgotten. STYLE BASE.
+
+ACT 2 — COMMON ENEMIES
+⭐ 1. Slime
+A semi-translucent gelatinous mass with faint silhouettes of objects it absorbed—broken weapons, coins, a handprint fading inside it. Soft edges, cute-tragic rather than comedic. STYLE BASE.
+
+⭐ 2. Slimeling
+A smaller, faster-shaped version of the slime with sharper silhouette, tiny drifting lights inside it representing swallowed memories. Slightly aggressive droplet-like shape. STYLE BASE.
+
+⭐ 3. Dark Mage
+A drowned, hollow-eyed caster with robes faded by saltwater and void exposure. One hand clutches a warped spellbook; the other channels dark tendrils shaped like regret. Face partially obscured by wet, matted hair. STYLE BASE.
+
+⭐ 4. Gargoyle
+A stone gargoyle animated by residual Sanctum magic, wings cracked, moss growing along joints. Eyes glow with soft inner sorrow. Pose suggests a guardian who failed centuries ago. STYLE BASE.
+
+⭐ 5. Corrupted Spirit
+A shimmering, half-formed apparition of someone who drowned, their outline flickering between who they were and what they've become. Trails of spectral water flow upward from their form. Fragmented, sorrowful facial features. STYLE BASE.
+
+⭐ 6. Aberration
+A fused, tragic two-headed or two-silhouette creature whose bodies overlap as if pulled through each other. Arms mismatch in size, legs intertwine. Their facial expressions mirror grief and longing, reaching toward each other but unable to separate. Subtle embroidery or jewelry suggesting their former relationship. STYLE BASE.
+
+⭐ 7. Drowned Cultist
+A cultist whose robes cling with water weight, seaweed wrapping their limbs, face pale and waterlogged. One eye normal, the other glossy and dead. Hands raised in silent underwater prayer. STYLE BASE.
+
+⭐ 8. Deep One
+A once-human fisherman with fish-like scaling layered over skin, gills split along the ribs, and barnacles on shoulders. Holds a broken harpoon. Facial features warped but recognizably human—like someone who wanted to save their village. Wet silhouette with curved aquatic lines. STYLE BASE.
+
+ACT 2 — ELITES
+⭐ 1. Voidcaller
+A tall, robed void-worshipper with a floating halo of spiraling runes. Their chest cavity glows with a small localized black hole pulling faint threads of reality inward. Hands outstretched in summoning gesture, calling forth tendrils of grief-void energy. STYLE BASE.
+
+⭐ 2. Void Tendril
+A slim, shadowy tendril-being shaped like stretched sorrow. Long ribbon-like body with no defined head, glowing cracks running along its surface showing emotional fractures. Moves in spirals. STYLE BASE.
+
+⭐ 3. Stone Sentinel
+A massive stone construct with runes carved deeply across chest and arms, lit with dim drowning-blue light. Joints are cracked from centuries underwater. Pose is protective, like it once guarded a king. STYLE BASE.
+
+ACT 2 — BOSS
+⭐ The Drowned King (Trident-wielding)
+A regal, drowned monarch with a broken crown fused to sea-soaked hair. Pale skin marbled with waterlogged veins. He holds a grand trident carved with symbols of Thalassar’s lost kingdom. Armor is ornate but rusted, encrusted with barnacles and coral. His expression flickers between stern kingly pride and crushing grief. Behind him, faint water sigils spiral upward like rising tides of memory. STYLE BASE.
+
+ACT 3 — COMMON ENEMIES
+⭐ 1. Imp (Gleeful Void-Demons)
+A small, twisted imp with angular limbs, manic grin, and tiny ember-like eyes. Its body is wiry and charred as though burnt by void energy, with little horns curling backward. Wings made of tattered shadow, fluttering like torn pages from forgotten memories. Gleeful, mischievous, delighted by destruction. STYLE BASE.
+
+⭐ 2. Corrupted Angel
+A once-radiant angelic being whose wings are now split between feathers and dripping void strands. Face smooth on one side; the other distorted as if erased. Armor cracked open, leaking soft light that flickers like a dying candle. Halo fractured into segments orbiting chaotically. Pose expresses grief, not rage—an emissary betrayed by its own purpose. STYLE BASE.
+
+⭐ 3. Void Spawn
+A floating, amorphous creature shaped like a warped silhouette of a person you almost recognize. Its form tears inward toward a small gravity point—a memory-core that devours identity. Edges glitch, ripple, or blur like corrupted data. Eyes absent; face half-suggested. Trails of stolen memories spiral off its body in faint glowing ribbons. STYLE BASE.
+
+⭐ 4. Sanctum Guardian
+A majestic but unsettling guardian construct carved from white stone and living crystal. Joints glow with Warden-light. Helmet has no face, only a vertical slit that emits a soft pulse. Its posture is noble, designed to protect—but cracks across the armor show a long struggle against the Hollow God’s corruption. Silhouette imposing, like a fallen paladin-statue made animate. STYLE BASE.
+
+⭐ 5. Soul Fragment
+A fragile, humanoid outline formed of splintered soul-light, like shattered stained glass barely holding together. Limbs taper into drifting shards, as if the person is desperately trying to remember how to exist. Their face is soft and blurred, flickering with lost expressions. Barely hostile—more like a plea for wholeness. STYLE BASE.
+
+⭐ 6. Infernal Hound
+A multi-headed infernal hound forged from void-fire and cracked obsidian plates. Three heads, each with different emotional expressions (rage, sorrow, hunger). Flames leak between the plates like molten memory. Tail ends in splintered bone spikes. Stance low and predatory but shaped like a creature that was once loyal to something. STYLE BASE.
+
+ACT 3 — ELITES
+⭐ 1. Greater Demon
+A towering archdemon with elongated horns shaped like branching roots of a dying world. Muscular but lean, skin etched with runes that pulse with void-light. Wings torn into jagged membranes. Mouth full of too many teeth forming spirals. Chains of broken contracts or vows dangle from wrists. Stands like a fallen general leading the last horrors of the Sanctum. STYLE BASE.
+
+⭐ 2. Sanctum Warden
+A spectral knight-templar who appears as if carved from luminous crystal and cracked metal, representing a former Warden’s protective echo. Their armor is ornate but fractured, inner light spilling like sand from the cracks. Face hidden by a ceremonial helm engraved with forgotten names. Sword or spear made of hardened Warden-light. Their stance is unyielding, tragic, and noble—guarding the path to the Hollow God. STYLE BASE.
+
+Act 3 - "Shadow Self"
+Prompt:
+A humanoid silhouette identical to the player's shape but rendered entirely in inverted colors and void-corrupted texture: translucent shadow body, hollow glowing eyes, glitching edges, spine bending unnaturally, subtle mirror of player's gear but simplified and distorted. Clean vector silhouette, no background.
+
+ACT 3 — BOSS
+⭐ The Hollow God
+A towering, abstract figure shaped like the outline of a god but hollow inside—its entire body defined by absence. The silhouette is majestic, elegant, and terrifying: long limbs, regal stature, a presence carved from negative space. Inside the hollow form, threads of stolen memories swirl like pale ribbons, orbiting a singularity where a heart should be. The edges of the figure glitch, blur, and tear like corrupted data or unraveling consciousness. Its face is a smooth, vacant mask with faint, shifting impressions of dozens of half-remembered expressions flickering beneath it. A fractured crown made of broken identity shards orbits its head in jagged, uneven arcs. In its chest, a swirling void-core pulls inward, absorbing color and light. Thin tendrils of darkness drip downward like melted shadow, unraveling into nothing. Its posture is both regal and pitiful—reaching for identity but unable to grasp it. Composition emphasizes clean bold silhouette, high-detail interior textures, gothic-cosmic tragedy, memory-loss motifs, no background, transparent, vector illustration, game-ready boss art.
+
+Hollow God Phase 2 --
+Body more distorted, void-core brighter, identity shards swirling aggressively, limbs elongated, mask splitting into many shifting expressions.
+
+Phase 3 -- 
+Silhouette breaking apart into jagged negative-space fragments, void-core enormous and unstable, crown shattered into dozens of orbiting shards, posture desperate and reaching outward.
+
+ACT 3 - SANCTUM CORE (arena)
+A vast crystalline chamber lined with petrified Wardens encased in shimmering soul-crystal, each with engraved regrets. At the center is an empty formation of light—a space where the Hollow God “sits,” but nothing occupies it. Reality bends softly around the emptiness, subtle cracks of light forming spirals around the void. Vector, transparent, symbolic not literal.
+
+===================================================
 1. CLERIC
 
   The Divine Healer

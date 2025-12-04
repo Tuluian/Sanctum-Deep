@@ -360,6 +360,21 @@ export const CLERIC_RARE_CARDS: Record<string, CardDefinition> = {
   },
 };
 
+// Starter Block Bonus Card
+export const CLERIC_BLOCK_BONUS_CARD: Record<string, CardDefinition> = {
+  divine_aegis: {
+    id: 'divine_aegis',
+    name: 'Divine Aegis',
+    type: CardType.POWER,
+    cost: 2,
+    description: 'Permanently increase all block from cards by 1. Exhaust.',
+    effects: [{ type: EffectType.PERMANENT_BLOCK_BONUS, amount: 1 }],
+    rarity: CardRarity.STARTER,
+    classId: CharacterClassId.CLERIC,
+    exhaust: true,
+  },
+};
+
 // Combined card pool (excludes starters for rewards)
 export const CLERIC_REWARD_POOL: CardDefinition[] = [
   ...Object.values(CLERIC_COMMON_CARDS),
@@ -370,6 +385,7 @@ export const CLERIC_REWARD_POOL: CardDefinition[] = [
 // All Cleric cards including starters
 export const CLERIC_CARDS: Record<string, CardDefinition> = {
   ...CLERIC_STARTER_CARDS,
+  ...CLERIC_BLOCK_BONUS_CARD,
   ...CLERIC_COMMON_CARDS,
   ...CLERIC_UNCOMMON_CARDS,
   ...CLERIC_RARE_CARDS,

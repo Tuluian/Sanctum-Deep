@@ -78,6 +78,21 @@ export const BARGAINER_CURSES: Record<string, CardDefinition> = {
   demonic_debt: DEMONIC_DEBT,
 };
 
+// Starter Block Bonus Card
+export const BARGAINER_BLOCK_BONUS_CARD: Record<string, CardDefinition> = {
+  infernal_bulwark: {
+    id: 'infernal_bulwark',
+    name: 'Infernal Bulwark',
+    type: CardType.POWER,
+    cost: 2,
+    description: 'Permanently increase all block from cards by 1. Exhaust.',
+    effects: [{ type: EffectType.PERMANENT_BLOCK_BONUS, amount: 1 }],
+    rarity: CardRarity.STARTER,
+    classId: CharacterClassId.BARGAINER,
+    exhaust: true,
+  },
+};
+
 // Combined card pool (excludes starters for rewards - to be expanded later)
 export const BARGAINER_REWARD_POOL: CardDefinition[] = [];
 
@@ -85,4 +100,5 @@ export const BARGAINER_REWARD_POOL: CardDefinition[] = [];
 export const BARGAINER_CARDS: Record<string, CardDefinition> = {
   ...BARGAINER_STARTER_CARDS,
   ...BARGAINER_CURSES,
+  ...BARGAINER_BLOCK_BONUS_CARD,
 };

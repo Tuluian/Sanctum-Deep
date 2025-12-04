@@ -53,6 +53,9 @@ function createDiabolistPlayerState(overrides: Partial<PlayerState> = {}): Playe
     favor: 0,
     activePrices: [],
     baseMaxResolve: diabolistClass.maxResolve,
+    permanentBlockBonus: 0,
+    upgradeDamageBonus: 0,
+    upgradeBlockBonus: 0,
     ...overrides,
   };
 }
@@ -89,11 +92,11 @@ function createMockEnemyDefinition(overrides: Partial<EnemyDefinition> = {}): En
 describe('Story 3.4: Diabolist Card Pool', () => {
   // AC 1: Diabolist has 32 total cards
   describe('AC 1: Card Count', () => {
-    it('should have 32 total unique cards (4 starter + 28 obtainable)', () => {
-      // 4 starter + 4 curses + 16 common + 9 uncommon + 3 rare = 36 total definitions
-      // But starter deck is 10 cards using 4 unique definitions
+    it('should have 33 total unique cards (5 starter + 28 obtainable)', () => {
+      // 4 starter + 1 block bonus + 4 curses + 16 common + 9 uncommon + 3 rare = 37 total definitions
+      // But starter deck is 11 cards using 5 unique definitions
       const totalCards = Object.keys(DIABOLIST_CARDS).length;
-      expect(totalCards).toBe(36); // Includes curses
+      expect(totalCards).toBe(37); // Includes curses
 
       // Reward pool should have 28 obtainable cards (16 common + 9 uncommon + 3 rare)
       expect(DIABOLIST_REWARD_POOL.length).toBe(28);

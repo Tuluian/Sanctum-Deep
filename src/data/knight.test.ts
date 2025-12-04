@@ -43,6 +43,9 @@ function createKnightPlayerState(overrides: Partial<PlayerState> = {}): PlayerSt
     favor: 0,
     activePrices: [],
     baseMaxResolve: knightClass.maxResolve,
+    permanentBlockBonus: 0,
+    upgradeDamageBonus: 0,
+    upgradeBlockBonus: 0,
     ...overrides,
   };
 }
@@ -94,9 +97,9 @@ describe('Story 2.1: Dungeon Knight Class & Fortify Mechanic', () => {
   });
 
   describe('Knight Starter Deck (AC: 1)', () => {
-    it('should create exactly 10 cards total', () => {
+    it('should create exactly 12 cards total', () => {
       const deck = createStarterDeck(CharacterClassId.DUNGEON_KNIGHT);
-      expect(deck.length).toBe(10);
+      expect(deck.length).toBe(12);
     });
 
     it('should have 5 Sword Strike cards', () => {

@@ -31,9 +31,9 @@ describe('Story 1.3: Cleric Starter Deck & Devotion', () => {
   });
 
   describe('Cleric Starter Deck Creation (AC: 1)', () => {
-    it('should create exactly 10 cards total', () => {
+    it('should create exactly 11 cards total', () => {
       const deck = createStarterDeck(CharacterClassId.CLERIC);
-      expect(deck.length).toBe(10);
+      expect(deck.length).toBe(11);
     });
 
     it('should have 4 Smite cards', () => {

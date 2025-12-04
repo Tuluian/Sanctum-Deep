@@ -444,9 +444,25 @@ export const OATHSWORN_RARE_CARDS: Record<string, CardDefinition> = {
   },
 };
 
+// Starter Block Bonus Card
+export const OATHSWORN_BLOCK_BONUS_CARD: Record<string, CardDefinition> = {
+  sanctified_bulwark: {
+    id: 'sanctified_bulwark',
+    name: 'Sanctified Bulwark',
+    type: CardType.POWER,
+    cost: 2,
+    description: 'Permanently increase all block from cards by 1. Exhaust.',
+    effects: [{ type: EffectType.PERMANENT_BLOCK_BONUS, amount: 1 }],
+    rarity: CardRarity.STARTER,
+    classId: CharacterClassId.OATHSWORN,
+    exhaust: true,
+  },
+};
+
 // All Oathsworn cards including starters
 export const OATHSWORN_CARDS: Record<string, CardDefinition> = {
   ...OATHSWORN_STARTER_CARDS,
+  ...OATHSWORN_BLOCK_BONUS_CARD,
   ...OATHSWORN_COMMON_CARDS,
   ...OATHSWORN_UNCOMMON_CARDS,
   ...OATHSWORN_RARE_CARDS,

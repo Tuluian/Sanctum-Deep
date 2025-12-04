@@ -167,6 +167,9 @@ describe('Hollow God Combat Mechanics', () => {
       favor: 0,
       activePrices: [],
       baseMaxResolve: 3,
+      permanentBlockBonus: 0,
+      upgradeDamageBonus: 0,
+      upgradeBlockBonus: 0,
     };
 
     engine = new CombatEngine(player, [HOLLOW_GOD]);
@@ -380,6 +383,9 @@ describe('Chomp Timer', () => {
       favor: 0,
       activePrices: [],
       baseMaxResolve: 3,
+      permanentBlockBonus: 0,
+      upgradeDamageBonus: 0,
+      upgradeBlockBonus: 0,
     };
   });
 
@@ -547,6 +553,7 @@ describe('Shadow Self Death Healing', () => {
       favor: 0,
       activePrices: [],
       baseMaxResolve: 3,
+      permanentBlockBonus: 0,
     };
 
     const engine = new CombatEngine(player, [SHADOW_SELF]);

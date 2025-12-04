@@ -20,8 +20,9 @@ import { HOLLOW_GOD, SHADOW_SELF } from '@/data/enemies/act3-boss';
 import { ACT3_ELITE_ENEMIES } from '@/data/enemies/act3-elites';
 import { ACT3_ENEMIES } from '@/data/enemies/act3';
 import { generateFloor } from '@/map/MapGenerator';
-import { CardType, CharacterClassId, CombatEventType, PlayerState, FloorMap, MapNode, NodeType, EnemyDefinition } from '@/types';
+import { CardType, CharacterClassId, CombatEventType, PlayerState, FloorMap, MapNode, NodeType, EnemyDefinition, StatusType } from '@/types';
 import { NarrativeEvent, NarrativeChoice } from '@/types/narrativeEvents';
+import { getPotion } from '@/data/potions';
 import './styles/main.css';
 
 // Extended map screen type with custom methods
@@ -304,6 +305,9 @@ class Game {
         favor: 0,
         activePrices: [],
         baseMaxResolve: 3,
+        permanentBlockBonus: 0,
+        upgradeDamageBonus: 0,
+        upgradeBlockBonus: 0,
       };
 
       const rewardDescriptions = this.narrativeService.applyRewardsToPlayer(
@@ -401,6 +405,9 @@ class Game {
       favor: 0,
       activePrices: [],
       baseMaxResolve: 3,
+      permanentBlockBonus: 0,
+      upgradeDamageBonus: 0,
+      upgradeBlockBonus: 0,
     };
 
     const nodeType = this.currentNode?.type === NodeType.COMBAT ? 'combat'
@@ -456,6 +463,9 @@ class Game {
       favor: 0,
       activePrices: [],
       baseMaxResolve: 3,
+      permanentBlockBonus: 0,
+      upgradeDamageBonus: 0,
+      upgradeBlockBonus: 0,
     };
 
     const nodeType = this.currentNode?.type === NodeType.COMBAT ? 'combat'
@@ -503,8 +513,8 @@ class Game {
     this.currentFloor = generateFloor(1, mapSeed);
     const startNodeId = this.currentFloor.rows[0][0].id;
 
-    // Save the new run with modified max HP
-    SaveManager.startNewRun(classId, maxHp, mapSeed, startNodeId);
+    // Save the new run with modified max HP and starting potions
+    SaveManager.startNewRun(classId, maxHp, mapSeed, startNodeId, this.runModifiers.startingPotions);
 
     // Initialize narrative service for this run
     this.narrativeService = initNarrativeEventService(classId, mapSeed);
@@ -605,6 +615,9 @@ class Game {
       favor: 0,
       activePrices: [],
       baseMaxResolve: characterClass.maxResolve,
+      permanentBlockBonus: 0,
+      upgradeDamageBonus: 0,
+      upgradeBlockBonus: 0,
     };
 
     // Apply upgrade modifiers for combat start
@@ -943,6 +956,7 @@ class Game {
   private render(): void {
     if (!this.combat) return;
     this.renderer.render(this.combat.getState());
+    this.renderPotions();
 
     // Update save with current HP
     if (this.currentClassId) {
@@ -951,6 +965,120 @@ class Game {
         playerHp: state.player.currentHp,
         playerMaxHp: state.player.maxHp,
       });
+    }
+  }
+
+  // ===========================================================================
+  // POTION SYSTEM
+  // ===========================================================================
+
+  private renderPotions(): void {
+    const potionSlots = document.getElementById('potion-slots');
+    if (!potionSlots) return;
+
+    const potions = SaveManager.getPotions();
+
+    if (potions.length === 0) {
+      potionSlots.innerHTML = '';
+      return;
+    }
+
+    potionSlots.innerHTML = potions
+      .map((slot) => {
+        const potion = getPotion(slot.potionId);
+        if (!potion) return '';
+        return `
+          <button class="potion-btn" data-potion-id="${slot.potionId}" data-tooltip="${potion.name}: ${potion.description}">
+            <span class="potion-icon">${potion.icon}</span>
+            ${slot.count > 1 ? `<span class="potion-count">${slot.count}</span>` : ''}
+          </button>
+        `;
+      })
+      .join('');
+
+    // Attach click handlers
+    potionSlots.querySelectorAll('.potion-btn').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        const potionId = (e.currentTarget as HTMLElement).dataset.potionId;
+        if (potionId) {
+          this.usePotion(potionId);
+        }
+      });
+    });
+  }
+
+  private usePotion(potionId: string): void {
+    if (!this.combat || this.combat.isGameOver()) return;
+
+    const potion = getPotion(potionId);
+    if (!potion) return;
+
+    // Check if potion can be used
+    if (!SaveManager.usePotion(potionId)) {
+      this.renderer.addLog('No potions remaining!', true);
+      return;
+    }
+
+    // Apply potion effect
+    const state = this.combat.getState();
+    const effect = potion.effect;
+
+    AudioManager.playSfx('spell');
+
+    switch (effect.type) {
+      case 'heal': {
+        const oldHp = state.player.currentHp;
+        state.player.currentHp = Math.min(state.player.maxHp, state.player.currentHp + effect.amount);
+        const healed = state.player.currentHp - oldHp;
+        this.renderer.addLog(`Used ${potion.name}: Healed ${healed} HP`);
+        break;
+      }
+      case 'block': {
+        state.player.block += effect.amount;
+        this.renderer.addLog(`Used ${potion.name}: Gained ${effect.amount} Block`);
+        break;
+      }
+      case 'damage_all': {
+        let totalDamage = 0;
+        for (const enemy of state.enemies) {
+          if (enemy.currentHp > 0) {
+            const dmg = Math.min(enemy.currentHp, effect.amount);
+            enemy.currentHp -= dmg;
+            totalDamage += dmg;
+          }
+        }
+        this.renderer.addLog(`Used ${potion.name}: Dealt ${totalDamage} damage to all enemies`);
+        break;
+      }
+      case 'draw': {
+        this.combat.drawCardsPublic(effect.amount);
+        this.renderer.addLog(`Used ${potion.name}: Drew ${effect.amount} cards`);
+        break;
+      }
+      case 'resolve': {
+        state.player.resolve += effect.amount;
+        this.renderer.addLog(`Used ${potion.name}: Gained ${effect.amount} Resolve`);
+        break;
+      }
+      case 'apply_status': {
+        if (effect.target === 'self') {
+          const existing = state.player.statusEffects.find(s => s.type === effect.status);
+          if (existing) {
+            existing.amount += effect.amount;
+          } else {
+            state.player.statusEffects.push({ type: effect.status, amount: effect.amount });
+          }
+          this.renderer.addLog(`Used ${potion.name}: Gained ${effect.amount} ${StatusType[effect.status]}`);
+        }
+        break;
+      }
+    }
+
+    this.render();
+
+    // Check for combat end after potion use (damage potions might kill enemies)
+    if (this.combat.isGameOver()) {
+      this.handleCombatEnd();
     }
   }
 
@@ -996,6 +1124,9 @@ class Game {
       favor: 0,
       activePrices: [],
       baseMaxResolve: characterClass.maxResolve,
+      permanentBlockBonus: 0,
+      upgradeDamageBonus: 0,
+      upgradeBlockBonus: 0,
     };
 
     // Get enemies based on type
@@ -1160,6 +1291,19 @@ document.addEventListener('DOMContentLoaded', () => {
   (window as unknown as Record<string, unknown>).debugDamageEnemy = (amount: number) => game.debugDamageEnemy(amount);
   (window as unknown as Record<string, unknown>).debugHealPlayer = (amount: number) => game.debugHealPlayer(amount);
   (window as unknown as Record<string, unknown>).debugGetCombat = () => game.debugGetCombat();
+  (window as unknown as Record<string, unknown>).giveSoulEchoes = (amount: number = 1000) => {
+    SaveManager.addSoulEchoes(amount);
+    console.log(`Added ${amount} Soul Echoes. Total: ${SaveManager.getSoulEchoes()}`);
+  };
+  (window as unknown as Record<string, unknown>).givePotion = (potionId: string = 'health_potion') => {
+    const potion = getPotion(potionId);
+    if (!potion) {
+      console.log(`Unknown potion: ${potionId}. Available: health_potion, block_potion, fire_potion, swift_potion, energy_potion, might_potion, elixir_of_life`);
+      return;
+    }
+    SaveManager.addPotion(potionId);
+    console.log(`Added ${potion.name}. Potions: ${JSON.stringify(SaveManager.getPotions())}`);
+  };
 
   console.log('Debug commands available:');
   console.log('  window.debugCombat("hollow_god")       - Fight the Hollow God');
@@ -1169,4 +1313,7 @@ document.addEventListener('DOMContentLoaded', () => {
   console.log('  window.debugStopChomp()               - Stop the Chomp Timer');
   console.log('  window.debugDamageEnemy(100)          - Deal damage to enemy');
   console.log('  window.debugHealPlayer(50)            - Heal the player');
+  console.log('  window.giveSoulEchoes(1000)           - Give Soul Echoes for testing');
+  console.log('  window.givePotion("health_potion")    - Give a potion for testing');
 });
+

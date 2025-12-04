@@ -2,7 +2,7 @@
  * SaveManager - Handles game save/load to localStorage
  */
 
-import { CharacterClassId } from '@/types';
+import { CharacterClassId, PotionSlot } from '@/types';
 
 export const SAVE_VERSION = 1;
 const STORAGE_KEY = 'sanctum_ruins_save';
@@ -43,6 +43,8 @@ export interface RunSaveData {
   currentNodeId: string;
   visitedNodeIds: string[];
   inCombat: boolean; // True if player is mid-combat (reload should return to map)
+  // Potions
+  potions: PotionSlot[];
 }
 
 export interface SaveData {
@@ -190,7 +192,7 @@ class SaveManagerClass {
     return this.saveData.run ? { ...this.saveData.run } : null;
   }
 
-  startNewRun(classId: CharacterClassId, maxHp: number, mapSeed: string, startNodeId: string): void {
+  startNewRun(classId: CharacterClassId, maxHp: number, mapSeed: string, startNodeId: string, startingPotions: PotionSlot[] = []): void {
     this.saveData.run = {
       classId,
       currentAct: 1,
@@ -202,9 +204,38 @@ class SaveManagerClass {
       currentNodeId: startNodeId,
       visitedNodeIds: [],
       inCombat: false,
+      potions: startingPotions,
     };
     this.saveData.meta.statistics.totalRuns++;
     this.saveNow();
+  }
+
+  // Potion management
+  addPotion(potionId: string): void {
+    if (!this.saveData.run) return;
+    const existing = this.saveData.run.potions.find(p => p.potionId === potionId);
+    if (existing) {
+      existing.count++;
+    } else {
+      this.saveData.run.potions.push({ potionId, count: 1 });
+    }
+    this.saveNow();
+  }
+
+  usePotion(potionId: string): boolean {
+    if (!this.saveData.run) return false;
+    const existing = this.saveData.run.potions.find(p => p.potionId === potionId);
+    if (!existing || existing.count <= 0) return false;
+    existing.count--;
+    if (existing.count <= 0) {
+      this.saveData.run.potions = this.saveData.run.potions.filter(p => p.potionId !== potionId);
+    }
+    this.saveNow();
+    return true;
+  }
+
+  getPotions(): PotionSlot[] {
+    return this.saveData.run?.potions ?? [];
   }
 
   setInCombat(inCombat: boolean): void {

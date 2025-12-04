@@ -32,9 +32,9 @@ describe('Story 6.2: Summoner Class & Minion System', () => {
   });
 
   describe('Summoner Starter Deck Creation (AC: 1)', () => {
-    it('should create exactly 10 cards total', () => {
+    it('should create exactly 11 cards total', () => {
       const deck = createStarterDeck(CharacterClassId.SUMMONER);
-      expect(deck.length).toBe(10);
+      expect(deck.length).toBe(11);
     });
 
     it('should have 3 Spirit Bolt cards', () => {
@@ -199,6 +199,9 @@ describe('Story 6.2: Summoner Class & Minion System', () => {
         favor: 0,
         activePrices: [],
         baseMaxResolve: 3,
+        permanentBlockBonus: 0,
+        upgradeDamageBonus: 0,
+        upgradeBlockBonus: 0,
       };
     }
 

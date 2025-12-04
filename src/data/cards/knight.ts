@@ -359,6 +359,21 @@ export const KNIGHT_RARE_CARDS: Record<string, CardDefinition> = {
   },
 };
 
+// Starter Block Bonus Card
+export const KNIGHT_BLOCK_BONUS_CARD: Record<string, CardDefinition> = {
+  iron_mastery: {
+    id: 'iron_mastery',
+    name: 'Iron Mastery',
+    type: CardType.POWER,
+    cost: 2,
+    description: 'Permanently increase all block from cards by 1. Exhaust.',
+    effects: [{ type: EffectType.PERMANENT_BLOCK_BONUS, amount: 1 }],
+    rarity: CardRarity.STARTER,
+    classId: CharacterClassId.DUNGEON_KNIGHT,
+    exhaust: true,
+  },
+};
+
 // Combined card pool (excludes starters for rewards)
 export const KNIGHT_REWARD_POOL: CardDefinition[] = [
   ...Object.values(KNIGHT_COMMON_CARDS),
@@ -369,6 +384,7 @@ export const KNIGHT_REWARD_POOL: CardDefinition[] = [
 // All Knight cards including starters
 export const KNIGHT_CARDS: Record<string, CardDefinition> = {
   ...KNIGHT_STARTER_CARDS,
+  ...KNIGHT_BLOCK_BONUS_CARD,
   ...KNIGHT_COMMON_CARDS,
   ...KNIGHT_UNCOMMON_CARDS,
   ...KNIGHT_RARE_CARDS,

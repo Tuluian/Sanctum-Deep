@@ -43,6 +43,9 @@ function createFeyTouchedPlayerState(overrides: Partial<PlayerState> = {}): Play
     favor: 0,
     activePrices: [],
     baseMaxResolve: feyTouchedClass.maxResolve,
+    permanentBlockBonus: 0,
+    upgradeDamageBonus: 0,
+    upgradeBlockBonus: 0,
     ...overrides,
   };
 }
@@ -95,9 +98,9 @@ describe('Story 3.3: Fey-Touched Class', () => {
 
   // AC 3: Starter deck composition
   describe('AC 3: Starter Deck', () => {
-    it('should have 10 cards in starter deck', () => {
+    it('should have 11 cards in starter deck', () => {
       const deck = createStarterDeck(CharacterClassId.FEY_TOUCHED);
-      expect(deck.length).toBe(10);
+      expect(deck.length).toBe(11);
     });
 
     it('should have 4x Fey Bolt', () => {

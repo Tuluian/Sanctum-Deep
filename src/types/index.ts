@@ -70,6 +70,8 @@ export enum EffectType {
   GAIN_FAVOR = 'GAIN_FAVOR', // Gain Favor resource
   DAMAGE_PER_PRICE = 'DAMAGE_PER_PRICE', // Deal damage per active Price × multiplier
   REMOVE_ALL_PRICES = 'REMOVE_ALL_PRICES', // Remove all active Prices
+  // Permanent upgrade effects
+  PERMANENT_BLOCK_BONUS = 'PERMANENT_BLOCK_BONUS', // Permanently increase all block from cards by X
 }
 
 export enum CardRarity {
@@ -309,6 +311,11 @@ export interface PlayerState {
   favor: number; // 0-10, spent to remove Prices
   activePrices: Price[]; // Currently active Prices
   baseMaxResolve: number; // Original max Resolve (before RESOLVE_TAX)
+  // Permanent bonuses
+  permanentBlockBonus: number; // Bonus block added to all block-granting cards (from cards like Iron Mastery)
+  // Upgrade bonuses (from Soul Echo purchases)
+  upgradeDamageBonus: number; // +damage on all attacks (from Sharp Blades upgrade)
+  upgradeBlockBonus: number; // +block on all block cards (from Thick Skin upgrade)
 }
 
 // Oathsworn Vow Types
@@ -628,4 +635,33 @@ export interface MetaProgressionState {
   purchasedUpgrades: string[];
   totalSoulEchoesSpent: number;
   totalSoulEchoesEarned: number;
+}
+
+// Potion Types
+export enum PotionRarity {
+  COMMON = 'common',
+  UNCOMMON = 'uncommon',
+  RARE = 'rare',
+}
+
+export interface PotionDefinition {
+  id: string;
+  name: string;
+  description: string;
+  rarity: PotionRarity;
+  icon: string;
+  effect: PotionEffect;
+}
+
+export type PotionEffect =
+  | { type: 'heal'; amount: number }
+  | { type: 'block'; amount: number }
+  | { type: 'damage_all'; amount: number }
+  | { type: 'draw'; amount: number }
+  | { type: 'resolve'; amount: number }
+  | { type: 'apply_status'; status: StatusType; amount: number; target: 'self' | 'enemy' | 'all_enemies' };
+
+export interface PotionSlot {
+  potionId: string;
+  count: number;
 }

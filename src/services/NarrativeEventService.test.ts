@@ -37,6 +37,9 @@ function createTestPlayer(overrides: Partial<PlayerState> = {}): PlayerState {
     favor: 0,
     activePrices: [],
     baseMaxResolve: 3,
+    permanentBlockBonus: 0,
+    upgradeDamageBonus: 0,
+    upgradeBlockBonus: 0,
     ...overrides,
   };
 }

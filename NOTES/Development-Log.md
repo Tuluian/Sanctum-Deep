@@ -4,3 +4,5 @@
 # 12/4/2025: Incredible progress while working. Usage resets in 40 minutes, waiting during Advance IT.
   # New classes, Acts 2 and 3. 8 minutessssss until usage reset!! So impatient lol.
   # Class images, menu image, tons and tons of new narrative.
+  # Added Upgrades Shop (needs lots of testing), added favicon, added new cards
+  # On class select, players should click on a character and in the pop-up for "Begin Descent", we should also come up with a more in-depth look at the character with initial narrative and a Back button.

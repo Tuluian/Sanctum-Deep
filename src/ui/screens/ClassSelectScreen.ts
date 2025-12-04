@@ -5,6 +5,7 @@
 import { Screen } from '../ScreenManager';
 import { CharacterClassId } from '@/types';
 import { CLASSES } from '@/data/classes';
+import { CLASS_NARRATIVES } from '@/data/classNarratives';
 
 export interface ClassSelectCallbacks {
   onBack: () => void;
@@ -69,6 +70,67 @@ export function createClassSelectScreen(callbacks: ClassSelectCallbacks): Screen
   element.className = 'screen';
 
   let selectedClass: CharacterClassId | null = null;
+  let showingDetailPopup: CharacterClassId | null = null;
+
+  const renderDetailPopup = (classId: CharacterClassId): string => {
+    const cls = CLASSES[classId];
+    const narrative = CLASS_NARRATIVES[classId];
+    const info = CLASS_DESCRIPTIONS[classId];
+    const classImage = getClassImage(classId);
+
+    return `
+      <div class="class-detail-overlay" id="class-detail-overlay">
+        <div class="class-detail-popup">
+          <div class="class-detail-header">
+            <div class="class-detail-portrait">
+              ${classImage
+                ? `<img src="${classImage}" alt="${cls.name}" class="class-detail-img" />`
+                : `<div class="class-detail-icon">${getClassIcon(classId)}</div>`
+              }
+            </div>
+            <div class="class-detail-title">
+              <h2>${narrative.name}</h2>
+              <span class="class-detail-epithet">${narrative.title}</span>
+              <div class="class-detail-stats">
+                <span>❤️ ${cls.maxHp} HP</span>
+                <span>⚡ ${cls.maxResolve} Resolve</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="class-detail-content">
+            <div class="class-detail-hook">
+              <em>"${narrative.hook}"</em>
+            </div>
+
+            <div class="class-detail-section class-detail-mechanic">
+              <h3>Playstyle</h3>
+              <p class="mechanic-summary">${info.desc}</p>
+              <div class="mechanic-detail">
+                <strong>${info.mechanic.split(':')[0]}:</strong>
+                <span>${info.mechanic.split(':')[1] || ''}</span>
+              </div>
+              <p class="mechanic-tooltip-text">${info.tooltip}</p>
+            </div>
+
+            <div class="class-detail-section">
+              <h3>Background</h3>
+              <div class="class-detail-backstory">
+                ${narrative.backstory.split('\n\n').map(p => `<p>${p}</p>`).join('')}
+                <p>${narrative.motivation}</p>
+              </div>
+              <blockquote class="class-detail-quote-inline">${narrative.quote}</blockquote>
+            </div>
+          </div>
+
+          <div class="class-detail-actions">
+            <button class="class-detail-back-btn" id="btn-detail-back">← Back</button>
+            <button class="class-detail-start-btn" id="btn-detail-start">Begin Descent</button>
+          </div>
+        </div>
+      </div>
+    `;
+  };
 
   const render = () => {
     element.innerHTML = `
@@ -125,6 +187,8 @@ export function createClassSelectScreen(callbacks: ClassSelectCallbacks): Screen
           Enter the Sanctum
         </button>
       </div>
+
+      ${showingDetailPopup ? renderDetailPopup(showingDetailPopup) : ''}
     `;
 
     // Attach event listeners
@@ -134,6 +198,7 @@ export function createClassSelectScreen(callbacks: ClassSelectCallbacks): Screen
       card.addEventListener('click', () => {
         const classId = card.getAttribute('data-class') as CharacterClassId;
         selectedClass = classId;
+        showingDetailPopup = classId;
         render();
       });
     });
@@ -143,6 +208,26 @@ export function createClassSelectScreen(callbacks: ClassSelectCallbacks): Screen
         callbacks.onSelectClass(selectedClass);
       }
     });
+
+    // Detail popup event listeners
+    element.querySelector('#btn-detail-back')?.addEventListener('click', () => {
+      showingDetailPopup = null;
+      render();
+    });
+
+    element.querySelector('#btn-detail-start')?.addEventListener('click', () => {
+      if (showingDetailPopup) {
+        callbacks.onSelectClass(showingDetailPopup);
+      }
+    });
+
+    // Close popup when clicking overlay background
+    element.querySelector('#class-detail-overlay')?.addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) {
+        showingDetailPopup = null;
+        render();
+      }
+    });
   };
 
   return {
@@ -150,6 +235,7 @@ export function createClassSelectScreen(callbacks: ClassSelectCallbacks): Screen
     element,
     onEnter: () => {
       selectedClass = null;
+      showingDetailPopup = null;
       render();
     },
   };
@@ -163,6 +249,8 @@ function getClassImage(classId: CharacterClassId): string | null {
     [CharacterClassId.OATHSWORN]: '/images/characters/oathsworn.jpg',
     [CharacterClassId.FEY_TOUCHED]: '/images/characters/fey-touched.jpg',
     [CharacterClassId.CELESTIAL]: '/images/characters/celestial.jpg',
+    [CharacterClassId.SUMMONER]: '/images/characters/summoner.jpg',
+    [CharacterClassId.BARGAINER]: '/images/characters/bargainer.jpg',
   };
   return imageMap[classId] || null;
 }

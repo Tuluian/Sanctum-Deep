@@ -47,10 +47,26 @@ export const CELESTIAL_STARTER_CARDS: Record<string, CardDefinition> = {
   },
 };
 
+// Starter Block Bonus Card
+export const CELESTIAL_BLOCK_BONUS_CARD: Record<string, CardDefinition> = {
+  heavenly_barrier: {
+    id: 'heavenly_barrier',
+    name: 'Heavenly Barrier',
+    type: CardType.POWER,
+    cost: 2,
+    description: 'Permanently increase all block from cards by 1. Exhaust.',
+    effects: [{ type: EffectType.PERMANENT_BLOCK_BONUS, amount: 1 }],
+    rarity: CardRarity.STARTER,
+    classId: CharacterClassId.CELESTIAL,
+    exhaust: true,
+  },
+};
+
 // Combined card pool (excludes starters for rewards - to be expanded later)
 export const CELESTIAL_REWARD_POOL: CardDefinition[] = [];
 
 // All Celestial cards including starters
 export const CELESTIAL_CARDS: Record<string, CardDefinition> = {
   ...CELESTIAL_STARTER_CARDS,
+  ...CELESTIAL_BLOCK_BONUS_CARD,
 };

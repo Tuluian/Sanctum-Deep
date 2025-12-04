@@ -44,6 +44,9 @@ function createDiabolistPlayerState(overrides: Partial<PlayerState> = {}): Playe
     favor: 0,
     activePrices: [],
     baseMaxResolve: diabolistClass.maxResolve,
+    permanentBlockBonus: 0,
+    upgradeDamageBonus: 0,
+    upgradeBlockBonus: 0,
     ...overrides,
   };
 }
@@ -96,9 +99,9 @@ describe('Story 3.1: Diabolist Class', () => {
 
   // AC 3: Starter deck composition
   describe('AC 3: Starter Deck', () => {
-    it('should have 10 cards in starter deck', () => {
+    it('should have 11 cards in starter deck', () => {
       const deck = createStarterDeck(CharacterClassId.DIABOLIST);
-      expect(deck.length).toBe(10);
+      expect(deck.length).toBe(11);
     });
 
     it('should have 4x Soul Rend', () => {

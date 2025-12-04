@@ -1,4 +1,4 @@
-import { PlayerState, CharacterClassId } from '@/types';
+import { PlayerState, CharacterClassId, PotionSlot } from '@/types';
 import { getUpgradeService } from './UpgradeService';
 
 export interface RunModifiers {
@@ -12,6 +12,7 @@ export interface RunModifiers {
   eliteDropsPotion: boolean;
   hasDeathsDoor: boolean;
   deathsDoorUsed: boolean;
+  startingPotions: PotionSlot[];
 }
 
 export interface CombatModifiers {
@@ -63,6 +64,21 @@ export interface CombatModifiers {
 
 export function getRunModifiers(classId: CharacterClassId): RunModifiers {
   const service = getUpgradeService();
+  const upgrades = service.getActiveUpgrades(classId);
+
+  // Collect starting potions
+  const startingPotions: PotionSlot[] = [];
+  for (const upgrade of upgrades) {
+    const effect = upgrade.effect;
+    if (effect.type === 'starting_potion') {
+      const existing = startingPotions.find(p => p.potionId === effect.potionId);
+      if (existing) {
+        existing.count++;
+      } else {
+        startingPotions.push({ potionId: effect.potionId, count: 1 });
+      }
+    }
+  }
 
   return {
     maxHpBonus: service.getUpgradeEffectValue('max_hp', classId),
@@ -75,6 +91,7 @@ export function getRunModifiers(classId: CharacterClassId): RunModifiers {
     eliteDropsPotion: service.hasUpgradeEffect('elite_drops_potion', classId),
     hasDeathsDoor: service.hasUpgradeEffect('deaths_door', classId),
     deathsDoorUsed: false,
+    startingPotions,
   };
 }
 

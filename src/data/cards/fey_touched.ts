@@ -660,9 +660,25 @@ export const FEY_TOUCHED_RARE_CARDS: Record<string, CardDefinition> = {
   },
 };
 
+// Starter Block Bonus Card
+export const FEY_TOUCHED_BLOCK_BONUS_CARD: Record<string, CardDefinition> = {
+  enchanted_ward: {
+    id: 'enchanted_ward',
+    name: 'Enchanted Ward',
+    type: CardType.POWER,
+    cost: 2,
+    description: 'Permanently increase all block from cards by 1. Exhaust.',
+    effects: [{ type: EffectType.PERMANENT_BLOCK_BONUS, amount: 1 }],
+    rarity: CardRarity.STARTER,
+    classId: CharacterClassId.FEY_TOUCHED,
+    exhaust: true,
+  },
+};
+
 // All Fey-Touched cards including starters
 export const FEY_TOUCHED_CARDS: Record<string, CardDefinition> = {
   ...FEY_TOUCHED_STARTER_CARDS,
+  ...FEY_TOUCHED_BLOCK_BONUS_CARD,
   ...FEY_TOUCHED_COMMON_CARDS,
   ...FEY_TOUCHED_UNCOMMON_CARDS,
   ...FEY_TOUCHED_RARE_CARDS,

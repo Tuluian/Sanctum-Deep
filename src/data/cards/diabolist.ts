@@ -488,10 +488,26 @@ export const DIABOLIST_RARE_CARDS: Record<string, CardDefinition> = {
   },
 };
 
+// Starter Block Bonus Card
+export const DIABOLIST_BLOCK_BONUS_CARD: Record<string, CardDefinition> = {
+  hellforged_ward: {
+    id: 'hellforged_ward',
+    name: 'Hellforged Ward',
+    type: CardType.POWER,
+    cost: 2,
+    description: 'Permanently increase all block from cards by 1. Exhaust.',
+    effects: [{ type: EffectType.PERMANENT_BLOCK_BONUS, amount: 1 }],
+    rarity: CardRarity.STARTER,
+    classId: CharacterClassId.DIABOLIST,
+    exhaust: true,
+  },
+};
+
 // All Diabolist cards including starters and curses
 export const DIABOLIST_CARDS: Record<string, CardDefinition> = {
   ...DIABOLIST_CURSES,
   ...DIABOLIST_STARTER_CARDS,
+  ...DIABOLIST_BLOCK_BONUS_CARD,
   ...DIABOLIST_COMMON_CARDS,
   ...DIABOLIST_UNCOMMON_CARDS,
   ...DIABOLIST_RARE_CARDS,

@@ -54,10 +54,26 @@ export const SUMMONER_STARTER_CARDS: Record<string, CardDefinition> = {
   },
 };
 
+// Starter Block Bonus Card
+export const SUMMONER_BLOCK_BONUS_CARD: Record<string, CardDefinition> = {
+  spirit_fortress: {
+    id: 'spirit_fortress',
+    name: 'Spirit Fortress',
+    type: CardType.POWER,
+    cost: 2,
+    description: 'Permanently increase all block from cards by 1. Exhaust.',
+    effects: [{ type: EffectType.PERMANENT_BLOCK_BONUS, amount: 1 }],
+    rarity: CardRarity.STARTER,
+    classId: CharacterClassId.SUMMONER,
+    exhaust: true,
+  },
+};
+
 // Combined card pool (excludes starters for rewards - to be expanded later)
 export const SUMMONER_REWARD_POOL: CardDefinition[] = [];
 
 // All Summoner cards including starters
 export const SUMMONER_CARDS: Record<string, CardDefinition> = {
   ...SUMMONER_STARTER_CARDS,
+  ...SUMMONER_BLOCK_BONUS_CARD,
 };
