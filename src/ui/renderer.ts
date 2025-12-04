@@ -1,4 +1,4 @@
-import { CombatState, IntentType, StatusEffect, StatusType, Vow, VowBonusType, VowRestrictionType, CardType, EffectType, Card, PlayerState } from '@/types';
+import { CombatState, IntentType, StatusEffect, StatusType, Vow, VowBonusType, VowRestrictionType, CardType, EffectType, Card, PlayerState, CharacterClassId } from '@/types';
 
 // Status effect display info
 const STATUS_INFO: Record<StatusType, { icon: string; name: string; description: string; isDebuff: boolean }> = {
@@ -60,6 +60,24 @@ const STATUS_INFO: Record<StatusType, { icon: string; name: string; description:
     icon: '🛡️',
     name: 'Resilience',
     description: 'Takes reduced damage from all sources.',
+    isDebuff: false,
+  },
+  [StatusType.CORRUPT]: {
+    icon: '🩻',
+    name: 'Corrupt',
+    description: 'Take damage each time you play a card.',
+    isDebuff: true,
+  },
+  [StatusType.REGENERATION]: {
+    icon: '💚',
+    name: 'Regeneration',
+    description: 'Heal at the start of each turn.',
+    isDebuff: false,
+  },
+  [StatusType.DIVINE_FORM]: {
+    icon: '👼',
+    name: 'Divine Form',
+    description: 'Deal +1 damage with all attacks while at max Radiance.',
     isDebuff: false,
   },
 };
@@ -159,6 +177,27 @@ export class CombatRenderer {
 
   getSelectedEnemy(): number {
     return this.selectedEnemyIndex;
+  }
+
+  private getSpecialtyStat(player: PlayerState): number {
+    switch (player.classId) {
+      case CharacterClassId.CLERIC:
+        return player.devotion;
+      case CharacterClassId.DUNGEON_KNIGHT:
+        return player.fortify;
+      case CharacterClassId.DIABOLIST:
+        return player.soulDebt;
+      case CharacterClassId.OATHSWORN:
+        return player.vowsActivatedThisCombat;
+      case CharacterClassId.FEY_TOUCHED:
+        return player.luck;
+      case CharacterClassId.CELESTIAL:
+        return player.radiance;
+      case CharacterClassId.SUMMONER:
+        return player.minions.length;
+      default:
+        return player.devotion;
+    }
   }
 
   private renderStatusEffects(effects: StatusEffect[]): string {
@@ -359,13 +398,13 @@ export class CombatRenderer {
     this.elements.playerHp.textContent = `${player.currentHp}/${player.maxHp}`;
     this.elements.playerBlock.textContent = `🛡️ ${player.block}`;
     this.elements.playerResolve.textContent = `${player.resolve}/${player.maxResolve}`;
-    this.elements.playerDevotion.textContent = String(player.devotion);
+    this.elements.playerDevotion.textContent = String(this.getSpecialtyStat(player));
 
     // Update HUD overlay
     this.elements.hudHp.textContent = `${player.currentHp}/${player.maxHp}`;
     this.elements.hudBlock.textContent = String(player.block);
     this.elements.hudResolve.textContent = `${player.resolve}/${player.maxResolve}`;
-    this.elements.hudDevotion.textContent = String(player.devotion);
+    this.elements.hudDevotion.textContent = String(this.getSpecialtyStat(player));
 
     // Update player status effects in HUD
     const hudStatusContainer = document.getElementById('hud-status-effects');
@@ -397,6 +436,16 @@ export class CombatRenderer {
       this.elements.playerHud.classList.add('low-hp');
     } else {
       this.elements.playerHud.classList.remove('low-hp');
+    }
+
+    // Low HP vignette effect (below 30%)
+    const vignette = document.getElementById('low-hp-vignette');
+    if (vignette) {
+      if (hpPercent <= 0.3) {
+        vignette.classList.add('active');
+      } else {
+        vignette.classList.remove('active');
+      }
     }
   }
 
@@ -550,6 +599,34 @@ export class CombatRenderer {
   removeGameOver(): void {
     const gameOverDiv = document.querySelector('.game-over');
     if (gameOverDiv) gameOverDiv.remove();
+  }
+
+  // Turn announcements
+  showTurnBanner(isPlayerTurn: boolean): void {
+    const banner = document.getElementById('turn-banner');
+    if (!banner) return;
+
+    // Reset any existing animation
+    banner.classList.remove('active', 'player-turn', 'enemy-turn');
+
+    // Set content and style based on turn type
+    if (isPlayerTurn) {
+      banner.textContent = 'Your Turn';
+      banner.classList.add('player-turn');
+    } else {
+      banner.textContent = 'Enemy Turn';
+      banner.classList.add('enemy-turn');
+    }
+
+    // Trigger animation
+    requestAnimationFrame(() => {
+      banner.classList.add('active');
+    });
+
+    // Remove animation class after it completes
+    setTimeout(() => {
+      banner.classList.remove('active');
+    }, 1200);
   }
 
   // Combat animations

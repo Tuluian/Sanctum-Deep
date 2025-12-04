@@ -47,6 +47,12 @@ function createDiabolistPlayerState(overrides: Partial<PlayerState> = {}): Playe
     luck: 0,
     maxLuck: 10,
     guaranteedBest: false,
+    radiance: 0,
+    maxRadiance: 10,
+    minions: [],
+    favor: 0,
+    activePrices: [],
+    baseMaxResolve: diabolistClass.maxResolve,
     ...overrides,
   };
 }
@@ -81,32 +87,32 @@ function createMockEnemyDefinition(overrides: Partial<EnemyDefinition> = {}): En
 // =====================================================
 
 describe('Story 3.4: Diabolist Card Pool', () => {
-  // AC 1: Diabolist has 30 total cards
+  // AC 1: Diabolist has 32 total cards
   describe('AC 1: Card Count', () => {
-    it('should have 30 total unique cards (4 starter + 26 obtainable)', () => {
-      // 4 starter + 4 curses + 15 common + 8 uncommon + 3 rare = 34 total definitions
+    it('should have 32 total unique cards (4 starter + 28 obtainable)', () => {
+      // 4 starter + 4 curses + 16 common + 9 uncommon + 3 rare = 36 total definitions
       // But starter deck is 10 cards using 4 unique definitions
       const totalCards = Object.keys(DIABOLIST_CARDS).length;
-      expect(totalCards).toBe(34); // Includes curses
+      expect(totalCards).toBe(36); // Includes curses
 
-      // Reward pool should have 26 obtainable cards
-      expect(DIABOLIST_REWARD_POOL.length).toBe(26);
+      // Reward pool should have 28 obtainable cards (16 common + 9 uncommon + 3 rare)
+      expect(DIABOLIST_REWARD_POOL.length).toBe(28);
     });
   });
 
   // AC 2: Cards distributed by rarity
   describe('AC 2: Rarity Distribution', () => {
-    it('should have 15 Common cards', () => {
+    it('should have 16 Common cards', () => {
       const commonCards = Object.values(DIABOLIST_COMMON_CARDS);
-      expect(commonCards.length).toBe(15);
+      expect(commonCards.length).toBe(16);
       commonCards.forEach(card => {
         expect(card.rarity).toBe(CardRarity.COMMON);
       });
     });
 
-    it('should have 8 Uncommon cards', () => {
+    it('should have 9 Uncommon cards', () => {
       const uncommonCards = Object.values(DIABOLIST_UNCOMMON_CARDS);
-      expect(uncommonCards.length).toBe(8);
+      expect(uncommonCards.length).toBe(9);
       uncommonCards.forEach(card => {
         expect(card.rarity).toBe(CardRarity.UNCOMMON);
       });

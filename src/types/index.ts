@@ -58,6 +58,18 @@ export enum EffectType {
   BLOCK_IF_LUCK = 'BLOCK_IF_LUCK', // Bonus block if Luck > threshold
   SPEND_ALL_LUCK = 'SPEND_ALL_LUCK', // Spend all Luck for effect per Luck spent
   SET_GUARANTEED_BEST = 'SET_GUARANTEED_BEST', // Next Whimsy is guaranteed best outcome
+  // Celestial effects
+  GAIN_RADIANCE = 'GAIN_RADIANCE', // Gain Radiance resource
+  CONSUME_RADIANCE_DAMAGE = 'CONSUME_RADIANCE_DAMAGE', // Consume all Radiance for bonus damage
+  // Summoner effects
+  SUMMON_MINION = 'SUMMON_MINION', // Summon a minion by ID
+  BLOCK_ALL_MINIONS = 'BLOCK_ALL_MINIONS', // Give all minions block
+  MINIONS_ATTACK = 'MINIONS_ATTACK', // All minions attack immediately
+  GAIN_BLOCK_FROM_MINION_HP = 'GAIN_BLOCK_FROM_MINION_HP', // Gain block equal to total minion HP
+  // Bargainer effects
+  GAIN_FAVOR = 'GAIN_FAVOR', // Gain Favor resource
+  DAMAGE_PER_PRICE = 'DAMAGE_PER_PRICE', // Deal damage per active Price × multiplier
+  REMOVE_ALL_PRICES = 'REMOVE_ALL_PRICES', // Remove all active Prices
 }
 
 export enum CardRarity {
@@ -72,6 +84,9 @@ export interface CardEffect {
   amount: number;
   target?: 'self' | 'enemy' | 'all_enemies';
   cardId?: string; // For ADD_CARD effects - which card to add
+  perStack?: number; // For consume effects - damage per stack consumed (Celestial)
+  minionId?: string; // For SUMMON_MINION effects - which minion to summon
+  multiplier?: number; // For DAMAGE_PER_PRICE - damage per price × multiplier
 }
 
 export interface CardDefinition {
@@ -89,6 +104,7 @@ export interface CardDefinition {
   devotionBonus?: CardEffect[];
   // Diabolist properties
   unplayable?: boolean; // Cannot be played (Curses)
+  exhaustOnDiscard?: boolean; // Card is exhausted when discarded (Curses)
   onDraw?: CardEffect[]; // Effects triggered when card is drawn
   onTurnEnd?: CardEffect[]; // Effects triggered at end of turn (while in deck)
   onCombatEnd?: CardEffect[]; // Effects triggered at end of combat (while in deck)
@@ -98,6 +114,8 @@ export interface CardDefinition {
   activatesVow?: string; // Vow ID to activate when played
   // Fey-Touched properties
   whimsy?: WhimsyEffect[]; // Random outcomes
+  // Bargainer properties
+  price?: PriceDefinition; // Price paid when card is played
 }
 
 // Fey-Touched Whimsy Types
@@ -119,12 +137,16 @@ export enum StatusType {
   BLEEDING = 'BLEEDING',
   CURSED = 'CURSED',
   BOUND = 'BOUND',
+  CORRUPT = 'CORRUPT', // Take X damage when playing a card
   // Buffs
   BLESSED = 'BLESSED',
   EMPOWERED = 'EMPOWERED',
   WARDED = 'WARDED',
   MIGHT = 'MIGHT',
   RESILIENCE = 'RESILIENCE',
+  REGENERATION = 'REGENERATION', // Heal X at start of turn
+  // Celestial buffs
+  DIVINE_FORM = 'DIVINE_FORM', // +1 damage to all attacks while at max Radiance
 }
 
 export interface StatusEffect {
@@ -143,6 +165,7 @@ export enum IntentType {
   HEAL = 'heal',
   MULTI_ATTACK = 'multi_attack',
   SUMMON = 'summon',
+  SPAWN = 'spawn', // Create a new enemy (e.g., Slime splitting)
   CHARGING = 'charging',
   COMMAND = 'command',
   UNKNOWN = 'unknown',
@@ -163,6 +186,10 @@ export interface EnemyMove {
   buffAmount?: number;
   debuffType?: StatusType; // For debuff moves
   debuffDuration?: number;
+  debuffAmount?: number; // Amount for status effects like CORRUPT
+  // Spawn mechanic (for Slime splitting etc.)
+  spawnId?: string; // Enemy definition ID to spawn
+  hpThreshold?: number; // Only use this move if HP below threshold (0.0-1.0)
   // Elite abilities
   summons?: string[]; // Enemy IDs to summon
   oncePerCombat?: boolean; // Can only be used once
@@ -240,6 +267,7 @@ export interface Enemy {
 
 // Player Types
 export interface PlayerState {
+  classId?: CharacterClassId;
   maxHp: number;
   currentHp: number;
   block: number;
@@ -264,6 +292,15 @@ export interface PlayerState {
   luck: number; // 0-10, spend for Whimsy control
   maxLuck: number;
   guaranteedBest: boolean; // Next Whimsy is guaranteed best outcome
+  // Celestial specific
+  radiance: number; // 0-10, empowers divine spells
+  maxRadiance: number;
+  // Summoner specific
+  minions: Minion[]; // Active minions on battlefield
+  // Bargainer specific
+  favor: number; // 0-10, spent to remove Prices
+  activePrices: Price[]; // Currently active Prices
+  baseMaxResolve: number; // Original max Resolve (before RESOLVE_TAX)
 }
 
 // Oathsworn Vow Types
@@ -314,7 +351,57 @@ export enum CharacterClassId {
   DIABOLIST = 'diabolist',
   OATHSWORN = 'oathsworn',
   FEY_TOUCHED = 'fey_touched',
+  CELESTIAL = 'celestial',
+  SUMMONER = 'summoner',
+  BARGAINER = 'bargainer',
 }
+
+// Bargainer Price Types
+export enum PriceType {
+  HP_DRAIN = 'hp_drain', // Lose X HP at start of player turn
+  RESOLVE_TAX = 'resolve_tax', // -X max Resolve until combat ends
+  CURSE_CARDS = 'curse_cards', // Add X Curse cards to deck immediately
+  DEBT_STACK = 'debt_stack', // Accumulates; at 10 stacks, take 20 damage and clear
+}
+
+export interface Price {
+  id: string; // Unique ID
+  type: PriceType;
+  amount: number; // Intensity (HP per turn, Resolve reduction, etc.)
+  stacks: number; // For DEBT_STACK type
+  sourceCardId: string; // Card that created this Price
+}
+
+export interface PriceDefinition {
+  type: PriceType;
+  amount: number;
+}
+
+export const MAX_FAVOR = 10;
+export const DEBT_STACK_THRESHOLD = 10;
+export const DEBT_STACK_DAMAGE = 20;
+
+// Summoner Minion Types
+export interface MinionDefinition {
+  id: string;
+  name: string;
+  maxHp: number;
+  attackDamage: number;
+  description?: string;
+}
+
+export interface Minion {
+  id: string; // Definition ID (e.g., 'wisp')
+  instanceId: string; // Unique instance ID
+  name: string;
+  maxHp: number;
+  currentHp: number;
+  block: number;
+  attackDamage: number;
+  statusEffects: StatusEffect[];
+}
+
+export const MAX_MINIONS = 4;
 
 export interface StarterDeckRecipe {
   cardId: string;
@@ -366,6 +453,9 @@ export enum CombatEventType {
   VOW_CHARGE_USED = 'VOW_CHARGE_USED',
   WHIMSY_RESOLVED = 'WHIMSY_RESOLVED',
   LUCK_CHANGED = 'LUCK_CHANGED',
+  RADIANCE_CHANGED = 'RADIANCE_CHANGED',
+  DIVINE_FORM_ACTIVATED = 'DIVINE_FORM_ACTIVATED',
+  DIVINE_FORM_DEACTIVATED = 'DIVINE_FORM_DEACTIVATED',
   CARD_PLAYED = 'CARD_PLAYED',
   CARD_DRAWN = 'CARD_DRAWN',
   CARD_ADDED = 'CARD_ADDED', // For ADD_CARD effects
@@ -378,6 +468,18 @@ export enum CombatEventType {
   PLAYER_DAMAGED = 'PLAYER_DAMAGED',
   COMBAT_LOG = 'COMBAT_LOG',
   GAME_OVER = 'GAME_OVER',
+  // Minion events
+  MINION_SUMMONED = 'MINION_SUMMONED',
+  MINION_DAMAGED = 'MINION_DAMAGED',
+  MINION_DIED = 'MINION_DIED',
+  MINION_ATTACKED = 'MINION_ATTACKED',
+  MINION_BLOCK_CHANGED = 'MINION_BLOCK_CHANGED',
+  // Bargainer events
+  FAVOR_CHANGED = 'FAVOR_CHANGED',
+  PRICE_ADDED = 'PRICE_ADDED',
+  PRICE_TRIGGERED = 'PRICE_TRIGGERED',
+  PRICE_REMOVED = 'PRICE_REMOVED',
+  DEBT_THRESHOLD_TRIGGERED = 'DEBT_THRESHOLD_TRIGGERED',
 }
 
 export interface CombatEvent {

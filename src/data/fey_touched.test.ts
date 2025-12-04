@@ -37,6 +37,12 @@ function createFeyTouchedPlayerState(overrides: Partial<PlayerState> = {}): Play
     luck: 0,
     maxLuck: 10,
     guaranteedBest: false,
+    radiance: 0,
+    maxRadiance: 10,
+    minions: [],
+    favor: 0,
+    activePrices: [],
+    baseMaxResolve: feyTouchedClass.maxResolve,
     ...overrides,
   };
 }

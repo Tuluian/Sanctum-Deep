@@ -50,6 +50,12 @@ function createPlayerState(overrides?: Partial<PlayerState>): PlayerState {
     luck: 0,
     maxLuck: 10,
     guaranteedBest: false,
+    radiance: 0,
+    maxRadiance: 10,
+    minions: [],
+    favor: 0,
+    activePrices: [],
+    baseMaxResolve: 3,
     ...overrides,
   };
 }

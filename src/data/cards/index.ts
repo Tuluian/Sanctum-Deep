@@ -30,6 +30,23 @@ import {
   FEY_TOUCHED_STARTER_CARDS,
   FEY_TOUCHED_REWARD_POOL,
 } from './fey_touched';
+import {
+  CELESTIAL_CARDS,
+  CELESTIAL_STARTER_CARDS,
+  CELESTIAL_REWARD_POOL,
+} from './celestial';
+import {
+  SUMMONER_CARDS,
+  SUMMONER_STARTER_CARDS,
+  SUMMONER_REWARD_POOL,
+} from './summoner';
+import {
+  BARGAINER_CARDS,
+  BARGAINER_STARTER_CARDS,
+  BARGAINER_REWARD_POOL,
+  BARGAINER_CURSES,
+  DEMONIC_DEBT,
+} from './bargainer';
 
 // All cards indexed by ID
 export const ALL_CARDS: Record<string, CardDefinition> = {
@@ -38,6 +55,9 @@ export const ALL_CARDS: Record<string, CardDefinition> = {
   ...DIABOLIST_CARDS,
   ...OATHSWORN_CARDS,
   ...FEY_TOUCHED_CARDS,
+  ...CELESTIAL_CARDS,
+  ...SUMMONER_CARDS,
+  ...BARGAINER_CARDS,
 };
 
 export function getCardById(id: string): CardDefinition | undefined {
@@ -57,6 +77,12 @@ export function getClassRewardPool(classId: CharacterClassId): CardDefinition[] 
       return OATHSWORN_REWARD_POOL;
     case CharacterClassId.FEY_TOUCHED:
       return FEY_TOUCHED_REWARD_POOL;
+    case CharacterClassId.CELESTIAL:
+      return CELESTIAL_REWARD_POOL;
+    case CharacterClassId.SUMMONER:
+      return SUMMONER_REWARD_POOL;
+    case CharacterClassId.BARGAINER:
+      return BARGAINER_REWARD_POOL;
     default:
       return [];
   }
@@ -127,4 +153,15 @@ export {
   FEY_TOUCHED_CARDS,
   FEY_TOUCHED_STARTER_CARDS,
   FEY_TOUCHED_REWARD_POOL,
+  CELESTIAL_CARDS,
+  CELESTIAL_STARTER_CARDS,
+  CELESTIAL_REWARD_POOL,
+  SUMMONER_CARDS,
+  SUMMONER_STARTER_CARDS,
+  SUMMONER_REWARD_POOL,
+  BARGAINER_CARDS,
+  BARGAINER_STARTER_CARDS,
+  BARGAINER_REWARD_POOL,
+  BARGAINER_CURSES,
+  DEMONIC_DEBT,
 };

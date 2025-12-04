@@ -10,9 +10,10 @@ export const PAIN_CURSE: CardDefinition = {
   name: 'Pain',
   type: CardType.CURSE,
   cost: 0,
-  description: 'Unplayable. When drawn, lose 1 HP.',
+  description: 'Unplayable. When drawn, lose 1 HP. Exhausts when discarded.',
   effects: [],
   unplayable: true,
+  exhaustOnDiscard: true,
   onDraw: [{ type: EffectType.LOSE_HP, amount: 1 }],
 };
 
@@ -22,9 +23,10 @@ export const WEAKNESS_CURSE: CardDefinition = {
   name: 'Weakness',
   type: CardType.CURSE,
   cost: 0,
-  description: 'Unplayable. Deal 25% less damage this combat.',
+  description: 'Unplayable. Deal 25% less damage this combat. Exhausts when discarded.',
   effects: [],
   unplayable: true,
+  exhaustOnDiscard: true,
   onDraw: [{ type: EffectType.APPLY_STATUS, amount: 1, target: 'self' }], // IMPAIRED status
 };
 
@@ -34,9 +36,10 @@ export const DOOM_CURSE: CardDefinition = {
   name: 'Doom',
   type: CardType.CURSE,
   cost: 0,
-  description: 'Unplayable. At end of combat, lose 5 max HP.',
+  description: 'Unplayable. At end of combat, lose 5 max HP. Exhausts when discarded.',
   effects: [],
   unplayable: true,
+  exhaustOnDiscard: true,
   onCombatEnd: [{ type: EffectType.LOSE_MAX_HP, amount: 5 }],
 };
 
@@ -46,9 +49,10 @@ export const TORMENT_CURSE: CardDefinition = {
   name: 'Torment',
   type: CardType.CURSE,
   cost: 0,
-  description: 'Unplayable. Lose 1 HP at end of each turn.',
+  description: 'Unplayable. Lose 1 HP at end of each turn. Exhausts when discarded.',
   effects: [],
   unplayable: true,
+  exhaustOnDiscard: true,
   onTurnEnd: [{ type: EffectType.LOSE_HP, amount: 1 }],
 };
 
@@ -311,6 +315,19 @@ export const DIABOLIST_COMMON_CARDS: Record<string, CardDefinition> = {
     rarity: CardRarity.COMMON,
     classId: CharacterClassId.DIABOLIST,
   },
+  dark_mending: {
+    id: 'dark_mending',
+    name: 'Dark Mending',
+    type: CardType.SKILL,
+    cost: 1,
+    description: 'Heal 6 HP. Add a Pain to your discard pile.',
+    effects: [
+      { type: EffectType.HEAL, amount: 6 },
+      { type: EffectType.ADD_CARD_TO_DISCARD, amount: 1, cardId: 'pain' },
+    ],
+    rarity: CardRarity.COMMON,
+    classId: CharacterClassId.DIABOLIST,
+  },
 };
 
 // ============================================
@@ -408,6 +425,19 @@ export const DIABOLIST_UNCOMMON_CARDS: Record<string, CardDefinition> = {
     description: '+5 damage to all attacks until you fall below 25% HP.',
     effects: [
       { type: EffectType.APPLY_STATUS, amount: 5 }, // Conditional power
+    ],
+    rarity: CardRarity.UNCOMMON,
+    classId: CharacterClassId.DIABOLIST,
+  },
+  blood_transfusion: {
+    id: 'blood_transfusion',
+    name: 'Blood Transfusion',
+    type: CardType.SKILL,
+    cost: 2,
+    description: 'Heal 12 HP. Add a Doom curse to your deck.',
+    effects: [
+      { type: EffectType.HEAL, amount: 12 },
+      { type: EffectType.ADD_CARD_TO_DECK, amount: 1, cardId: 'doom' },
     ],
     rarity: CardRarity.UNCOMMON,
     classId: CharacterClassId.DIABOLIST,

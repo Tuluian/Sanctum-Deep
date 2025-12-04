@@ -38,6 +38,12 @@ function createDiabolistPlayerState(overrides: Partial<PlayerState> = {}): Playe
     luck: 0,
     maxLuck: 10,
     guaranteedBest: false,
+    radiance: 0,
+    maxRadiance: 10,
+    minions: [],
+    favor: 0,
+    activePrices: [],
+    baseMaxResolve: diabolistClass.maxResolve,
     ...overrides,
   };
 }

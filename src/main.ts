@@ -149,6 +149,9 @@ class Game {
     document.getElementById('end-turn-btn')?.addEventListener('click', () => {
       if (!this.combat || this.combat.isGameOver()) return;
 
+      // Show "Enemy Turn" banner
+      this.renderer.showTurnBanner(false);
+
       // Get enemy intents before the turn ends to know who will attack
       const stateBefore = this.combat.getState();
       const attackingEnemies = stateBefore.enemies
@@ -171,6 +174,12 @@ class Game {
         // Delay game over to let animations finish
         const delay = attackingEnemies.length * 300 + 500;
         setTimeout(() => this.handleCombatEnd(), delay);
+      } else {
+        // Show "Your Turn" banner after enemy actions complete
+        const delay = attackingEnemies.length * 300 + 800;
+        setTimeout(() => {
+          this.renderer.showTurnBanner(true);
+        }, delay);
       }
     });
 
@@ -283,6 +292,7 @@ class Game {
     const runData = SaveManager.getActiveRun();
 
     const player: PlayerState = {
+      classId,
       maxHp: runData?.playerMaxHp ?? characterClass.maxHp,
       currentHp: currentHp ?? runData?.playerHp ?? characterClass.maxHp,
       block: 0,
@@ -303,6 +313,12 @@ class Game {
       luck: 0,
       maxLuck: 10,
       guaranteedBest: false,
+      radiance: 0,
+      maxRadiance: 10,
+      minions: [],
+      favor: 0,
+      activePrices: [],
+      baseMaxResolve: characterClass.maxResolve,
     };
 
     // Get enemies based on current node type
@@ -327,6 +343,9 @@ class Game {
     this.combat.startCombat();
     this.renderer.setSelectedEnemy(0);
     this.render();
+
+    // Show "Your Turn" banner at combat start
+    this.renderer.showTurnBanner(true);
   }
 
   private getEnemiesForNode(): EnemyDefinition[] {
@@ -526,6 +545,18 @@ class Game {
       [CharacterClassId.FEY_TOUCHED]: {
         icon: '🍀',
         tooltip: 'Luck: Build up Luck to improve Whimsy outcomes. Spend all Luck to guarantee the best result.',
+      },
+      [CharacterClassId.CELESTIAL]: {
+        icon: '☀️',
+        tooltip: 'Radiance: Divine energy that empowers holy spells. Build up Radiance through prayer and devotion.',
+      },
+      [CharacterClassId.SUMMONER]: {
+        icon: '👻',
+        tooltip: 'Minions: Summon spirits that protect you and auto-attack enemies. Enemies must defeat all minions before targeting you.',
+      },
+      [CharacterClassId.BARGAINER]: {
+        icon: '🤝',
+        tooltip: 'Favor: Make deals with powerful entities. Pay Prices for powerful effects, but beware of accumulating Debt.',
       },
     };
 

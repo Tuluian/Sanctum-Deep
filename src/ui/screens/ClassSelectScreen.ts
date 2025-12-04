@@ -37,6 +37,21 @@ const CLASS_DESCRIPTIONS: Record<CharacterClassId, { desc: string; mechanic: str
     mechanic: 'Whimsy: Cards with random but powerful effects.',
     tooltip: 'Whimsy cards roll a random effect each time played. Build up Luck to increase your chances of the best outcomes, or spend Luck to guarantee the most powerful result.',
   },
+  [CharacterClassId.CELESTIAL]: {
+    desc: 'Channel divine radiance for holy power.',
+    mechanic: 'Radiance: Build divine energy to empower holy spells.',
+    tooltip: 'Divine actions generate Radiance. As Radiance builds, certain holy spells become more powerful. Radiance fades between combats, so use it while you have it.',
+  },
+  [CharacterClassId.SUMMONER]: {
+    desc: 'Command spirits and minions to fight for you.',
+    mechanic: 'Minions: Summon creatures that attack enemies automatically.',
+    tooltip: 'Summon minions that persist between turns and attack enemies. Some cards buff your minions or sacrifice them for powerful effects.',
+  },
+  [CharacterClassId.BARGAINER]: {
+    desc: 'Make dark deals for overwhelming power.',
+    mechanic: 'Prices: Pay ongoing costs for immediate power.',
+    tooltip: 'Many Bargainer cards have a "Price" - an ongoing negative effect like losing HP each turn or reduced max Resolve. Accumulate Favor to remove Prices or use Blood Payment to clear all Prices at once.',
+  },
 };
 
 const FREE_CLASSES = [
@@ -45,6 +60,7 @@ const FREE_CLASSES = [
   CharacterClassId.DIABOLIST,
   CharacterClassId.OATHSWORN,
   CharacterClassId.FEY_TOUCHED,
+  CharacterClassId.CELESTIAL, // TODO: Remove after testing - DLC class
 ];
 
 export function createClassSelectScreen(callbacks: ClassSelectCallbacks): Screen {
@@ -142,6 +158,9 @@ function getClassIcon(classId: CharacterClassId): string {
     case CharacterClassId.DIABOLIST: return '🔥';
     case CharacterClassId.OATHSWORN: return '⚔️';
     case CharacterClassId.FEY_TOUCHED: return '🌙';
+    case CharacterClassId.CELESTIAL: return '☀️';
+    case CharacterClassId.SUMMONER: return '👻';
+    case CharacterClassId.BARGAINER: return '💀';
     default: return '❓';
   }
 }

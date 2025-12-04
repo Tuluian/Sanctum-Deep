@@ -192,6 +192,34 @@ h1 {
   pointer-events: none;
 }
 
+/* Low HP vignette overlay - red edges when HP < 30% */
+.low-hp-vignette {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 15;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  box-shadow: inset 0 0 80px 30px rgba(200, 0, 0, 0.5);
+}
+
+.low-hp-vignette.active {
+  opacity: 1;
+  animation: lowHpPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes lowHpPulse {
+  0%, 100% {
+    box-shadow: inset 0 0 80px 30px rgba(200, 0, 0, 0.4);
+  }
+  50% {
+    box-shadow: inset 0 0 100px 40px rgba(200, 0, 0, 0.6);
+  }
+}
+
 /* Enemy slots container */
 .enemy-slots {
   position: absolute;
@@ -472,11 +500,24 @@ h1 {
   border: 1px solid #555;
   cursor: help;
   transition: all 0.2s ease;
+  animation: intentPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes intentPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 5px rgba(255, 100, 100, 0.3);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 12px rgba(255, 100, 100, 0.6);
+  }
 }
 
 .arena-enemy-intent:hover {
   border-color: #f4d03f;
   background: rgba(0, 0, 0, 0.95);
+  animation: none;
 }
 
 /* Intent tooltip - shows on hover */
@@ -1141,10 +1182,70 @@ h1 {
   pointer-events: none;
 }
 
+/* Turn announcement banner */
+.turn-banner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 50;
+  padding: 15px 50px;
+  font-size: 1.6em;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+  border-radius: 4px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.turn-banner.player-turn {
+  background: linear-gradient(135deg, rgba(52, 152, 219, 0.9) 0%, rgba(41, 128, 185, 0.9) 100%);
+  color: #fff;
+  border: 2px solid #3498db;
+  box-shadow: 0 0 20px rgba(52, 152, 219, 0.5);
+}
+
+.turn-banner.enemy-turn {
+  background: linear-gradient(135deg, rgba(192, 57, 43, 0.9) 0%, rgba(231, 76, 60, 0.9) 100%);
+  color: #fff;
+  border: 2px solid #e74c3c;
+  box-shadow: 0 0 20px rgba(231, 76, 60, 0.5);
+}
+
+.turn-banner.active {
+  animation: turnBannerSlide 1.2s ease-out forwards;
+}
+
+@keyframes turnBannerSlide {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) translateX(-100px);
+  }
+  15% {
+    opacity: 1;
+    transform: translate(-50%, -50%) translateX(0);
+  }
+  75% {
+    opacity: 1;
+    transform: translate(-50%, -50%) translateX(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) translateX(100px);
+  }
+}
+
 /* Responsive arena */
 @media (max-width: 600px) {
   .dungeon-scene {
     height: 200px;
+  }
+
+  .turn-banner {
+    font-size: 1.1em;
+    padding: 10px 30px;
   }
 
   .enemy-figure {
@@ -1332,8 +1433,9 @@ h2 {
 }
 
 .card:hover:not(.unplayable) {
-  transform: translateY(-4px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  transform: translateY(-40px) scale(1.15);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.5);
+  z-index: 10;
 }
 
 .card.attack {
@@ -2199,9 +2301,11 @@ button.icon-btn:hover {
   position: relative;
   width: 100%;
   height: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 40px 20px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 20px 40px;
+  display: flex;
+  align-items: center;
 }
 
 .map-connections {
@@ -2215,33 +2319,38 @@ button.icon-btn:hover {
 }
 
 .map-line {
-  stroke-width: 3;
+  stroke-width: 2;
   stroke-linecap: round;
 }
 
 .map-line--available {
-  stroke: rgba(244, 208, 63, 0.6);
-  filter: drop-shadow(0 0 4px rgba(244, 208, 63, 0.4));
+  stroke: rgba(244, 208, 63, 0.5);
 }
 
-.map-line--visited {
-  stroke: rgba(100, 100, 100, 0.4);
-}
-
-.map-line--locked {
-  stroke: rgba(60, 60, 60, 0.3);
+.map-line--future {
+  stroke: rgba(150, 150, 150, 0.2);
 }
 
 .map-nodes {
   position: relative;
   z-index: 2;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 50px;
-  padding: 20px 0;
+  gap: 80px;
+  padding: 0 20px;
+  min-width: max-content;
 }
 
+.map-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+}
+
+/* Legacy support - can be removed later */
 .map-row {
   display: flex;
   justify-content: center;
@@ -2384,30 +2493,43 @@ button.icon-btn:hover {
 
 /* Responsive Map */
 @media (max-width: 600px) {
+  .map-nodes {
+    gap: 50px;
+  }
+
+  .map-column {
+    gap: 25px;
+  }
+
   .map-row {
     gap: 30px;
   }
 
   .map-node {
-    width: 48px;
-    height: 48px;
+    width: 44px;
+    height: 44px;
   }
 
   .map-node-icon {
-    font-size: 1.3em;
+    font-size: 1.2em;
   }
 
   .map-node--boss {
-    width: 60px;
-    height: 60px;
+    width: 56px;
+    height: 56px;
   }
 
   .map-legend {
-    gap: 12px;
-    font-size: 0.75em;
+    gap: 10px;
+    font-size: 0.7em;
+    padding: 8px 15px;
   }
 
   .map-title {
     font-size: 1.1em;
+  }
+
+  .map-scroll-area {
+    padding: 15px 20px;
   }
 }

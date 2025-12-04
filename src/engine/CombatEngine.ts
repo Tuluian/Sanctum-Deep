@@ -14,8 +14,15 @@ import {
   EnemyMove,
   EndTurnResult,
   IntentType,
+  Minion,
+  MAX_MINIONS,
+  MAX_FAVOR,
+  DEBT_STACK_THRESHOLD,
+  DEBT_STACK_DAMAGE,
   PlayerState,
   PlayCardResult,
+  Price,
+  PriceType,
   StatusType,
   Vow,
   VowBonusType,
@@ -23,6 +30,7 @@ import {
   WhimsyEffect,
 } from '@/types';
 import { getCardById, OATHSWORN_VOWS } from '@/data/cards';
+import { getMinionById } from '@/data/minions';
 
 export class CombatEngine {
   private state: CombatState;
@@ -438,9 +446,15 @@ export class CombatEngine {
       if (vowResult) log.push(vowResult);
     }
 
+    // Handle Price application (Bargainer mechanic)
+    if (card.price) {
+      const priceResult = this.applyPrice(card.price, card.id);
+      if (priceResult) log.push(priceResult);
+    }
+
     // Move to discard (or exhaust for Power cards or cards with exhaust property)
-    if (card.type === CardType.POWER || card.exhaust) {
-      // Powers and cards with exhaust property don't go to discard, they're consumed
+    if (card.type === CardType.POWER || card.exhaust || card.exhaustOnDiscard) {
+      // Powers, exhaust cards, and exhaustOnDiscard cards don't go to discard
       this.state.player.exhaustPile.push(card);
     } else {
       this.state.player.discardPile.push(card);
@@ -460,7 +474,7 @@ export class CombatEngine {
     return { success: true, log };
   }
 
-  private executeEffect(effect: { type: EffectType; amount: number; cardId?: string }, target?: Enemy, isAttack: boolean = false): string | null {
+  private executeEffect(effect: { type: EffectType; amount: number; cardId?: string; perStack?: number; minionId?: string; multiplier?: number }, target?: Enemy, isAttack: boolean = false): string | null {
     switch (effect.type) {
       case EffectType.DAMAGE: {
         if (target) {
@@ -474,6 +488,10 @@ export class CombatEngine {
           // Apply Vow damage bonus (Oathsworn)
           if (isAttack && this.state.player.activeVow?.bonus.type === VowBonusType.DAMAGE_BOOST) {
             damageAmount += this.state.player.activeVow.bonus.amount;
+          }
+          // Apply Divine Form bonus (Celestial)
+          if (isAttack && this.hasDivineForm()) {
+            damageAmount += 1;
           }
           const result = this.dealDamageToEnemy(target, damageAmount);
           // Consume a Vow charge if this is an attack
@@ -491,6 +509,10 @@ export class CombatEngine {
         // Apply Vow damage bonus for AoE attacks too
         if (isAttack && this.state.player.activeVow?.bonus.type === VowBonusType.DAMAGE_BOOST) {
           damageAmount += this.state.player.activeVow.bonus.amount;
+        }
+        // Apply Divine Form bonus (Celestial)
+        if (isAttack && this.hasDivineForm()) {
+          damageAmount += 1;
         }
         for (const enemy of aliveEnemies) {
           this.dealDamageToEnemy(enemy, damageAmount);
@@ -836,6 +858,140 @@ export class CombatEngine {
         return 'Next Whimsy is guaranteed best outcome';
       }
 
+      // Celestial effects
+      case EffectType.GAIN_RADIANCE: {
+        const previousRadiance = this.state.player.radiance;
+        this.state.player.radiance = Math.min(
+          this.state.player.radiance + effect.amount,
+          this.state.player.maxRadiance
+        );
+        this.emit(CombatEventType.RADIANCE_CHANGED, { radiance: this.state.player.radiance });
+
+        // Check for Divine Form activation at max Radiance
+        if (previousRadiance < this.state.player.maxRadiance && this.state.player.radiance >= this.state.player.maxRadiance) {
+          this.activateDivineForm();
+        }
+
+        return `Gained ${effect.amount} Radiance (${this.state.player.radiance}/${this.state.player.maxRadiance})`;
+      }
+
+      case EffectType.CONSUME_RADIANCE_DAMAGE: {
+        if (!target) return null;
+        const radianceConsumed = this.state.player.radiance;
+        const bonusDamage = radianceConsumed * (effect.perStack || 0);
+
+        // Deactivate Divine Form if active (radiance dropping below max)
+        if (radianceConsumed > 0 && this.state.player.radiance >= this.state.player.maxRadiance) {
+          this.deactivateDivineForm();
+        }
+
+        this.state.player.radiance = 0;
+        this.emit(CombatEventType.RADIANCE_CHANGED, { radiance: 0 });
+
+        if (bonusDamage > 0) {
+          this.dealDamageToEnemy(target, bonusDamage);
+          return `Consumed ${radianceConsumed} Radiance for ${bonusDamage} bonus damage`;
+        }
+        return `Consumed ${radianceConsumed} Radiance (no bonus damage)`;
+      }
+
+      // Summoner effects
+      case EffectType.SUMMON_MINION: {
+        if (!effect.minionId) return null;
+        if (this.state.player.minions.length >= MAX_MINIONS) {
+          return 'Cannot summon - maximum minions reached (4)';
+        }
+        const minionDef = getMinionById(effect.minionId);
+        if (!minionDef) return null;
+
+        const minion = this.createMinionInstance(minionDef);
+        this.state.player.minions.push(minion);
+        this.emit(CombatEventType.MINION_SUMMONED, { minion });
+        this.log(`Summoned ${minion.name}!`);
+        return `Summoned ${minion.name} (${minion.currentHp} HP, ${minion.attackDamage} attack)`;
+      }
+
+      case EffectType.BLOCK_ALL_MINIONS: {
+        if (this.state.player.minions.length === 0) {
+          return 'No minions to shield';
+        }
+        for (const minion of this.state.player.minions) {
+          minion.block += effect.amount;
+          this.emit(CombatEventType.MINION_BLOCK_CHANGED, {
+            minionId: minion.instanceId,
+            block: minion.block,
+          });
+        }
+        return `All minions gained ${effect.amount} block`;
+      }
+
+      case EffectType.MINIONS_ATTACK: {
+        if (this.state.player.minions.length === 0) {
+          return 'No minions to attack';
+        }
+        const logs: string[] = [];
+        for (const minion of this.state.player.minions) {
+          const attackLog = this.minionAttack(minion);
+          logs.push(attackLog);
+        }
+        return logs.join(', ');
+      }
+
+      case EffectType.GAIN_BLOCK_FROM_MINION_HP: {
+        const totalMinionHp = this.state.player.minions.reduce(
+          (sum, m) => sum + m.currentHp,
+          0
+        );
+        if (totalMinionHp === 0) {
+          return 'No minions - no block gained';
+        }
+        this.state.player.block += totalMinionHp;
+        this.emit(CombatEventType.PLAYER_BLOCK_CHANGED, { block: this.state.player.block });
+        return `Gained ${totalMinionHp} block from minion HP`;
+      }
+
+      // Bargainer effects
+      case EffectType.GAIN_FAVOR: {
+        const previousFavor = this.state.player.favor;
+        this.state.player.favor = Math.min(
+          this.state.player.favor + effect.amount,
+          MAX_FAVOR
+        );
+        this.emit(CombatEventType.FAVOR_CHANGED, { favor: this.state.player.favor });
+        return `Gained ${this.state.player.favor - previousFavor} Favor (${this.state.player.favor}/${MAX_FAVOR})`;
+      }
+
+      case EffectType.DAMAGE_PER_PRICE: {
+        if (!target) return null;
+        const priceCount = this.state.player.activePrices.length;
+        const multiplier = effect.multiplier || 1;
+        const damage = priceCount * multiplier;
+        if (damage > 0) {
+          return this.dealDamageToEnemy(target, damage);
+        }
+        return `Dealt ${damage} damage (${priceCount} prices × ${multiplier})`;
+      }
+
+      case EffectType.REMOVE_ALL_PRICES: {
+        const priceCount = this.state.player.activePrices.length;
+        if (priceCount === 0) {
+          return 'No Prices to remove';
+        }
+        // Restore RESOLVE_TAX effects
+        for (const price of this.state.player.activePrices) {
+          if (price.type === PriceType.RESOLVE_TAX) {
+            this.state.player.maxResolve = Math.min(
+              this.state.player.maxResolve + price.amount,
+              this.state.player.baseMaxResolve
+            );
+          }
+        }
+        this.state.player.activePrices = [];
+        this.emit(CombatEventType.PRICE_REMOVED, { allPrices: true });
+        this.emit(CombatEventType.PLAYER_RESOLVE_CHANGED, { resolve: this.state.player.resolve, maxResolve: this.state.player.maxResolve });
+        return `Removed all ${priceCount} Prices`;
+      }
+
       default:
         return null;
     }
@@ -845,6 +1001,286 @@ export class CombatEngine {
   private pendingConditionalHeal: number = 0;
   // Track pending vow reset (Celestial Chain)
   private pendingVowReset: boolean = false;
+  // Price ID counter (Bargainer)
+  private priceIdCounter = 0;
+
+  // Bargainer Price system methods
+  private applyPrice(priceDef: { type: PriceType; amount: number }, sourceCardId: string): string {
+    const price: Price = {
+      id: `price_${this.priceIdCounter++}`,
+      type: priceDef.type,
+      amount: priceDef.amount,
+      stacks: priceDef.type === PriceType.DEBT_STACK ? priceDef.amount : 0,
+      sourceCardId,
+    };
+
+    switch (priceDef.type) {
+      case PriceType.HP_DRAIN:
+        // Add to active prices, will drain HP at start of each turn
+        this.state.player.activePrices.push(price);
+        this.emit(CombatEventType.PRICE_ADDED, { price });
+        return `PRICE: Lose ${price.amount} HP per turn`;
+
+      case PriceType.RESOLVE_TAX:
+        // Immediately reduce max Resolve
+        this.state.player.activePrices.push(price);
+        this.state.player.maxResolve = Math.max(1, this.state.player.maxResolve - price.amount);
+        if (this.state.player.resolve > this.state.player.maxResolve) {
+          this.state.player.resolve = this.state.player.maxResolve;
+        }
+        this.emit(CombatEventType.PRICE_ADDED, { price });
+        this.emit(CombatEventType.PLAYER_RESOLVE_CHANGED, {
+          resolve: this.state.player.resolve,
+          maxResolve: this.state.player.maxResolve
+        });
+        return `PRICE: -${price.amount} max Resolve`;
+
+      case PriceType.CURSE_CARDS:
+        // Add Demonic Debt curses immediately
+        for (let i = 0; i < price.amount; i++) {
+          const curseCardDef = getCardById('demonic_debt');
+          if (curseCardDef) {
+            const newCurse = this.createCardInstance(curseCardDef);
+            this.state.player.drawPile.push(newCurse);
+            this.emit(CombatEventType.CARD_ADDED, { card: newCurse, destination: 'deck' });
+          }
+        }
+        this.state.player.drawPile = this.shuffle(this.state.player.drawPile);
+        this.emit(CombatEventType.PRICE_ADDED, { price });
+        return `PRICE: Added ${price.amount} Demonic Debt(s) to deck`;
+
+      case PriceType.DEBT_STACK:
+        // Add to existing debt stacks or create new
+        const existingDebt = this.state.player.activePrices.find(
+          p => p.type === PriceType.DEBT_STACK
+        );
+        if (existingDebt) {
+          existingDebt.stacks += price.amount;
+          this.emit(CombatEventType.PRICE_ADDED, { price: existingDebt });
+
+          // Check threshold
+          if (existingDebt.stacks >= DEBT_STACK_THRESHOLD) {
+            const excess = existingDebt.stacks - DEBT_STACK_THRESHOLD;
+            existingDebt.stacks = excess;
+            this.state.player.currentHp = Math.max(0, this.state.player.currentHp - DEBT_STACK_DAMAGE);
+            this.emit(CombatEventType.DEBT_THRESHOLD_TRIGGERED, { damage: DEBT_STACK_DAMAGE });
+            this.emit(CombatEventType.PLAYER_HP_CHANGED, { hp: this.state.player.currentHp });
+            this.log(`Debt threshold reached! Took ${DEBT_STACK_DAMAGE} damage!`);
+            return `PRICE: Debt stacks at ${DEBT_STACK_THRESHOLD}! Took ${DEBT_STACK_DAMAGE} damage!`;
+          }
+          return `PRICE: Debt stacks now at ${existingDebt.stacks}/${DEBT_STACK_THRESHOLD}`;
+        } else {
+          this.state.player.activePrices.push(price);
+          this.emit(CombatEventType.PRICE_ADDED, { price });
+          return `PRICE: Debt stacks at ${price.stacks}/${DEBT_STACK_THRESHOLD}`;
+        }
+    }
+  }
+
+  private processPricesAtTurnStart(): string[] {
+    const log: string[] = [];
+
+    for (const price of this.state.player.activePrices) {
+      if (price.type === PriceType.HP_DRAIN) {
+        this.state.player.currentHp = Math.max(0, this.state.player.currentHp - price.amount);
+        this.emit(CombatEventType.PRICE_TRIGGERED, { price });
+        this.emit(CombatEventType.PLAYER_HP_CHANGED, { hp: this.state.player.currentHp });
+        log.push(`Price: Lost ${price.amount} HP`);
+
+        // Check for death
+        if (this.state.player.currentHp <= 0) {
+          break;
+        }
+      }
+    }
+
+    return log;
+  }
+
+  // Spend Favor to remove a Price
+  spendFavorToRemovePrice(priceId: string): { success: boolean; message: string } {
+    const priceIndex = this.state.player.activePrices.findIndex(p => p.id === priceId);
+    if (priceIndex === -1) {
+      return { success: false, message: 'Price not found' };
+    }
+
+    const price = this.state.player.activePrices[priceIndex];
+    const favorCost = this.getFavorCostForPrice(price);
+
+    if (this.state.player.favor < favorCost) {
+      return { success: false, message: `Need ${favorCost} Favor, have ${this.state.player.favor}` };
+    }
+
+    // Spend Favor
+    this.state.player.favor -= favorCost;
+    this.emit(CombatEventType.FAVOR_CHANGED, { favor: this.state.player.favor });
+
+    // Remove the Price
+    this.state.player.activePrices.splice(priceIndex, 1);
+
+    // Restore RESOLVE_TAX if applicable
+    if (price.type === PriceType.RESOLVE_TAX) {
+      this.state.player.maxResolve = Math.min(
+        this.state.player.maxResolve + price.amount,
+        this.state.player.baseMaxResolve
+      );
+      this.emit(CombatEventType.PLAYER_RESOLVE_CHANGED, {
+        resolve: this.state.player.resolve,
+        maxResolve: this.state.player.maxResolve
+      });
+    }
+
+    this.emit(CombatEventType.PRICE_REMOVED, { price });
+    this.log(`Spent ${favorCost} Favor to remove ${this.getPriceDescription(price)}`);
+
+    return { success: true, message: `Removed ${this.getPriceDescription(price)}` };
+  }
+
+  private getFavorCostForPrice(price: Price): number {
+    // Cost scales with Price intensity
+    switch (price.type) {
+      case PriceType.HP_DRAIN:
+        return price.amount * 2; // 2 Favor per HP/turn
+      case PriceType.RESOLVE_TAX:
+        return price.amount * 3; // 3 Favor per Resolve
+      case PriceType.DEBT_STACK:
+        return Math.ceil(price.stacks / 2); // 1 Favor per 2 stacks
+      default:
+        return 2;
+    }
+  }
+
+  private getPriceDescription(price: Price): string {
+    switch (price.type) {
+      case PriceType.HP_DRAIN:
+        return `HP Drain (${price.amount}/turn)`;
+      case PriceType.RESOLVE_TAX:
+        return `Resolve Tax (-${price.amount})`;
+      case PriceType.DEBT_STACK:
+        return `Debt Stacks (${price.stacks})`;
+      default:
+        return 'Price';
+    }
+  }
+
+  // Divine Form methods (Celestial)
+  private activateDivineForm(): void {
+    const existingDivineForm = this.state.player.statusEffects.find(
+      e => e.type === StatusType.DIVINE_FORM
+    );
+    if (!existingDivineForm) {
+      this.state.player.statusEffects.push({
+        type: StatusType.DIVINE_FORM,
+        amount: 1, // +1 damage to all attacks
+      });
+      this.emit(CombatEventType.DIVINE_FORM_ACTIVATED, { radiance: this.state.player.radiance });
+      this.log('Divine Form activated! +1 damage to all attacks.');
+    }
+  }
+
+  private deactivateDivineForm(): void {
+    const index = this.state.player.statusEffects.findIndex(
+      e => e.type === StatusType.DIVINE_FORM
+    );
+    if (index !== -1) {
+      this.state.player.statusEffects.splice(index, 1);
+      this.emit(CombatEventType.DIVINE_FORM_DEACTIVATED, {});
+      this.log('Divine Form deactivated.');
+    }
+  }
+
+  private hasDivineForm(): boolean {
+    return this.state.player.statusEffects.some(e => e.type === StatusType.DIVINE_FORM);
+  }
+
+  // Minion system methods (Summoner)
+  private minionInstanceCounter = 0;
+
+  private createMinionInstance(minionDef: { id: string; name: string; maxHp: number; attackDamage: number }): Minion {
+    return {
+      id: minionDef.id,
+      instanceId: `${minionDef.id}_${this.minionInstanceCounter++}`,
+      name: minionDef.name,
+      maxHp: minionDef.maxHp,
+      currentHp: minionDef.maxHp,
+      block: 0,
+      attackDamage: minionDef.attackDamage,
+      statusEffects: [],
+    };
+  }
+
+  private minionAttack(minion: Minion): string {
+    const aliveEnemies = this.state.enemies.filter(e => e.currentHp > 0);
+    if (aliveEnemies.length === 0) {
+      return `${minion.name} has no target`;
+    }
+
+    // Attack random enemy
+    const target = aliveEnemies[Math.floor(Math.random() * aliveEnemies.length)];
+    this.emit(CombatEventType.MINION_ATTACKED, {
+      minionId: minion.instanceId,
+      targetId: target.id,
+      damage: minion.attackDamage,
+    });
+
+    this.dealDamageToEnemy(target, minion.attackDamage);
+    return `${minion.name} attacked ${target.name} for ${minion.attackDamage}`;
+  }
+
+  private minionAutoAttackPhase(): string[] {
+    const log: string[] = [];
+    for (const minion of this.state.player.minions) {
+      const attackLog = this.minionAttack(minion);
+      log.push(attackLog);
+    }
+    return log;
+  }
+
+  private dealDamageToMinion(minion: Minion, damage: number): { blocked: number; hpDamage: number } {
+    let remaining = damage;
+
+    // Block absorbs first
+    const blocked = Math.min(remaining, minion.block);
+    minion.block -= blocked;
+    remaining -= blocked;
+
+    // HP takes remainder
+    const hpDamage = remaining;
+    minion.currentHp = Math.max(0, minion.currentHp - hpDamage);
+
+    this.emit(CombatEventType.MINION_DAMAGED, {
+      minionId: minion.instanceId,
+      damage,
+      blocked,
+      hpDamage,
+      remainingHp: minion.currentHp,
+    });
+
+    if (minion.currentHp <= 0) {
+      // Remove dead minion
+      this.state.player.minions = this.state.player.minions.filter(
+        m => m.instanceId !== minion.instanceId
+      );
+      this.emit(CombatEventType.MINION_DIED, { minion });
+      this.log(`${minion.name} was destroyed!`);
+    }
+
+    return { blocked, hpDamage };
+  }
+
+  private dealDamageToPlayerOrMinion(damage: number): { targetName: string; blocked: number; hpDamage: number } {
+    // If minions exist, target a random minion
+    if (this.state.player.minions.length > 0) {
+      const targetIndex = Math.floor(Math.random() * this.state.player.minions.length);
+      const minion = this.state.player.minions[targetIndex];
+      const result = this.dealDamageToMinion(minion, damage);
+      return { targetName: minion.name, blocked: result.blocked, hpDamage: result.hpDamage };
+    }
+
+    // Otherwise target player
+    const result = this.dealDamageToPlayer(damage);
+    return { targetName: 'you', blocked: result.blocked, hpDamage: result.hpDamage };
+  }
 
   // Count curses in the entire deck (hand + draw + discard)
   private countCursesInDeck(): number {
@@ -1071,9 +1507,37 @@ export class CombatEngine {
 
     const log: string[] = [];
 
-    // Discard hand
-    this.state.player.discardPile.push(...this.state.player.hand);
+    // Discard hand (separating exhaustOnDiscard cards)
+    for (const card of this.state.player.hand) {
+      if (card.exhaustOnDiscard) {
+        this.state.player.exhaustPile.push(card);
+      } else {
+        this.state.player.discardPile.push(card);
+      }
+    }
     this.state.player.hand = [];
+
+    // Minion auto-attack phase (Summoner mechanic)
+    if (this.state.player.minions.length > 0) {
+      const minionLogs = this.minionAutoAttackPhase();
+      log.push(...minionLogs);
+
+      // Check victory after minion attacks
+      if (this.state.enemies.every((e) => e.currentHp <= 0)) {
+        this.state.victory = true;
+        this.state.gameOver = true;
+        this.state.phase = CombatPhase.VICTORY;
+        this.emit(CombatEventType.GAME_OVER, { victory: true });
+        log.push('Victory!');
+        return { log };
+      }
+    }
+
+    // Reset minion block at end of turn
+    for (const minion of this.state.player.minions) {
+      minion.block = 0;
+      this.emit(CombatEventType.MINION_BLOCK_CHANGED, { minionId: minion.instanceId, block: 0 });
+    }
 
     // Enemy phase
     this.state.phase = CombatPhase.ENEMY_ACTION;
@@ -1110,8 +1574,8 @@ export class CombatEngine {
         case IntentType.ATTACK:
           if (intent.damage) {
             const totalDamage = intent.damage + mightBonus;
-            const result = this.dealDamageToPlayer(totalDamage);
-            log.push(`${enemy.name} dealt ${totalDamage} damage (${result.hpDamage} to HP)`);
+            const attackResult = this.dealDamageToPlayerOrMinion(totalDamage);
+            log.push(`${enemy.name} dealt ${totalDamage} damage to ${attackResult.targetName} (${attackResult.hpDamage} to HP)`);
             // Handle lifesteal (attack with heal)
             if (intent.heal && intent.heal > 0) {
               const healAmount = Math.min(intent.heal, enemy.maxHp - enemy.currentHp);
@@ -1125,8 +1589,8 @@ export class CombatEngine {
           if (intent.damage && intent.times) {
             for (let i = 0; i < intent.times; i++) {
               const totalDamage = intent.damage + mightBonus;
-              const result = this.dealDamageToPlayer(totalDamage);
-              log.push(`${enemy.name} dealt ${totalDamage} damage (${result.hpDamage} to HP)`);
+              const attackResult = this.dealDamageToPlayerOrMinion(totalDamage);
+              log.push(`${enemy.name} dealt ${totalDamage} damage to ${attackResult.targetName} (${attackResult.hpDamage} to HP)`);
               // Check if player died mid-attack
               if (this.state.player.currentHp <= 0) break;
             }
@@ -1367,6 +1831,24 @@ export class CombatEngine {
     this.state.phase = CombatPhase.CLEANUP;
     this.state.turn++;
 
+    log.push(`--- Turn ${this.state.turn} ---`);
+
+    // Process Prices at start of player turn (Bargainer mechanic)
+    if (this.state.player.activePrices.length > 0) {
+      const priceLogs = this.processPricesAtTurnStart();
+      log.push(...priceLogs);
+
+      // Check defeat after Price processing
+      if (this.state.player.currentHp <= 0) {
+        this.state.gameOver = true;
+        this.state.victory = false;
+        this.state.phase = CombatPhase.DEFEAT;
+        this.emit(CombatEventType.GAME_OVER, { victory: false });
+        log.push('You have been defeated by your Prices!');
+        return { log };
+      }
+    }
+
     // Draw phase
     this.state.phase = CombatPhase.DRAW;
     this.state.player.resolve = this.state.player.maxResolve;
@@ -1376,8 +1858,6 @@ export class CombatEngine {
     // Player action phase
     this.state.phase = CombatPhase.PLAYER_ACTION;
     this.emit(CombatEventType.PHASE_CHANGED, { phase: CombatPhase.PLAYER_ACTION });
-
-    log.push(`--- Turn ${this.state.turn} ---`);
 
     return { log };
   }

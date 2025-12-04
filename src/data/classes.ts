@@ -61,6 +61,44 @@ export const CLASSES: Record<CharacterClassId, CharacterClass> = {
       { cardId: 'tricksters_trade', count: 1 },
     ],
   },
+  [CharacterClassId.CELESTIAL]: {
+    id: CharacterClassId.CELESTIAL,
+    name: 'Celestial',
+    maxHp: 70,
+    maxResolve: 3,
+    starterDeckRecipe: [
+      { cardId: 'holy_bolt', count: 4 },
+      { cardId: 'celestial_shield', count: 3 },
+      { cardId: 'blessing', count: 2 },
+      { cardId: 'smite_the_wicked_celestial', count: 1 },
+    ],
+  },
+  [CharacterClassId.SUMMONER]: {
+    id: CharacterClassId.SUMMONER,
+    name: 'Summoner',
+    maxHp: 65,
+    maxResolve: 3,
+    starterDeckRecipe: [
+      { cardId: 'spirit_bolt', count: 3 },
+      { cardId: 'summon_wisp', count: 3 },
+      { cardId: 'shield_minions', count: 2 },
+      { cardId: 'rally', count: 1 },
+      { cardId: 'soul_link', count: 1 },
+    ],
+  },
+  [CharacterClassId.BARGAINER]: {
+    id: CharacterClassId.BARGAINER,
+    name: 'Bargainer',
+    maxHp: 80,
+    maxResolve: 3,
+    starterDeckRecipe: [
+      { cardId: 'dark_pact', count: 3 },
+      { cardId: 'infernal_shield', count: 3 },
+      { cardId: 'collect_favor', count: 2 },
+      { cardId: 'debt_collector', count: 1 },
+      { cardId: 'blood_payment', count: 1 },
+    ],
+  },
 };
 
 export function createStarterDeck(classId: CharacterClassId): Card[] {

@@ -51,9 +51,9 @@ export function createMapScreen(callbacks: MapScreenCallbacks): Screen {
     `;
   };
 
-  const renderRow = (nodes: MapNode[], rowIndex: number): string => {
+  const renderColumn = (nodes: MapNode[], columnIndex: number): string => {
     return `
-      <div class="map-row" data-row="${rowIndex}">
+      <div class="map-column" data-column="${columnIndex}">
         ${nodes.map(renderNode).join('')}
       </div>
     `;
@@ -73,10 +73,11 @@ export function createMapScreen(callbacks: MapScreenCallbacks): Screen {
       return;
     }
 
-    // Render rows from top (boss) to bottom (start)
-    const rowsHtml: string[] = [];
-    for (let i = currentFloor.rows.length - 1; i >= 0; i--) {
-      rowsHtml.push(renderRow(currentFloor.rows[i], i));
+    // Render columns from left (start) to right (boss)
+    // Each "row" in the data represents a vertical slice (column) in the horizontal layout
+    const columnsHtml: string[] = [];
+    for (let i = 0; i < currentFloor.rows.length; i++) {
+      columnsHtml.push(renderColumn(currentFloor.rows[i], i));
     }
 
     element.innerHTML = `
@@ -88,7 +89,7 @@ export function createMapScreen(callbacks: MapScreenCallbacks): Screen {
         <div class="map-scroll-area">
           ${calculateConnections()}
           <div class="map-nodes">
-            ${rowsHtml.join('')}
+            ${columnsHtml.join('')}
           </div>
         </div>
       </div>
@@ -137,62 +138,77 @@ export function createMapScreen(callbacks: MapScreenCallbacks): Screen {
     const svg = document.getElementById('map-connections-svg');
     if (!svg) return;
 
-    const container = element.querySelector('.map-scroll-area');
-    if (!container) return;
+    const scrollArea = element.querySelector('.map-scroll-area') as HTMLElement;
+    if (!scrollArea) return;
 
     // Clear existing lines
     svg.innerHTML = '';
 
-    // Get container bounds for coordinate calculation
-    const containerRect = container.getBoundingClientRect();
+    // Get scroll area bounds - SVG is positioned relative to this
+    const scrollAreaRect = scrollArea.getBoundingClientRect();
 
-    for (const row of currentFloor.rows) {
-      for (const node of row) {
-        const fromEl = element.querySelector(`[data-node-id="${node.id}"]`);
-        if (!fromEl) continue;
+    // Set SVG size to match the full scrollable content
+    svg.setAttribute('width', String(scrollArea.scrollWidth));
+    svg.setAttribute('height', String(scrollArea.scrollHeight));
 
+    // Show connections only for nodes reachable from current position
+    if (!currentNodeId) return;
+
+    // Build set of reachable node IDs using BFS from current node
+    const reachableNodes = new Set<string>();
+    const queue: string[] = [currentNodeId];
+
+    while (queue.length > 0) {
+      const nodeId = queue.shift()!;
+      if (reachableNodes.has(nodeId)) continue;
+      reachableNodes.add(nodeId);
+
+      const node = findNode(currentFloor, nodeId);
+      if (node) {
         for (const connId of node.connections) {
-          const toEl = element.querySelector(`[data-node-id="${connId}"]`);
-          if (!toEl) continue;
-
-          const fromRect = fromEl.getBoundingClientRect();
-          const toRect = toEl.getBoundingClientRect();
-
-          const x1 = fromRect.left + fromRect.width / 2 - containerRect.left;
-          const y1 = fromRect.top + fromRect.height / 2 - containerRect.top;
-          const x2 = toRect.left + toRect.width / 2 - containerRect.left;
-          const y2 = toRect.top + toRect.height / 2 - containerRect.top;
-
-          const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-          line.setAttribute('x1', String(x1));
-          line.setAttribute('y1', String(y1));
-          line.setAttribute('x2', String(x2));
-          line.setAttribute('y2', String(y2));
-
-          // Style based on node states
-          const fromState = getNodeState(node);
-          const toNode = findNode(currentFloor!, connId);
-          const toState = toNode ? getNodeState(toNode) : 'locked';
-
-          if (fromState === 'visited' && toState === 'visited') {
-            line.classList.add('map-line', 'map-line--visited');
-          } else if (fromState === 'current' || toState === 'available') {
-            line.classList.add('map-line', 'map-line--available');
-          } else {
-            line.classList.add('map-line', 'map-line--locked');
+          if (!reachableNodes.has(connId)) {
+            queue.push(connId);
           }
-
-          svg.appendChild(line);
         }
       }
     }
 
-    // Set SVG size to match container
-    const scrollArea = element.querySelector('.map-nodes');
-    if (scrollArea) {
-      const rect = scrollArea.getBoundingClientRect();
-      svg.setAttribute('width', String(rect.width));
-      svg.setAttribute('height', String(rect.height));
+    // Draw connections only for reachable nodes
+    for (const nodeId of reachableNodes) {
+      const node = findNode(currentFloor, nodeId);
+      if (!node) continue;
+
+      const fromEl = element.querySelector(`[data-node-id="${nodeId}"]`) as HTMLElement;
+      if (!fromEl) continue;
+
+      for (const connId of node.connections) {
+        const toEl = element.querySelector(`[data-node-id="${connId}"]`) as HTMLElement;
+        if (!toEl) continue;
+
+        const fromRect = fromEl.getBoundingClientRect();
+        const toRect = toEl.getBoundingClientRect();
+
+        // Calculate positions relative to scroll area, then add scroll offset
+        const x1 = fromRect.left - scrollAreaRect.left + scrollArea.scrollLeft + fromRect.width / 2;
+        const y1 = fromRect.top - scrollAreaRect.top + scrollArea.scrollTop + fromRect.height / 2;
+        const x2 = toRect.left - scrollAreaRect.left + scrollArea.scrollLeft + toRect.width / 2;
+        const y2 = toRect.top - scrollAreaRect.top + scrollArea.scrollTop + toRect.height / 2;
+
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', String(x1));
+        line.setAttribute('y1', String(y1));
+        line.setAttribute('x2', String(x2));
+        line.setAttribute('y2', String(y2));
+
+        // Brighter lines for immediate choices, dimmer for future paths
+        if (nodeId === currentNodeId) {
+          line.classList.add('map-line', 'map-line--available');
+        } else {
+          line.classList.add('map-line', 'map-line--future');
+        }
+
+        svg.appendChild(line);
+      }
     }
   };
 
@@ -201,7 +217,8 @@ export function createMapScreen(callbacks: MapScreenCallbacks): Screen {
 
     const currentEl = element.querySelector(`[data-node-id="${currentNodeId}"]`);
     if (currentEl) {
-      currentEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // For horizontal layout, use inline: 'center' to center horizontally
+      currentEl.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
     }
   };
 
