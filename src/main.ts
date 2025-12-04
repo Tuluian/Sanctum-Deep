@@ -5,14 +5,23 @@ import { createMainMenuScreen } from '@/ui/screens/MainMenuScreen';
 import { createClassSelectScreen } from '@/ui/screens/ClassSelectScreen';
 import { createSettingsScreen } from '@/ui/screens/SettingsScreen';
 import { createMapScreen } from '@/ui/screens/MapScreen';
+import { createUpgradeScreen } from '@/ui/screens/UpgradeScreen';
+import { createNarrativeEventScreen } from '@/ui/screens/NarrativeEventScreen';
+import { StoryCardOverlay } from '@/ui/screens/StoryCardOverlay';
 import { SaveManager } from '@/services/SaveManager';
 import { AudioManager } from '@/services/AudioManager';
+import { NarrativeEventService, initNarrativeEventService } from '@/services/NarrativeEventService';
+import { applyCombatModifiersToPlayer, getRunModifiers, type RunModifiers } from '@/services/UpgradeEffects';
 import { createStarterDeck, CLASSES } from '@/data/classes';
 import { ACT1_ENEMIES } from '@/data/enemies/act1';
 import { ELITE_ENEMIES } from '@/data/enemies/elites';
 import { BOSSES, MINIONS } from '@/data/enemies/bosses';
+import { HOLLOW_GOD, SHADOW_SELF } from '@/data/enemies/act3-boss';
+import { ACT3_ELITE_ENEMIES } from '@/data/enemies/act3-elites';
+import { ACT3_ENEMIES } from '@/data/enemies/act3';
 import { generateFloor } from '@/map/MapGenerator';
 import { CardType, CharacterClassId, CombatEventType, PlayerState, FloorMap, MapNode, NodeType, EnemyDefinition } from '@/types';
+import { NarrativeEvent, NarrativeChoice } from '@/types/narrativeEvents';
 import './styles/main.css';
 
 // Extended map screen type with custom methods
@@ -35,6 +44,10 @@ class Game {
   private currentFloor: FloorMap | null = null;
   private currentNode: MapNode | null = null;
   private mapScreen: MapScreenExtended | null = null;
+  private narrativeService: NarrativeEventService | null = null;
+  private storyCardOverlay: StoryCardOverlay | null = null;
+  private isFirstCombat: boolean = true;
+  private runModifiers: RunModifiers | null = null;
 
   constructor() {
     this.renderer = new CombatRenderer();
@@ -44,6 +57,7 @@ class Game {
     this.setupAudio();
     this.setupScreens();
     this.setupCombatEventListeners();
+    this.setupStoryCardOverlay();
   }
 
   private setupAudio(): void {
@@ -68,8 +82,14 @@ class Game {
     const mainMenu = createMainMenuScreen(
       () => this.screenManager.navigateTo('class-select'),
       () => this.continueRun(),
-      () => this.screenManager.navigateTo('settings')
+      () => this.screenManager.navigateTo('settings'),
+      () => this.screenManager.navigateTo('upgrades')
     );
+
+    // Upgrade Screen
+    const upgradeScreen = createUpgradeScreen({
+      onBack: () => this.screenManager.back(),
+    });
 
     // Class Select
     const classSelect = createClassSelectScreen({
@@ -92,11 +112,21 @@ class Game {
       },
     }) as MapScreenExtended;
 
+    // Narrative Event Screen
+    const narrativeEventScreen = createNarrativeEventScreen({
+      onChoiceSelected: (event: NarrativeEvent, choice: NarrativeChoice) => {
+        return this.handleNarrativeChoice(event, choice);
+      },
+      onEventComplete: () => this.handleNarrativeEventComplete(),
+    });
+
     // Register screens
     this.screenManager.register(mainMenu);
+    this.screenManager.register(upgradeScreen);
     this.screenManager.register(classSelect);
     this.screenManager.register(settings);
     this.screenManager.register(this.mapScreen);
+    this.screenManager.register(narrativeEventScreen);
 
     // Start at main menu
     this.screenManager.navigateTo('main-menu');
@@ -216,17 +246,269 @@ class Game {
     this.screenManager.navigateTo('settings');
   }
 
+  private setupStoryCardOverlay(): void {
+    this.storyCardOverlay = new StoryCardOverlay({
+      onDismiss: () => {
+        // Story card dismissed, continue with game flow
+      },
+    });
+  }
+
+  // ===========================================================================
+  // NARRATIVE EVENT HANDLING
+  // ===========================================================================
+
+  /**
+   * Handle a choice made in a narrative event
+   */
+  private handleNarrativeChoice(event: NarrativeEvent, choice: NarrativeChoice): {
+    outcome: import('@/types/narrativeEvents').EventOutcome;
+    rewardDescriptions: string[];
+    penaltyDescriptions: string[];
+  } {
+    if (!this.narrativeService) {
+      throw new Error('Narrative service not initialized');
+    }
+
+    const result = this.narrativeService.resolveChoice(event, choice);
+
+    // Apply rewards and penalties to player state
+    const runData = SaveManager.getActiveRun();
+    if (runData) {
+      // Create a temporary player state to apply changes
+      const tempPlayer: PlayerState = {
+        classId: this.currentClassId!,
+        maxHp: runData.playerMaxHp,
+        currentHp: runData.playerHp,
+        block: 0,
+        resolve: 3,
+        maxResolve: 3,
+        hand: [],
+        drawPile: [],
+        discardPile: [],
+        exhaustPile: [],
+        statusEffects: [],
+        devotion: 0,
+        fortify: 0,
+        maxFortify: 15,
+        empoweredAttack: 0,
+        soulDebt: 0,
+        activeVow: null,
+        vowsActivatedThisCombat: 0,
+        luck: 0,
+        maxLuck: 10,
+        guaranteedBest: false,
+        radiance: 0,
+        maxRadiance: 10,
+        minions: [],
+        favor: 0,
+        activePrices: [],
+        baseMaxResolve: 3,
+      };
+
+      const rewardDescriptions = this.narrativeService.applyRewardsToPlayer(
+        tempPlayer,
+        result.appliedRewards
+      );
+      const penaltyDescriptions = this.narrativeService.applyPenaltiesToPlayer(
+        tempPlayer,
+        result.appliedPenalties
+      );
+
+      // Save updated player state
+      SaveManager.updateRun({
+        playerHp: tempPlayer.currentHp,
+        playerMaxHp: tempPlayer.maxHp,
+      });
+
+      // Handle gold changes
+      for (const reward of result.appliedRewards) {
+        if (reward.type === 'gold') {
+          SaveManager.updateRun({
+            gold: (runData.gold || 0) + (reward.amount || 0),
+          });
+        }
+      }
+
+      return {
+        outcome: result.outcome,
+        rewardDescriptions,
+        penaltyDescriptions,
+      };
+    }
+
+    return {
+      outcome: result.outcome,
+      rewardDescriptions: [],
+      penaltyDescriptions: [],
+    };
+  }
+
+  /**
+   * Handle narrative event completion
+   */
+  private handleNarrativeEventComplete(): void {
+    // Event completed
+
+    // If we have pending combat (e.g., after pre-boss event), start it
+    if (this.pendingCombatAfterNarrative && this.currentNode) {
+      this.pendingCombatAfterNarrative = false;
+      this.startCombatForNode(this.currentNode);
+      return;
+    }
+
+    // Check for story card after event
+    this.checkAndShowStoryCard();
+
+    // Return to map
+    this.showMapScreen();
+  }
+
+  /**
+   * Check for and show story card if appropriate
+   */
+  private checkAndShowStoryCard(): void {
+    if (!this.narrativeService || !this.storyCardOverlay) return;
+
+    const runData = SaveManager.getActiveRun();
+    if (!runData) return;
+
+    const tempPlayer: PlayerState = {
+      classId: this.currentClassId!,
+      maxHp: runData.playerMaxHp,
+      currentHp: runData.playerHp,
+      block: 0,
+      resolve: 3,
+      maxResolve: 3,
+      hand: [],
+      drawPile: [],
+      discardPile: [],
+      exhaustPile: [],
+      statusEffects: [],
+      devotion: 0,
+      fortify: 0,
+      maxFortify: 15,
+      empoweredAttack: 0,
+      soulDebt: 0,
+      activeVow: null,
+      vowsActivatedThisCombat: 0,
+      luck: 0,
+      maxLuck: 10,
+      guaranteedBest: false,
+      radiance: 0,
+      maxRadiance: 10,
+      minions: [],
+      favor: 0,
+      activePrices: [],
+      baseMaxResolve: 3,
+    };
+
+    const nodeType = this.currentNode?.type === NodeType.COMBAT ? 'combat'
+      : this.currentNode?.type === NodeType.ELITE ? 'elite'
+      : this.currentNode?.type === NodeType.BOSS ? 'boss'
+      : 'combat';
+
+    const result = this.narrativeService.checkForStoryCard(tempPlayer, {
+      nodeType,
+      isFirstCombat: this.isFirstCombat,
+      isEliteDefeated: this.currentNode?.type === NodeType.ELITE,
+    });
+
+    if (result.shouldShow && result.card) {
+      this.storyCardOverlay.show(result.card);
+    }
+  }
+
+  /**
+   * Check for narrative event before starting combat or after completing a room
+   */
+  private checkForNarrativeEvent(isBossPreFight: boolean = false, isBossPostFight: boolean = false): boolean {
+    if (!this.narrativeService) return false;
+
+    const runData = SaveManager.getActiveRun();
+    if (!runData) return false;
+
+    const tempPlayer: PlayerState = {
+      classId: this.currentClassId!,
+      maxHp: runData.playerMaxHp,
+      currentHp: runData.playerHp,
+      block: 0,
+      resolve: 3,
+      maxResolve: 3,
+      hand: [],
+      drawPile: [],
+      discardPile: [],
+      exhaustPile: [],
+      statusEffects: [],
+      devotion: 0,
+      fortify: 0,
+      maxFortify: 15,
+      empoweredAttack: 0,
+      soulDebt: 0,
+      activeVow: null,
+      vowsActivatedThisCombat: 0,
+      luck: 0,
+      maxLuck: 10,
+      guaranteedBest: false,
+      radiance: 0,
+      maxRadiance: 10,
+      minions: [],
+      favor: 0,
+      activePrices: [],
+      baseMaxResolve: 3,
+    };
+
+    const nodeType = this.currentNode?.type === NodeType.COMBAT ? 'combat'
+      : this.currentNode?.type === NodeType.ELITE ? 'elite'
+      : this.currentNode?.type === NodeType.BOSS ? 'boss'
+      : 'combat';
+
+    const result = this.narrativeService.checkForEvent(tempPlayer, {
+      nodeType,
+      isBossPreFight,
+      isBossPostFight,
+      bossId: this.currentNode?.type === NodeType.BOSS ? 'boss' : undefined,
+    });
+
+    if (result.shouldTrigger && result.event) {
+      this.showNarrativeEvent(result.event);
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Show narrative event screen
+   */
+  private showNarrativeEvent(event: NarrativeEvent): void {
+    // Get the narrative event screen and show the event
+    const screen = this.screenManager.getScreen('narrative-event-screen') as ReturnType<typeof createNarrativeEventScreen> | undefined;
+    if (screen && 'showEvent' in screen) {
+      screen.showEvent(event);
+      this.screenManager.navigateTo('narrative-event-screen');
+    }
+  }
+
   private startNewRun(classId: CharacterClassId): void {
     this.currentClassId = classId;
     const characterClass = CLASSES[classId];
+
+    // Get run modifiers from purchased upgrades
+    this.runModifiers = getRunModifiers(classId);
+    const maxHp = characterClass.maxHp + this.runModifiers.maxHpBonus;
 
     // Generate map for Act 1
     const mapSeed = `run_${Date.now()}_${Math.random().toString(36).slice(2)}`;
     this.currentFloor = generateFloor(1, mapSeed);
     const startNodeId = this.currentFloor.rows[0][0].id;
 
-    // Save the new run
-    SaveManager.startNewRun(classId, characterClass.maxHp, mapSeed, startNodeId);
+    // Save the new run with modified max HP
+    SaveManager.startNewRun(classId, maxHp, mapSeed, startNodeId);
+
+    // Initialize narrative service for this run
+    this.narrativeService = initNarrativeEventService(classId, mapSeed);
+    this.isFirstCombat = true;
 
     // Update class name in UI
     const classNameEl = document.getElementById('player-class-name');
@@ -272,6 +554,10 @@ class Game {
 
       // Note: Player will need to re-attempt the combat they abandoned
     }
+
+    // Initialize narrative service for continued run
+    this.narrativeService = initNarrativeEventService(runData.classId, runData.mapSeed);
+    this.isFirstCombat = runData.visitedNodeIds.length === 0;
 
     // Update class name in UI
     const classNameEl = document.getElementById('player-class-name');
@@ -321,6 +607,9 @@ class Game {
       baseMaxResolve: characterClass.maxResolve,
     };
 
+    // Apply upgrade modifiers for combat start
+    applyCombatModifiersToPlayer(player, classId);
+
     // Get enemies based on current node type
     const enemies = this.getEnemiesForNode();
 
@@ -331,11 +620,21 @@ class Game {
       this.combat.registerMinionDefinition(minion);
     }
 
-    // Subscribe to combat events for logging
+    // Subscribe to combat events for logging and UI updates
     this.combat.subscribe((event) => {
       if (event.type === CombatEventType.COMBAT_LOG) {
         const data = event.data as { message: string };
         this.renderer.addLog(data.message);
+      }
+      // Hollow God Chomp Timer - re-render when card is chomped
+      if (event.type === CombatEventType.CHOMP_TRIGGERED) {
+        const data = event.data as { card: { name: string }; taunt: string };
+        this.renderer.addLog(`The Void chomps! ${data.card.name} is lost... "${data.taunt}"`);
+        this.render();
+      }
+      // Card corruption - re-render to show corrupted visual
+      if (event.type === CombatEventType.CARD_CORRUPTED) {
+        this.render();
       }
     });
 
@@ -399,11 +698,17 @@ class Game {
 
     // Handle different node types
     if (node.type === NodeType.COMBAT || node.type === NodeType.ELITE || node.type === NodeType.BOSS) {
+      // Check for pre-boss narrative event
+      const isBoss = node.type === NodeType.BOSS;
+      if (isBoss && this.checkForNarrativeEvent(true, false)) {
+        // Event will show, combat starts after event completes
+        // Store that we need to start combat after narrative
+        this.pendingCombatAfterNarrative = true;
+        return;
+      }
+
       // Start combat
-      SaveManager.setCurrentNode(node.id);
-      SaveManager.setInCombat(true);
-      this.initCombat(this.currentClassId!);
-      this.showCombatScreen();
+      this.startCombatForNode(node);
     } else if (node.type === NodeType.CAMPFIRE) {
       // TODO: Show rest screen (heal or upgrade)
       this.handleCampfireNode(node);
@@ -415,6 +720,28 @@ class Game {
       this.handleNonCombatNode(node, 'Shrine events coming soon!');
     }
   }
+
+  /**
+   * Start combat for a given node
+   */
+  private startCombatForNode(node: MapNode): void {
+    SaveManager.setCurrentNode(node.id);
+    SaveManager.setInCombat(true);
+
+    // Track combat for narrative service
+    if (this.narrativeService) {
+      this.narrativeService.incrementCombatCount();
+    }
+
+    this.initCombat(this.currentClassId!);
+    this.showCombatScreen();
+
+    // No longer first combat after this
+    this.isFirstCombat = false;
+  }
+
+  // Flag for pending combat after narrative event
+  private pendingCombatAfterNarrative: boolean = false;
 
   private handleCampfireNode(node: MapNode): void {
     // Simple heal for now
@@ -467,6 +794,11 @@ class Game {
     // Combat is over
     SaveManager.setInCombat(false);
 
+    // Track room cleared for narrative service
+    if (this.narrativeService && victory) {
+      this.narrativeService.incrementRoomsCleared();
+    }
+
     if (victory) {
       // Mark current node as visited
       if (this.currentNode) {
@@ -491,6 +823,12 @@ class Game {
         this.renderer.showGameOver(true, soulEchoesReward, () => {
           this.renderer.removeGameOver();
           this.hideCombatScreen();
+
+          // Check for post-boss narrative event
+          if (this.checkForNarrativeEvent(false, true)) {
+            return; // Event will show first
+          }
+
           this.screenManager.navigateTo('main-menu', true);
         });
       } else {
@@ -502,6 +840,15 @@ class Game {
         this.renderer.showGameOver(true, soulEchoesReward, () => {
           this.renderer.removeGameOver();
           this.hideCombatScreen();
+
+          // Check for post-combat story card
+          this.checkAndShowStoryCard();
+
+          // Check for random narrative event after combat
+          if (this.checkForNarrativeEvent(false, false)) {
+            return; // Event will show first
+          }
+
           this.showMapScreen();
           AudioManager.playMusic('menu');
         });
@@ -606,9 +953,220 @@ class Game {
       });
     }
   }
+
+  // ===========================================
+  // DEBUG METHODS - For testing specific encounters
+  // ===========================================
+
+  /**
+   * Start a debug combat with specified enemies
+   * Available from browser console: window.debugCombat('hollow_god', 'knight')
+   */
+  debugCombat(enemyType: string, classId: CharacterClassId = CharacterClassId.DUNGEON_KNIGHT): void {
+    this.currentClassId = classId;
+    const characterClass = CLASSES[classId];
+    const starterDeck = createStarterDeck(classId);
+
+    // Create a powered-up player for testing boss fights
+    const player: PlayerState = {
+      classId,
+      maxHp: 100,
+      currentHp: 100,
+      block: 0,
+      resolve: characterClass.maxResolve,
+      maxResolve: characterClass.maxResolve,
+      hand: [],
+      drawPile: starterDeck,
+      discardPile: [],
+      exhaustPile: [],
+      statusEffects: [],
+      devotion: 0,
+      fortify: 0,
+      maxFortify: 15,
+      empoweredAttack: 0,
+      soulDebt: 0,
+      activeVow: null,
+      vowsActivatedThisCombat: 0,
+      luck: 0,
+      maxLuck: 10,
+      guaranteedBest: false,
+      radiance: 0,
+      maxRadiance: 10,
+      minions: [],
+      favor: 0,
+      activePrices: [],
+      baseMaxResolve: characterClass.maxResolve,
+    };
+
+    // Get enemies based on type
+    const enemies = this.getDebugEnemies(enemyType);
+
+    if (enemies.length === 0) {
+      console.error(`Unknown enemy type: ${enemyType}`);
+      console.log('Available types: hollow_god, shadow_self, greater_demon, sanctum_warden, act3_common, act3_elite, bonelord, drowned_king');
+      return;
+    }
+
+    this.combat = new CombatEngine(player, enemies);
+
+    // Register minion definitions for summoning abilities
+    for (const minion of Object.values(MINIONS)) {
+      this.combat.registerMinionDefinition(minion);
+    }
+    // Register Act 3 minions
+    this.combat.registerMinionDefinition(SHADOW_SELF);
+    for (const enemy of Object.values(ACT3_ENEMIES)) {
+      this.combat.registerMinionDefinition(enemy);
+    }
+
+    // Subscribe to combat events for logging and UI updates
+    this.combat.subscribe((event) => {
+      if (event.type === CombatEventType.COMBAT_LOG) {
+        const data = event.data as { message: string };
+        this.renderer.addLog(data.message);
+      }
+      // Hollow God Chomp Timer - re-render when card is chomped
+      if (event.type === CombatEventType.CHOMP_TRIGGERED) {
+        const data = event.data as { card: { name: string }; taunt: string };
+        console.log('CHOMP!', data);
+        this.renderer.addLog(`The Void chomps! ${data.card.name} is lost... "${data.taunt}"`);
+        this.render();
+      }
+      // Card corruption - re-render to show corrupted visual
+      if (event.type === CombatEventType.CARD_CORRUPTED) {
+        const data = event.data as { card: { name: string } };
+        console.log('Card corrupted:', data);
+        this.render();
+      }
+      if (event.type === CombatEventType.CARD_PERMANENTLY_EXHAUSTED) {
+        const data = event.data as { card: { name: string }; taunt: string };
+        console.log('Card permanently exhausted:', data);
+        this.renderer.addLog(`You forget how to ${data.card.name}... "${data.taunt}"`);
+        this.render();
+      }
+      if (event.type === CombatEventType.BOSS_DIALOGUE) {
+        console.log('Boss dialogue:', event.data);
+      }
+    });
+
+    // Update HUD class info
+    this.updateHudClassInfo(classId, characterClass.name);
+
+    this.renderer.clearLog();
+    this.combat.startCombat();
+    this.renderer.setSelectedEnemy(0);
+    this.render();
+
+    // Show combat screen
+    this.showCombatScreen();
+
+    // Show "Your Turn" banner
+    this.renderer.showTurnBanner(true);
+
+    // Start Chomp Timer if fighting Hollow God
+    if (enemyType === 'hollow_god' && this.combat.isHollowGodFight()) {
+      this.combat.startChompTimer();
+      console.log('Chomp Timer started! Cards will be discarded every 3 seconds.');
+    }
+
+    console.log(`Debug combat started: ${enemyType} vs ${characterClass.name}`);
+    console.log('Tips:');
+    console.log('- Use window.debugStopChomp() to stop the Chomp Timer');
+    console.log('- Use window.debugDamageEnemy(amount) to deal damage to enemy 0');
+    console.log('- Use window.debugHealPlayer(amount) to heal the player');
+  }
+
+  private getDebugEnemies(type: string): EnemyDefinition[] {
+    switch (type.toLowerCase()) {
+      case 'hollow_god':
+        return [HOLLOW_GOD];
+      case 'shadow_self':
+        return [SHADOW_SELF];
+      case 'greater_demon':
+        return [ACT3_ELITE_ENEMIES.greater_demon];
+      case 'sanctum_warden':
+        return [ACT3_ELITE_ENEMIES.sanctum_warden];
+      case 'act3_common':
+        // Random Act 3 common enemies
+        const commonKeys = Object.keys(ACT3_ENEMIES) as (keyof typeof ACT3_ENEMIES)[];
+        const key1 = commonKeys[Math.floor(Math.random() * commonKeys.length)];
+        const key2 = commonKeys[Math.floor(Math.random() * commonKeys.length)];
+        return [ACT3_ENEMIES[key1], ACT3_ENEMIES[key2]];
+      case 'act3_elite':
+        const eliteKeys = Object.keys(ACT3_ELITE_ENEMIES) as (keyof typeof ACT3_ELITE_ENEMIES)[];
+        const eliteKey = eliteKeys[Math.floor(Math.random() * eliteKeys.length)];
+        return [ACT3_ELITE_ENEMIES[eliteKey]];
+      case 'bonelord':
+        return [BOSSES.bonelord];
+      case 'drowned_king':
+        return [BOSSES.drowned_king];
+      default:
+        return [];
+    }
+  }
+
+  /**
+   * Stop the Chomp Timer (useful for debugging)
+   */
+  debugStopChomp(): void {
+    if (this.combat) {
+      this.combat.stopChompTimer();
+      console.log('Chomp Timer stopped.');
+    }
+  }
+
+  /**
+   * Deal damage to enemy 0 (useful for testing phase transitions)
+   */
+  debugDamageEnemy(amount: number): void {
+    if (!this.combat) return;
+    const state = this.combat.getState();
+    if (state.enemies.length > 0) {
+      const enemy = state.enemies[0];
+      enemy.currentHp = Math.max(0, enemy.currentHp - amount);
+      console.log(`Dealt ${amount} damage to ${enemy.name}. HP: ${enemy.currentHp}/${enemy.maxHp}`);
+      this.render();
+    }
+  }
+
+  /**
+   * Heal the player (useful for testing)
+   */
+  debugHealPlayer(amount: number): void {
+    if (!this.combat) return;
+    const state = this.combat.getState();
+    state.player.currentHp = Math.min(state.player.maxHp, state.player.currentHp + amount);
+    console.log(`Healed player for ${amount}. HP: ${state.player.currentHp}/${state.player.maxHp}`);
+    this.render();
+  }
+
+  /**
+   * Get current combat engine (for advanced debugging)
+   */
+  debugGetCombat(): CombatEngine | null {
+    return this.combat;
+  }
 }
 
 // Start game when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-  new Game();
+  const game = new Game();
+
+  // Expose debug methods on window for browser console access
+  // Usage: window.debugCombat('hollow_god', 'knight')
+  (window as unknown as Record<string, unknown>).debugCombat = (enemyType: string, classId?: CharacterClassId) =>
+    game.debugCombat(enemyType, classId);
+  (window as unknown as Record<string, unknown>).debugStopChomp = () => game.debugStopChomp();
+  (window as unknown as Record<string, unknown>).debugDamageEnemy = (amount: number) => game.debugDamageEnemy(amount);
+  (window as unknown as Record<string, unknown>).debugHealPlayer = (amount: number) => game.debugHealPlayer(amount);
+  (window as unknown as Record<string, unknown>).debugGetCombat = () => game.debugGetCombat();
+
+  console.log('Debug commands available:');
+  console.log('  window.debugCombat("hollow_god")       - Fight the Hollow God');
+  console.log('  window.debugCombat("greater_demon")    - Fight the Greater Demon');
+  console.log('  window.debugCombat("sanctum_warden")   - Fight the Sanctum Warden');
+  console.log('  window.debugCombat("act3_common")      - Fight random Act 3 enemies');
+  console.log('  window.debugStopChomp()               - Stop the Chomp Timer');
+  console.log('  window.debugDamageEnemy(100)          - Deal damage to enemy');
+  console.log('  window.debugHealPlayer(50)            - Heal the player');
 });

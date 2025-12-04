@@ -147,6 +147,8 @@ export enum StatusType {
   REGENERATION = 'REGENERATION', // Heal X at start of turn
   // Celestial buffs
   DIVINE_FORM = 'DIVINE_FORM', // +1 damage to all attacks while at max Radiance
+  // Act 3 enemy buffs
+  INTANGIBLE = 'INTANGIBLE', // All incoming damage reduced by 50%
 }
 
 export interface StatusEffect {
@@ -263,6 +265,12 @@ export interface Enemy {
   charging?: ChargingState; // For charge-up attacks
   summonCooldown: number; // Turns until summon is available again
   justSummoned: boolean; // Skip first turn after being summoned
+  // Act 3 mechanics
+  intangible: number; // Turns remaining of intangible (50% damage reduction)
+  // Elite passive effects
+  infernalPresence: number; // Damage reduction applied to player attacks (Greater Demon)
+  realityAnchor: number; // Draw limit (Sanctum Warden)
+  turnsSinceProjection: number; // Turns since last Memory Projection (Sanctum Warden)
 }
 
 // Player Types
@@ -435,6 +443,10 @@ export interface CombatState {
   enemies: Enemy[];
   gameOver: boolean;
   victory: boolean;
+  // Hollow God boss state
+  corruptedCardIds: Set<string>; // instanceIds of corrupted cards
+  lastPlayerCardPlayed: Card | null; // For Hollow Echo
+  permanentlyExhaustedCards: Card[]; // Cards removed from the run
 }
 
 // Events for UI updates
@@ -480,6 +492,18 @@ export enum CombatEventType {
   PRICE_TRIGGERED = 'PRICE_TRIGGERED',
   PRICE_REMOVED = 'PRICE_REMOVED',
   DEBT_THRESHOLD_TRIGGERED = 'DEBT_THRESHOLD_TRIGGERED',
+  // Act 3 enemy mechanic events
+  CARD_CONSUMED = 'CARD_CONSUMED', // Void Spawn's Consume Light
+  BUFFS_PURGED = 'BUFFS_PURGED', // Sanctum Guardian's Purge
+  // Hollow God boss events
+  CARD_CORRUPTED = 'CARD_CORRUPTED', // Card becomes corrupted
+  CARD_PERMANENTLY_EXHAUSTED = 'CARD_PERMANENTLY_EXHAUSTED', // Forget attack
+  HOLLOW_ECHO = 'HOLLOW_ECHO', // Boss copies player's card
+  CHOMP_TIMER_TICK = 'CHOMP_TIMER_TICK', // Chomp timer update
+  CHOMP_TRIGGERED = 'CHOMP_TRIGGERED', // Chomp discards a card
+  SHADOW_SELF_SUMMONED = 'SHADOW_SELF_SUMMONED', // Shadow Self appears
+  SHADOW_SELF_DIED = 'SHADOW_SELF_DIED', // Shadow Self defeated (heals player)
+  BOSS_DIALOGUE = 'BOSS_DIALOGUE', // Boss speaks
 }
 
 export interface CombatEvent {
@@ -525,4 +549,83 @@ export interface FloorMap {
   rows: MapNode[][];
   bossNode: MapNode;
   seed: string;
+}
+
+// Meta-Progression Upgrade Types
+export enum UpgradePath {
+  VITALITY = 'vitality',
+  RESOLVE = 'resolve',
+  COMBAT = 'combat',
+  FORTUNE = 'fortune',
+  CLASS = 'class',
+}
+
+export type UpgradeEffectType =
+  | { type: 'max_hp'; amount: number }
+  | { type: 'starting_hp_heal'; amount: number }
+  | { type: 'starting_resolve'; amount: number }
+  | { type: 'starting_gold'; amount: number }
+  | { type: 'starting_block'; amount: number }
+  | { type: 'damage_bonus'; amount: number }
+  | { type: 'block_bonus'; amount: number }
+  | { type: 'card_reward_count'; amount: number }
+  | { type: 'gold_multiplier'; percent: number }
+  | { type: 'starting_potion'; potionId: string }
+  | { type: 'merchant_discount'; percent: number }
+  | { type: 'crit_chance'; percent: number }
+  | { type: 'potion_drop_chance'; percent: number }
+  | { type: 'rare_card_chance'; percent: number }
+  | { type: 'elite_drops_potion' }
+  | { type: 'deaths_door' }
+  | { type: 'draw_turn_1'; amount: number }
+  | { type: 'first_card_discount'; amount: number }
+  | { type: 'momentum'; cardsPlayed: number; mightGained: number }
+  | { type: 'perseverance'; hpThreshold: number; blockGained: number }
+  // Class-specific effects
+  | { type: 'starting_devotion'; amount: number }
+  | { type: 'devotion_on_heal'; amount: number }
+  | { type: 'devotion_cost_reduction'; amount: number }
+  | { type: 'starting_fortify'; amount: number }
+  | { type: 'fortify_cap_bonus'; amount: number }
+  | { type: 'fortify_reflect'; damage: number }
+  | { type: 'curse_start_exhausted' }
+  | { type: 'curse_damage_reduction'; amount: number }
+  | { type: 'contract_penalty_reduction'; percent: number }
+  | { type: 'starting_vow'; vowId: string; charges: number }
+  | { type: 'vow_charge_bonus'; amount: number }
+  | { type: 'first_vow_break_free' }
+  | { type: 'starting_luck'; amount: number }
+  | { type: 'whimsy_bonus'; percent: number }
+  | { type: 'whimsy_reroll'; uses: number }
+  // Celestial upgrades
+  | { type: 'starting_radiance'; amount: number }
+  | { type: 'radiance_on_block'; amount: number }
+  | { type: 'divine_form_threshold_reduction'; amount: number }
+  // Summoner upgrades
+  | { type: 'starting_minion'; minionId: string }
+  | { type: 'minion_hp_bonus'; amount: number }
+  | { type: 'minion_damage_bonus'; amount: number }
+  // Bargainer upgrades
+  | { type: 'starting_favor'; amount: number }
+  | { type: 'price_duration_reduction'; amount: number }
+  | { type: 'favor_on_price_trigger'; amount: number };
+
+export interface Upgrade {
+  id: string;
+  name: string;
+  description: string;
+  cost: number;
+  path: UpgradePath;
+  classId?: CharacterClassId;
+  prerequisites: string[];
+  effect: UpgradeEffectType;
+  tier: 1 | 2 | 3 | 4;
+}
+
+// Soul Echoes persistence
+export interface MetaProgressionState {
+  soulEchoes: number;
+  purchasedUpgrades: string[];
+  totalSoulEchoesSpent: number;
+  totalSoulEchoesEarned: number;
 }

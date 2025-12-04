@@ -1,0 +1,140 @@
+1. CLERIC
+
+  The Divine Healer
+
+  Portrait of a battle-worn holy warrior standing in the ruins of a sacred cathedral,
+  soft golden light emanating from their hands. They wear weathered white and gold vestments
+  layered over light chain mail, bearing prayer scrolls at their belt. Their face shows
+  serene determination, eyes glowing faintly with divine light. A halo of floating scripture
+  pages orbits their head. The background shows crumbling stone walls with beams of
+  heavenly light piercing through gaps. Style: dark fantasy, painterly, dramatic lighting,
+  muted color palette with gold accents. Devotion mechanic represented by stacking golden
+  rings of light around their forearms.
+
+  ---
+  2. DUNGEON KNIGHT
+
+  The Unbreakable Bulwark
+
+  Full-body portrait of a heavily armored knight standing resolute in a dark dungeon corridor,
+  weathered tower shield planted firmly before them. Their scarred plate armor shows signs
+  of countless battles - dented, scratched, but unbroken. Blue-grey steel with brass rivets,
+  a closed greathelm with a narrow visor revealing only determined eyes. Stance is defensive,
+  low and immovable. Shield glows with faint runic fortification magic. Background is rough-hewn
+  stone walls with torch light flickering, casting dramatic shadows. Style: grimdark fantasy,
+  realistic metal textures, sense of weight and permanence. Fortify mechanic shown as
+  crystalline barrier patterns forming on armor.
+
+  ---
+  3. DIABOLIST
+
+  The Cursed Bargainer
+
+  Three-quarter portrait of a corrupted mage wreathed in crimson and black smoke,
+  infernal contracts floating around them like burning parchment. Pale skin marked with
+  glowing red contract sigils, eyes replaced with smoldering embers. They wear tattered
+  dark robes with demonic iconography, one hand dripping with their own blood, the other
+  clutching a soul-binding grimoire. Chains of hellfire wrap around their arms. Expression
+  is cunning and pained - power at a terrible cost. Background: a hellscape bleeding into
+  the dungeon, cracks revealing flames beneath. Style: dark fantasy, high contrast,
+  reds and blacks dominating. Pain curse shown as thorny dark wisps entering their flesh.
+
+  ---
+  4. OATHSWORN
+
+  The Bound Crusader
+
+  Dynamic portrait of a holy warrior mid-stride, wrapped in glowing chains of their own
+  sacred vows. They wear partial plate armor inscribed with oaths in celestial script,
+  a long blade wreathed in white flame. Their face shows absolute conviction - jaw set,
+  eyes blazing with inner fire. Golden chains of light connect their sword arm to an
+  ethereal oath-seal floating above their shoulder. The chains bind as much as empower.
+  Background: the edge of a sanctum being reclaimed from darkness, light vs shadow.
+  Style: heroic fantasy with dark undertones, dramatic poses, dynamic lighting.
+  Vow mechanic shown as luminous chains that both strengthen and restrict movement.
+
+  ---
+  5. FEY-TOUCHED
+
+  The Chaotic Trickster
+
+  Whimsical portrait of a mortal transformed by fey magic, features shifting between
+  beautiful and unsettling. Pointed ears, one eye emerald green, the other violet with
+  a cat's pupil. Their clothing is patchwork elegance - fine silks mixed with leaves
+  and spider silk, mismatched patterns that somehow harmonize. Surrounded by floating
+  motes of chaotic light, tiny mischievous spirits peeking from their pockets. Expression
+  is impish, knowing, slightly unhinged. Background: a dungeon room where reality bends -
+  mushrooms growing from stone, doorways leading to starfields. Style: fantastical,
+  dreamlike quality, saturated colors against dark dungeon tones. Whimsy mechanic
+  shown as dice-like runes flickering with random outcomes.
+
+  ---
+  6. CELESTIAL
+
+  The Divine Conduit
+
+  Ethereal portrait of a being channeling pure radiant energy, their mortal form partially
+  translucent with golden light bleeding through cracks in their skin like a vessel overfull.
+  They wear simple white robes that flow unnaturally, as if underwater, with a crystalline
+  breastplate reflecting light in rainbows. Wings of pure light manifest behind them -
+  not physical, but suggested in the luminous pattern. Eyes are solid gold with no pupils.
+  Expression is serene yet terrible - divine power barely contained. Background:
+  sanctum ruins with pillars of light descending from above. Style: high fantasy,
+  luminous, ethereal, warm gold and white palette. Radiance mechanic shown as
+  stacking halos of increasing intensity.
+
+  ---
+  7. SUMMONER
+
+  The Spirit Caller
+
+  Atmospheric portrait of a mystic surrounded by ghostly minions - a wisp floating at
+  their shoulder, a spirit wolf at their heels, ethereal guardians circling overhead.
+  They wear layered robes of deep purple and silver, covered in summoning circles and
+  binding runes. Their hands are adorned with spirit-anchor rings on every finger,
+  one hand extended commanding their creatures. Face is gaunt and focused, eyes
+  white and distant, seeing into the spirit realm. Background: a dungeon chamber
+  where the veil between worlds is thin - ghostly shapes emerging from walls.
+  Style: dark fantasy, ethereal lighting, spectral blues and purples with silver
+  accents. Minion mechanic shown as glowing tethers connecting summoner to creatures.
+
+  ---
+  8. BARGAINER
+
+  The Debt Collector
+
+  Sinister portrait of a merchant of souls, standing amid floating contracts and ledgers
+  written in blood. They wear fine but corrupted attire - a once-elegant coat now stained
+  with otherworldly ink, a vest with buttons made of small skulls. Their smile is
+  too wide, teeth slightly too sharp, eyes calculating the worth of everything they see.
+  One hand holds a quill that drips with liquid shadow, the other gestures to a
+  floating scale weighing souls against golden coins. Behind them, shadowy figures
+  of those who couldn't pay their debts. Style: dark fantasy, gothic horror elements,
+  rich textures, gold and crimson against deep blacks. Price/Favor mechanic shown as
+  demonic contract seals burning on their skin and a spectral ledger always open.
+
+  ---
+  Style Guide Notes for All Characters
+
+  Setting Context: All characters exist within the Sanctum Ruins - a sentient, ever-shifting dungeon that tests worthy souls. The environment should
+  blend:
+  - Ancient cathedral/sanctum architecture (crumbling columns, stained glass, stone arches)
+  - Dungeon elements (torchlight, rough stone, chains, iron doors)
+  - Magical corruption/transformation (reality bending, otherworldly lighting)
+
+  Common Art Direction:
+  - Aspect ratio: 2:3 portrait orientation for character cards
+  - Lighting: Dramatic, high contrast, rim lighting from magical sources
+  - Mood: Dark fantasy with each class having their distinctive color palette
+  - Quality: High detail, painterly digital art style reminiscent of card game art
+  - Consistent elements: Dungeon stone backgrounds, magical particle effects
+
+  Color Palettes by Class:
+  - Cleric: Gold, white, cream, soft amber
+  - Dungeon Knight: Steel blue, iron grey, brass
+  - Diabolist: Crimson, black, ember orange
+  - Oathsworn: White, gold, pale blue chains
+  - Fey-Touched: Chaotic rainbow, emerald, violet, dreamlike pastels
+  - Celestial: Pure gold, radiant white, prismatic light
+  - Summoner: Spirit blue, deep purple, silver, spectral green
+  - Bargainer: Rich gold, blood red, shadow black, aged parchment

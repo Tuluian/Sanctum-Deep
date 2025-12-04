@@ -8,7 +8,8 @@ import { SaveManager } from '@/services/SaveManager';
 export function createMainMenuScreen(
   onNewRun: () => void,
   onContinue: () => void,
-  onSettings: () => void
+  onSettings: () => void,
+  onUpgrades?: () => void
 ): Screen {
   const element = document.createElement('div');
   element.id = 'main-menu';
@@ -38,6 +39,10 @@ export function createMainMenuScreen(
           <button class="menu-btn ${hasRun ? '' : 'disabled'}" id="btn-continue" ${hasRun ? '' : 'disabled'}>
             <span class="btn-text">Continue</span>
             <span class="btn-subtitle">${hasRun ? 'Run in progress' : 'No save found'}</span>
+          </button>
+          <button class="menu-btn" id="btn-upgrades">
+            <span class="btn-text">Soul Sanctum</span>
+            <span class="btn-subtitle">Spend Soul Echoes</span>
           </button>
           <button class="menu-btn" id="btn-settings">
             <span class="btn-text">Settings</span>
@@ -70,6 +75,9 @@ export function createMainMenuScreen(
     element.querySelector('#btn-continue')?.addEventListener('click', () => {
       if (hasRun) onContinue();
     });
+    if (onUpgrades) {
+      element.querySelector('#btn-upgrades')?.addEventListener('click', onUpgrades);
+    }
     element.querySelector('#btn-settings')?.addEventListener('click', onSettings);
   };
 

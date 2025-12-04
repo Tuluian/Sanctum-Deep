@@ -65,7 +65,7 @@ const STATUS_INFO: Record<StatusType, { icon: string; name: string; description:
   [StatusType.CORRUPT]: {
     icon: '🩻',
     name: 'Corrupt',
-    description: 'Take damage each time you play a card.',
+    description: 'Take damage equal to stacks when playing a card. Decays by 1 per card and per turn.',
     isDebuff: true,
   },
   [StatusType.REGENERATION]: {
@@ -78,6 +78,12 @@ const STATUS_INFO: Record<StatusType, { icon: string; name: string; description:
     icon: '👼',
     name: 'Divine Form',
     description: 'Deal +1 damage with all attacks while at max Radiance.',
+    isDebuff: false,
+  },
+  [StatusType.INTANGIBLE]: {
+    icon: '👻',
+    name: 'Intangible',
+    description: 'All incoming damage reduced by 50%.',
     isDebuff: false,
   },
 };
@@ -360,14 +366,19 @@ export class CombatRenderer {
         const bossClass = isBoss ? 'boss' : '';
         const phaseIndicator = isBoss && enemy.phase > 0 ? `<div class="boss-phase">Phase ${enemy.phase + 1}</div>` : '';
 
+        // Intangible styling
+        const intangibleClass = enemy.intangible > 0 ? 'intangible' : '';
+        const intangibleIndicator = enemy.intangible > 0 ? `<div class="intangible-indicator">👻 Intangible</div>` : '';
+
         // Intent tooltip HTML
         const intentTooltip = intentDescription ? `<div class="intent-tooltip">${intentDescription}</div>` : '';
 
         return `
-          <div class="arena-enemy ${isDead ? 'dead' : ''} ${isSelected ? 'selected' : ''} ${bossClass}"
+          <div class="arena-enemy ${isDead ? 'dead' : ''} ${isSelected ? 'selected' : ''} ${bossClass} ${intangibleClass}"
                onclick="selectEnemy(${index})"
                data-enemy-id="${enemy.id}">
             ${phaseIndicator}
+            ${intangibleIndicator}
             ${!isDead && enemy.intent ? `
               <div class="arena-enemy-intent-wrapper">
                 <div class="arena-enemy-intent ${intentClass}">${intentDisplay}</div>
@@ -404,7 +415,11 @@ export class CombatRenderer {
     this.elements.hudHp.textContent = `${player.currentHp}/${player.maxHp}`;
     this.elements.hudBlock.textContent = String(player.block);
     this.elements.hudResolve.textContent = `${player.resolve}/${player.maxResolve}`;
-    this.elements.hudDevotion.textContent = String(this.getSpecialtyStat(player));
+    // Re-query hud-devotion since main.ts replaces the innerHTML of hud-specialty-stat
+    const hudDevotionElement = document.getElementById('hud-devotion');
+    if (hudDevotionElement) {
+      hudDevotionElement.textContent = String(this.getSpecialtyStat(player));
+    }
 
     // Update player status effects in HUD
     const hudStatusContainer = document.getElementById('hud-status-effects');

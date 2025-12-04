@@ -121,6 +121,47 @@ export function createMapScreen(callbacks: MapScreenCallbacks): Screen {
 
     // Draw connection lines after DOM is ready
     requestAnimationFrame(() => drawConnections());
+
+    // Setup drag-to-scroll functionality
+    setupDragScroll();
+  };
+
+  // Drag-to-scroll state
+  let isDragging = false;
+  let startX = 0;
+  let scrollLeft = 0;
+
+  const setupDragScroll = () => {
+    const scrollArea = element.querySelector('.map-scroll-area') as HTMLElement;
+    if (!scrollArea) return;
+
+    scrollArea.addEventListener('mousedown', (e) => {
+      // Don't start drag if clicking on a node
+      if ((e.target as HTMLElement).closest('.map-node')) return;
+
+      isDragging = true;
+      scrollArea.classList.add('dragging');
+      startX = e.pageX - scrollArea.offsetLeft;
+      scrollLeft = scrollArea.scrollLeft;
+    });
+
+    scrollArea.addEventListener('mouseleave', () => {
+      isDragging = false;
+      scrollArea.classList.remove('dragging');
+    });
+
+    scrollArea.addEventListener('mouseup', () => {
+      isDragging = false;
+      scrollArea.classList.remove('dragging');
+    });
+
+    scrollArea.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      e.preventDefault();
+      const x = e.pageX - scrollArea.offsetLeft;
+      const walk = (x - startX) * 1.5; // Scroll speed multiplier
+      scrollArea.scrollLeft = scrollLeft - walk;
+    });
   };
 
   const findNode = (floor: FloorMap, nodeId: string): MapNode | null => {

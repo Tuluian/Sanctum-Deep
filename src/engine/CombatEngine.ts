@@ -31,6 +31,8 @@ import {
 } from '@/types';
 import { getCardById, OATHSWORN_VOWS } from '@/data/cards';
 import { getMinionById } from '@/data/minions';
+import { isDemonEnemy } from '@/data/enemies/act3';
+import { SHADOW_SELF, HOLLOW_GOD_DIALOGUE, CHOMP_TIMER_CONFIG } from '@/data/enemies/act3-boss';
 
 export class CombatEngine {
   private state: CombatState;
@@ -57,6 +59,11 @@ export class CombatEngine {
       usedAbilities: [],
       summonCooldown: 0,
       justSummoned: false,
+      intangible: 0,
+      // Elite passives
+      infernalPresence: def.id === 'greater_demon' ? 2 : 0,
+      realityAnchor: def.id === 'sanctum_warden' ? 4 : 0,
+      turnsSinceProjection: 0,
     }));
 
     this.state = {
@@ -66,6 +73,10 @@ export class CombatEngine {
       enemies,
       gameOver: false,
       victory: false,
+      // Hollow God boss state
+      corruptedCardIds: new Set<string>(),
+      lastPlayerCardPlayed: null,
+      permanentlyExhaustedCards: [],
     };
   }
 
@@ -114,7 +125,17 @@ export class CombatEngine {
   }
 
   private drawCards(count: number): void {
-    for (let i = 0; i < count; i++) {
+    // Apply Reality Anchor (Sanctum Warden passive - limits draw)
+    let drawCount = count;
+    const warden = this.state.enemies.find(e => e.id === 'sanctum_warden' && e.currentHp > 0);
+    if (warden && warden.realityAnchor > 0) {
+      drawCount = Math.min(count, warden.realityAnchor);
+      if (drawCount !== count) {
+        this.log(`Reality Anchor limits draw to ${warden.realityAnchor} cards!`);
+      }
+    }
+
+    for (let i = 0; i < drawCount; i++) {
       if (this.state.player.drawPile.length === 0) {
         if (this.state.player.discardPile.length === 0) break;
         this.state.player.drawPile = this.shuffle([...this.state.player.discardPile]);
@@ -290,6 +311,22 @@ export class CombatEngine {
       enemy.phase = newPhase;
       this.emit(CombatEventType.ENEMY_PHASE_CHANGED, { enemyId: enemy.id, phase: newPhase });
       this.log(`${enemy.name} enters phase ${newPhase + 1}!`);
+
+      // Greater Demon phase 2: Infernal Presence increases to 4
+      if (enemy.id === 'greater_demon' && newPhase === 1) {
+        enemy.infernalPresence = 4;
+        this.log(`Infernal Presence intensifies! Player damage reduced by 4!`);
+      }
+
+      // Hollow God phase transitions - emit dialogue
+      if (enemy.id === 'hollow_god') {
+        const dialogue = this.getBossDialogue(newPhase);
+        if (dialogue) {
+          this.emit(CombatEventType.BOSS_DIALOGUE, { message: dialogue, phase: newPhase });
+          this.log(`"${dialogue}"`);
+        }
+      }
+
       // Immediately set new intent based on new phase
       this.setEnemyIntent(enemy);
     }
@@ -320,6 +357,10 @@ export class CombatEngine {
       usedAbilities: [],
       summonCooldown: 0,
       justSummoned: true, // Skip first turn
+      intangible: 0,
+      infernalPresence: 0,
+      realityAnchor: 0,
+      turnsSinceProjection: 0,
     };
 
     this.state.enemies.push(enemy);
@@ -425,8 +466,43 @@ export class CombatEngine {
     // Remove from hand
     this.state.player.hand.splice(cardIndex, 1);
 
+    // Track last played card for Hollow Echo
+    this.state.lastPlayerCardPlayed = card;
+
     // Execute effects
     const log: string[] = [];
+
+    // Handle corrupted card penalty (Hollow God mechanic)
+    if (this.state.corruptedCardIds.has(card.instanceId)) {
+      this.applyCorruptionStacks(2);
+      log.push(`Playing corrupted ${card.name} spreads corruption! (+2 Corruption)`);
+    }
+
+    // Corrupt status deals damage when playing any card, then decays by 1
+    const corruptEffect = this.state.player.statusEffects.find(e => e.type === StatusType.CORRUPT);
+    if (corruptEffect && corruptEffect.amount > 0) {
+      const corruptDamage = corruptEffect.amount;
+      this.state.player.currentHp = Math.max(0, this.state.player.currentHp - corruptDamage);
+      this.emit(CombatEventType.PLAYER_HP_CHANGED, { hp: this.state.player.currentHp });
+
+      // Decay corruption by 1 after dealing damage
+      corruptEffect.amount -= 1;
+      if (corruptEffect.amount <= 0) {
+        this.state.player.statusEffects = this.state.player.statusEffects.filter(
+          e => e.type !== StatusType.CORRUPT
+        );
+        log.push(`Corruption deals ${corruptDamage} damage! Corruption fades.`);
+      } else {
+        log.push(`Corruption deals ${corruptDamage} damage! (${corruptEffect.amount} remaining)`);
+      }
+
+      // Check for player death from corruption
+      if (this.state.player.currentHp <= 0) {
+        this.state.gameOver = true;
+        this.state.victory = false;
+        this.emit(CombatEventType.GAME_OVER, { victory: false });
+      }
+    }
 
     // Handle Whimsy cards (Fey-Touched mechanic)
     if (card.whimsy && card.whimsy.length > 0) {
@@ -1356,10 +1432,26 @@ export class CombatEngine {
   }
 
   private dealDamageToEnemy(enemy: Enemy, damage: number): string {
-    const blockedDamage = Math.min(damage, enemy.block);
-    enemy.block = Math.max(0, enemy.block - damage);
+    // Apply Infernal Presence (Greater Demon passive - reduces player outgoing damage)
+    let effectiveDamage = damage;
+    const greaterDemon = this.state.enemies.find(e => e.id === 'greater_demon' && e.currentHp > 0);
+    if (greaterDemon && greaterDemon.infernalPresence > 0) {
+      effectiveDamage = Math.max(0, damage - greaterDemon.infernalPresence);
+      if (effectiveDamage !== damage) {
+        this.log(`Infernal Presence reduces damage by ${greaterDemon.infernalPresence}!`);
+      }
+    }
 
-    const hpDamage = damage - blockedDamage;
+    // Apply Intangible damage reduction (50%)
+    if (enemy.intangible > 0) {
+      effectiveDamage = Math.floor(effectiveDamage / 2);
+      this.log(`${enemy.name} is intangible! Damage halved.`);
+    }
+
+    const blockedDamage = Math.min(effectiveDamage, enemy.block);
+    enemy.block = Math.max(0, enemy.block - effectiveDamage);
+
+    const hpDamage = effectiveDamage - blockedDamage;
     enemy.currentHp = Math.max(0, enemy.currentHp - hpDamage);
 
     this.emit(CombatEventType.ENEMY_DAMAGED, {
@@ -1380,6 +1472,8 @@ export class CombatEngine {
           this.deadMinions.push({ definition, maxHp: enemy.maxHp });
         }
       }
+      // Handle Shadow Self death - player heals 10 HP (Hollow God)
+      this.handleShadowSelfDeath(enemy);
       // Handle conditional heal (Grim Harvest)
       if (this.pendingConditionalHeal > 0) {
         const heal = Math.min(this.pendingConditionalHeal, this.state.player.maxHp - this.state.player.currentHp);
@@ -1471,10 +1565,280 @@ export class CombatEngine {
     return bestIndex;
   }
 
+  // ===========================================
+  // Hollow God Boss Mechanics
+  // ===========================================
+
+  // Chomp Timer state
+  private chompTimerInterval: ReturnType<typeof setInterval> | null = null;
+  private chompTimerActive = false;
+
+  /**
+   * Start the Chomp Timer when player turn begins (Hollow God fight only)
+   */
+  startChompTimer(): void {
+    const hollowGod = this.state.enemies.find(e => e.id === 'hollow_god' && e.currentHp > 0);
+    if (!hollowGod || !CHOMP_TIMER_CONFIG.enabled) return;
+
+    this.chompTimerActive = true;
+    this.chompTimerInterval = setInterval(() => {
+      if (this.chompTimerActive && this.state.phase === CombatPhase.PLAYER_ACTION) {
+        this.executeChomp();
+      }
+    }, CHOMP_TIMER_CONFIG.intervalMs);
+  }
+
+  /**
+   * Stop the Chomp Timer when player turn ends
+   */
+  stopChompTimer(): void {
+    this.chompTimerActive = false;
+    if (this.chompTimerInterval) {
+      clearInterval(this.chompTimerInterval);
+      this.chompTimerInterval = null;
+    }
+  }
+
+  /**
+   * Execute a Chomp - discard a random card from player's hand
+   */
+  private executeChomp(): void {
+    if (this.state.player.hand.length === 0) return;
+
+    // Select random card to discard
+    const randomIndex = Math.floor(Math.random() * this.state.player.hand.length);
+    const discardedCard = this.state.player.hand.splice(randomIndex, 1)[0];
+    this.state.player.discardPile.push(discardedCard);
+
+    // Pick a random taunt
+    const taunt = HOLLOW_GOD_DIALOGUE.chompTaunt[
+      Math.floor(Math.random() * HOLLOW_GOD_DIALOGUE.chompTaunt.length)
+    ];
+
+    this.emit(CombatEventType.CHOMP_TRIGGERED, {
+      card: discardedCard,
+      taunt,
+    });
+    this.log(`The Void chomps! ${discardedCard.name} is lost... "${taunt}"`);
+  }
+
+  /**
+   * Corrupt a card - makes it add Corruption stacks when played
+   */
+  corruptCard(card: Card): void {
+    if (this.state.corruptedCardIds.has(card.instanceId)) return; // Already corrupted
+
+    this.state.corruptedCardIds.add(card.instanceId);
+    this.emit(CombatEventType.CARD_CORRUPTED, { card });
+    this.log(`${card.name} becomes corrupted by the void!`);
+  }
+
+  /**
+   * Corrupt a random uncorrupted card in hand
+   */
+  private corruptRandomCardInHand(): void {
+    const uncorruptedInHand = this.state.player.hand.filter(
+      c => !this.state.corruptedCardIds.has(c.instanceId)
+    );
+
+    if (uncorruptedInHand.length > 0) {
+      const target = uncorruptedInHand[Math.floor(Math.random() * uncorruptedInHand.length)];
+      this.corruptCard(target);
+    }
+  }
+
+  /**
+   * Corrupt multiple cards in hand
+   */
+  private corruptCardsInHand(count: number): void {
+    for (let i = 0; i < count; i++) {
+      this.corruptRandomCardInHand();
+    }
+  }
+
+  /**
+   * Corrupt ALL cards in hand
+   */
+  private corruptAllCardsInHand(): void {
+    for (const card of this.state.player.hand) {
+      this.corruptCard(card);
+    }
+  }
+
+  /**
+   * Apply corruption stacks to the player (damage over time)
+   */
+  private applyCorruptionStacks(amount: number): void {
+    const existingCorrupt = this.state.player.statusEffects.find(
+      e => e.type === StatusType.CORRUPT
+    );
+    if (existingCorrupt) {
+      existingCorrupt.amount += amount;
+    } else {
+      this.state.player.statusEffects.push({
+        type: StatusType.CORRUPT,
+        amount,
+      });
+    }
+  }
+
+  /**
+   * Permanently exhaust a random non-basic card from the player's deck
+   * This removes it from the entire run, not just this combat
+   */
+  private permanentlyExhaustRandomCard(): Card | null {
+    // Collect all cards from hand, draw pile, and discard pile
+    const allCards = [
+      ...this.state.player.hand,
+      ...this.state.player.drawPile,
+      ...this.state.player.discardPile,
+    ];
+
+    // Filter to non-basic cards (not Strike, Defend, or Curses)
+    const nonBasicCards = allCards.filter(card =>
+      !['strike', 'defend', 'basic_strike', 'basic_defend'].includes(card.id) &&
+      card.type !== CardType.CURSE
+    );
+
+    if (nonBasicCards.length === 0) return null;
+
+    // Select random card
+    const targetCard = nonBasicCards[Math.floor(Math.random() * nonBasicCards.length)];
+
+    // Remove from wherever it is
+    this.state.player.hand = this.state.player.hand.filter(
+      c => c.instanceId !== targetCard.instanceId
+    );
+    this.state.player.drawPile = this.state.player.drawPile.filter(
+      c => c.instanceId !== targetCard.instanceId
+    );
+    this.state.player.discardPile = this.state.player.discardPile.filter(
+      c => c.instanceId !== targetCard.instanceId
+    );
+
+    // Add to permanently exhausted list
+    this.state.permanentlyExhaustedCards.push(targetCard);
+
+    // Pick a random taunt
+    const taunt = HOLLOW_GOD_DIALOGUE.forgetTaunt[
+      Math.floor(Math.random() * HOLLOW_GOD_DIALOGUE.forgetTaunt.length)
+    ];
+
+    this.emit(CombatEventType.CARD_PERMANENTLY_EXHAUSTED, {
+      card: targetCard,
+      taunt,
+    });
+    this.log(`You forget how to ${targetCard.name}... "${taunt}"`);
+
+    return targetCard;
+  }
+
+  /**
+   * Execute Hollow Echo - copy the last card the player played against them
+   */
+  private executeHollowEcho(): string[] {
+    const log: string[] = [];
+    const lastCard = this.state.lastPlayerCardPlayed;
+
+    if (!lastCard) {
+      // Fallback to basic attack if no card played
+      this.dealDamageToPlayer(8);
+      log.push('The Hollow God echoes... nothing. Deals 8 damage.');
+      return log;
+    }
+
+    this.emit(CombatEventType.HOLLOW_ECHO, { card: lastCard });
+    log.push(`The Hollow God echoes your ${lastCard.name}!`);
+
+    // Execute card effects against player
+    for (const effect of lastCard.effects) {
+      switch (effect.type) {
+        case EffectType.DAMAGE:
+        case EffectType.DAMAGE_ALL:
+          this.dealDamageToPlayer(effect.amount);
+          log.push(`Hollow Echo deals ${effect.amount} damage to you!`);
+          break;
+        case EffectType.BLOCK:
+          // Give block to Hollow God
+          const hollowGod = this.state.enemies.find(e => e.id === 'hollow_god' && e.currentHp > 0);
+          if (hollowGod) {
+            hollowGod.block += effect.amount;
+            this.emit(CombatEventType.ENEMY_BLOCK_CHANGED, { enemyId: hollowGod.id, block: hollowGod.block });
+            log.push(`Hollow Echo gives The Hollow God ${effect.amount} block`);
+          }
+          break;
+        case EffectType.HEAL:
+          // Heal Hollow God
+          const god = this.state.enemies.find(e => e.id === 'hollow_god' && e.currentHp > 0);
+          if (god) {
+            const healAmount = Math.min(effect.amount, god.maxHp - god.currentHp);
+            god.currentHp += healAmount;
+            log.push(`Hollow Echo heals The Hollow God for ${healAmount}`);
+          }
+          break;
+        // Other effects could be added as needed
+      }
+    }
+
+    return log;
+  }
+
+  /**
+   * Handle Shadow Self death - player heals 10 HP
+   */
+  private handleShadowSelfDeath(enemy: Enemy): void {
+    if (enemy.id.startsWith('shadow_self')) {
+      const healAmount = Math.min(10, this.state.player.maxHp - this.state.player.currentHp);
+      this.state.player.currentHp += healAmount;
+      this.emit(CombatEventType.PLAYER_HP_CHANGED, { hp: this.state.player.currentHp });
+      this.emit(CombatEventType.SHADOW_SELF_DIED, { healAmount });
+      this.log(`${HOLLOW_GOD_DIALOGUE.onShadowSelfDeath} You reclaim a piece of yourself and heal ${healAmount} HP.`);
+    }
+  }
+
+  /**
+   * The Void Hungers - corrupt 1 random card at end of player turn (Hollow God passive)
+   */
+  private voidHungersPassive(): void {
+    const hollowGod = this.state.enemies.find(e => e.id === 'hollow_god' && e.currentHp > 0);
+    if (!hollowGod) return;
+
+    this.corruptRandomCardInHand();
+    this.log('The Void Hungers... a piece of your identity fades.');
+  }
+
+  /**
+   * Check if the Hollow God is in combat
+   */
+  isHollowGodFight(): boolean {
+    return this.state.enemies.some(e => e.id === 'hollow_god');
+  }
+
+  /**
+   * Get dialogue for boss phase transitions
+   */
+  getBossDialogue(phase: number): string {
+    switch (phase) {
+      case 0: return HOLLOW_GOD_DIALOGUE.phase1Entry;
+      case 1: return HOLLOW_GOD_DIALOGUE.phase2Entry;
+      case 2: return HOLLOW_GOD_DIALOGUE.phase3Entry;
+      default: return '';
+    }
+  }
+
+  // ===========================================
+  // End Hollow God Boss Mechanics
+  // ===========================================
+
   private dealDamageToPlayer(damage: number): { blocked: number; fortifyAbsorbed: number; hpDamage: number } {
     let remaining = damage;
 
-    // Fortify absorbs first
+    // Block absorbs first (temporary, resets each turn)
+    const blocked = Math.min(remaining, this.state.player.block);
+    this.state.player.block -= blocked;
+    remaining -= blocked;
+
+    // Fortify absorbs second (persistent, stays between turns)
     const fortifyAbsorbed = Math.min(remaining, this.state.player.fortify);
     this.state.player.fortify -= fortifyAbsorbed;
     remaining -= fortifyAbsorbed;
@@ -1482,11 +1846,6 @@ export class CombatEngine {
     if (fortifyAbsorbed > 0) {
       this.emit(CombatEventType.PLAYER_FORTIFY_CHANGED, { fortify: this.state.player.fortify });
     }
-
-    // Block absorbs second
-    const blocked = Math.min(remaining, this.state.player.block);
-    this.state.player.block -= blocked;
-    remaining -= blocked;
 
     // Remaining hits HP
     const hpDamage = remaining;
@@ -1506,6 +1865,14 @@ export class CombatEngine {
     }
 
     const log: string[] = [];
+
+    // Stop Chomp Timer at end of player turn (Hollow God mechanic)
+    this.stopChompTimer();
+
+    // The Void Hungers passive - corrupt 1 card at end of turn (Hollow God)
+    if (this.isHollowGodFight()) {
+      this.voidHungersPassive();
+    }
 
     // Discard hand (separating exhaustOnDiscard cards)
     for (const card of this.state.player.hand) {
@@ -1558,9 +1925,33 @@ export class CombatEngine {
       enemy.untargetable = false;
       this.emit(CombatEventType.ENEMY_BLOCK_CHANGED, { enemyId: enemy.id, block: 0 });
 
+      // Decrement intangible
+      if (enemy.intangible > 0) {
+        enemy.intangible--;
+        if (enemy.intangible === 0) {
+          log.push(`${enemy.name} is no longer intangible.`);
+        }
+      }
+
       // Decrement summon cooldown
       if (enemy.summonCooldown > 0) {
         enemy.summonCooldown--;
+      }
+
+      // Memory Projection (Sanctum Warden - summon a Memory every 3 turns)
+      if (enemy.id === 'sanctum_warden') {
+        enemy.turnsSinceProjection++;
+        if (enemy.turnsSinceProjection >= 3) {
+          enemy.turnsSinceProjection = 0;
+          // Spawn a random Memory enemy
+          const memoryTypes = ['memory_bonelord', 'memory_drowned_king'];
+          const memoryId = memoryTypes[Math.floor(Math.random() * memoryTypes.length)];
+          const memoryDef = this.enemyDefinitions.get(memoryId);
+          if (memoryDef) {
+            this.addEnemy(memoryDef);
+            log.push(`${enemy.name} projects a Memory of the past!`);
+          }
+        }
       }
 
       const intent = enemy.intent as EnemyIntent;
@@ -1573,9 +1964,80 @@ export class CombatEngine {
       switch (intent.intent) {
         case IntentType.ATTACK:
           if (intent.damage) {
-            const totalDamage = intent.damage + mightBonus;
-            const attackResult = this.dealDamageToPlayerOrMinion(totalDamage);
-            log.push(`${enemy.name} dealt ${totalDamage} damage to ${attackResult.targetName} (${attackResult.hpDamage} to HP)`);
+            let totalDamage = intent.damage + mightBonus;
+            // Handle Judgment (HP-scaling attack)
+            if (intent.moveId === 'judgment') {
+              totalDamage = Math.floor(this.state.player.currentHp / 5) + mightBonus;
+              log.push(`${enemy.name} judges you! Damage scales with your HP.`);
+            }
+            // Handle Cataclysm (AoE including allies)
+            if (intent.moveId === 'cataclysm') {
+              // Damage player
+              const attackResult = this.dealDamageToPlayerOrMinion(totalDamage);
+              log.push(`${enemy.name} unleashes Cataclysm! ${totalDamage} damage to ${attackResult.targetName}`);
+              // Damage all other enemies (friendly fire)
+              for (const otherEnemy of this.state.enemies) {
+                if (otherEnemy.id !== enemy.id && otherEnemy.currentHp > 0) {
+                  const blocked = Math.min(totalDamage, otherEnemy.block);
+                  otherEnemy.block = Math.max(0, otherEnemy.block - totalDamage);
+                  const hpDamage = totalDamage - blocked;
+                  otherEnemy.currentHp = Math.max(0, otherEnemy.currentHp - hpDamage);
+                  log.push(`${otherEnemy.name} caught in Cataclysm for ${hpDamage} damage!`);
+                  if (otherEnemy.currentHp <= 0) {
+                    this.emit(CombatEventType.ENEMY_DIED, { enemyId: otherEnemy.id });
+                  }
+                }
+              }
+            }
+            // Hollow God - Doubt (damage + corruption)
+            else if (intent.moveId === 'doubt') {
+              this.dealDamageToPlayerOrMinion(totalDamage);
+              log.push(`${enemy.name} casts Doubt! ${totalDamage} damage!`);
+              const corruptionAmount = 3; // Fixed amount for Doubt
+              this.applyCorruptionStacks(corruptionAmount);
+              log.push(`You gain ${corruptionAmount} Corruption stacks.`);
+            }
+            // Hollow God - Identity Fracture (damage + corrupt 2 cards)
+            else if (intent.moveId === 'identity_fracture') {
+              this.dealDamageToPlayerOrMinion(totalDamage);
+              log.push(`${enemy.name} fractures your identity! ${totalDamage} damage!`);
+              this.corruptCardsInHand(2);
+              log.push('Two of your cards become corrupted!');
+            }
+            // Hollow God - Forget (damage + block + permanent exhaust)
+            else if (intent.moveId === 'forget') {
+              this.dealDamageToPlayerOrMinion(totalDamage);
+              log.push(`${enemy.name} makes you forget! ${totalDamage} damage!`);
+              // Give block to Hollow God
+              enemy.block += intent.block || 15;
+              this.emit(CombatEventType.ENEMY_BLOCK_CHANGED, { enemyId: enemy.id, block: enemy.block });
+              log.push(`${enemy.name} gained ${intent.block || 15} block.`);
+              // Permanently exhaust a card
+              const exhaustedCard = this.permanentlyExhaustRandomCard();
+              if (exhaustedCard) {
+                log.push(`You permanently forget how to ${exhaustedCard.name}!`);
+              }
+            }
+            // Hollow God - Total Void (damage + corrupt all cards)
+            else if (intent.moveId === 'total_void') {
+              this.dealDamageToPlayerOrMinion(totalDamage);
+              log.push(`${enemy.name} unleashes Total Void! ${totalDamage} damage!`);
+              this.corruptAllCardsInHand();
+              log.push('ALL your cards become corrupted by the void!');
+            }
+            // Hollow God - Void Watches (attack + block + intangible)
+            else if (intent.moveId === 'void_watches') {
+              this.dealDamageToPlayerOrMinion(totalDamage);
+              log.push(`${enemy.name} watches from the void! ${totalDamage} damage!`);
+              enemy.block += intent.block || 15;
+              this.emit(CombatEventType.ENEMY_BLOCK_CHANGED, { enemyId: enemy.id, block: enemy.block });
+              enemy.intangible = 1;
+              log.push(`${enemy.name} becomes intangible.`);
+            }
+            else {
+              const attackResult = this.dealDamageToPlayerOrMinion(totalDamage);
+              log.push(`${enemy.name} dealt ${totalDamage} damage to ${attackResult.targetName} (${attackResult.hpDamage} to HP)`);
+            }
             // Handle lifesteal (attack with heal)
             if (intent.heal && intent.heal > 0) {
               const healAmount = Math.min(intent.heal, enemy.maxHp - enemy.currentHp);
@@ -1606,14 +2068,44 @@ export class CombatEngine {
           break;
 
         case IntentType.BUFF:
-          // Self-buff (e.g., Phase makes enemy untargetable)
-          enemy.untargetable = true;
-          log.push(`${enemy.name} phases out and becomes untargetable!`);
+          // Self-buff - check for special moves
+          if (intent.moveId === 'phase_shift') {
+            // Void Spawn Phase Shift - become intangible
+            enemy.intangible = 1;
+            log.push(`${enemy.name} becomes intangible! All damage reduced by 50%.`);
+          } else {
+            // Default buff (e.g., Phase makes enemy untargetable)
+            enemy.untargetable = true;
+            log.push(`${enemy.name} phases out and becomes untargetable!`);
+          }
           break;
 
         case IntentType.BUFF_ALLY:
-          // Buff another enemy
-          if (intent.buffAmount) {
+          // Check for special pack buff moves
+          if (intent.moveId === 'giggle') {
+            // Imp Giggle - all Imps gain Might
+            const imps = this.state.enemies.filter(e => e.currentHp > 0 && e.id.startsWith('imp'));
+            if (imps.length > 0) {
+              for (const imp of imps) {
+                imp.might += intent.buffAmount || 3;
+              }
+              log.push(`${enemy.name} giggles! All Imps gain +${intent.buffAmount || 3} Might!`);
+            } else {
+              log.push(`${enemy.name} giggles to no one...`);
+            }
+          } else if (intent.moveId === 'howl') {
+            // Infernal Hound Howl - all demons gain Might
+            const demons = this.state.enemies.filter(e => e.currentHp > 0 && isDemonEnemy(e.id.replace(/_\d+$/, '')));
+            if (demons.length > 0) {
+              for (const demon of demons) {
+                demon.might += intent.buffAmount || 2;
+              }
+              log.push(`${enemy.name} howls! All demons gain +${intent.buffAmount || 2} Might!`);
+            } else {
+              log.push(`${enemy.name} howls but there are no demons to rally!`);
+            }
+          } else if (intent.buffAmount) {
+            // Default: Buff another enemy
             const aliveAllies = this.state.enemies.filter(e => e.currentHp > 0 && e.id !== enemy.id);
             if (aliveAllies.length > 0) {
               const target = aliveAllies[Math.floor(Math.random() * aliveAllies.length)];
@@ -1626,9 +2118,75 @@ export class CombatEngine {
           }
           break;
 
+        case IntentType.UNKNOWN:
+          // Special intent for Hollow Echo (copies last player card)
+          if (intent.moveId === 'hollow_echo') {
+            const echoLogs = this.executeHollowEcho();
+            log.push(...echoLogs);
+          }
+          break;
+
         case IntentType.DEBUFF:
-          // Apply debuff to player
-          if (intent.debuffType && intent.debuffDuration) {
+          // Hollow God - Glimpse of Oblivion (discard 2 random cards)
+          if (intent.moveId === 'glimpse_oblivion') {
+            let discarded = 0;
+            for (let i = 0; i < 2 && this.state.player.hand.length > 0; i++) {
+              const randomIndex = Math.floor(Math.random() * this.state.player.hand.length);
+              const discardedCard = this.state.player.hand.splice(randomIndex, 1)[0];
+              this.state.player.discardPile.push(discardedCard);
+              discarded++;
+            }
+            log.push(`${enemy.name} shows you a glimpse of oblivion... You discard ${discarded} card(s).`);
+          }
+          // Check for special Act 3 debuff moves
+          else if (intent.moveId === 'consume_light') {
+            // Void Spawn Consume Light - remove random card from hand
+            if (this.state.player.hand.length > 0) {
+              const randomIndex = Math.floor(Math.random() * this.state.player.hand.length);
+              const removedCard = this.state.player.hand.splice(randomIndex, 1)[0];
+              this.state.player.discardPile.push(removedCard);
+              this.emit(CombatEventType.CARD_CONSUMED, { card: removedCard, enemyId: enemy.id });
+              log.push(`${enemy.name} consumed ${removedCard.name} from your hand!`);
+            } else {
+              log.push(`${enemy.name} tried to consume a card but your hand is empty!`);
+            }
+          } else if (intent.moveId === 'purge') {
+            // Sanctum Guardian Purge - remove all player buffs
+            const buffTypes = [
+              StatusType.BLESSED, StatusType.EMPOWERED, StatusType.WARDED,
+              StatusType.MIGHT, StatusType.RESILIENCE, StatusType.REGENERATION,
+              StatusType.DIVINE_FORM
+            ];
+            const removedBuffs = this.state.player.statusEffects.filter(e => buffTypes.includes(e.type));
+            this.state.player.statusEffects = this.state.player.statusEffects.filter(e => !buffTypes.includes(e.type));
+            if (removedBuffs.length > 0) {
+              this.emit(CombatEventType.BUFFS_PURGED, { buffs: removedBuffs, enemyId: enemy.id });
+              log.push(`${enemy.name} purged ${removedBuffs.length} buff(s) from you!`);
+            } else {
+              log.push(`${enemy.name} tried to purge but you had no buffs!`);
+            }
+          } else if (intent.moveId === 'time_fracture') {
+            // Sanctum Warden Time Fracture - shuffle hand into deck, draw 3
+            const handCards = [...this.state.player.hand];
+            this.state.player.hand = [];
+            this.state.player.drawPile.push(...handCards);
+            // Shuffle draw pile
+            for (let i = this.state.player.drawPile.length - 1; i > 0; i--) {
+              const j = Math.floor(Math.random() * (i + 1));
+              [this.state.player.drawPile[i], this.state.player.drawPile[j]] =
+                [this.state.player.drawPile[j], this.state.player.drawPile[i]];
+            }
+            // Draw 3 new cards
+            for (let i = 0; i < 3 && this.state.player.drawPile.length > 0; i++) {
+              const card = this.state.player.drawPile.pop();
+              if (card) {
+                this.state.player.hand.push(card);
+                this.emit(CombatEventType.CARD_DRAWN, { card });
+              }
+            }
+            log.push(`${enemy.name} fractures time! Your hand is reshuffled and you draw 3 new cards!`);
+          } else if (intent.debuffType && intent.debuffDuration) {
+            // Apply debuff to player
             const existingEffect = this.state.player.statusEffects.find(e => e.type === intent.debuffType);
             if (existingEffect) {
               existingEffect.duration = Math.max(existingEffect.duration || 0, intent.debuffDuration);
@@ -1644,8 +2202,34 @@ export class CombatEngine {
           break;
 
         case IntentType.HEAL:
-          // Heal an ally (or self if no allies)
-          if (intent.heal) {
+          // Check for Fade (Soul Fragment's once-per-combat full heal)
+          if (intent.moveId === 'fade' && intent.oncePerCombat) {
+            // Track as used ability
+            if (!enemy.usedAbilities.includes('fade')) {
+              enemy.usedAbilities.push('fade');
+              enemy.currentHp = enemy.maxHp;
+              log.push(`${enemy.name} fades and reforms at full health!`);
+            } else {
+              log.push(`${enemy.name} tried to fade but has already used this ability!`);
+            }
+          } else if (intent.moveId === 'consume_minion') {
+            // Greater Demon Consume Minion - destroy an Imp to heal
+            const imps = this.state.enemies.filter(e => e.currentHp > 0 && e.id.startsWith('imp'));
+            if (imps.length > 0) {
+              // Consume a random Imp
+              const victim = imps[Math.floor(Math.random() * imps.length)];
+              victim.currentHp = 0;
+              this.emit(CombatEventType.ENEMY_DIED, { enemyId: victim.id });
+              // Heal the demon
+              const healAmount = Math.min(intent.heal || 20, enemy.maxHp - enemy.currentHp);
+              enemy.currentHp += healAmount;
+              log.push(`${enemy.name} consumes ${victim.name} and heals for ${healAmount} HP!`);
+            } else {
+              // No Imps to consume, do a basic attack instead
+              log.push(`${enemy.name} has no minions to consume!`);
+            }
+          } else if (intent.heal) {
+            // Heal an ally (or self if no allies)
             const aliveAllies = this.state.enemies.filter(e => e.currentHp > 0 && e.id !== enemy.id);
             let healTarget = enemy;
             if (aliveAllies.length > 0) {
@@ -1705,11 +2289,24 @@ export class CombatEngine {
                 log.push(`${enemy.name} cannot summon more minions!`);
                 break;
               }
-              const summonDef = this.enemyDefinitions.get(summonId);
-              if (summonDef) {
-                this.addEnemy(summonDef);
-                log.push(`${enemy.name} summoned ${summonDef.name}!`);
+              // Special handling for Shadow Self (Hollow God)
+              if (summonId === 'shadow_self') {
+                // Register the Shadow Self definition
+                this.enemyDefinitions.set('shadow_self', SHADOW_SELF);
+                this.addEnemy(SHADOW_SELF);
+                this.emit(CombatEventType.SHADOW_SELF_SUMMONED, {});
+                this.emit(CombatEventType.BOSS_DIALOGUE, {
+                  message: HOLLOW_GOD_DIALOGUE.onShadowSelfSummoned,
+                });
+                log.push(`${enemy.name} manifests your fear! "${HOLLOW_GOD_DIALOGUE.onShadowSelfSummoned}"`);
                 summoned++;
+              } else {
+                const summonDef = this.enemyDefinitions.get(summonId);
+                if (summonDef) {
+                  this.addEnemy(summonDef);
+                  log.push(`${enemy.name} summoned ${summonDef.name}!`);
+                  summoned++;
+                }
               }
             }
             if (summoned > 0) {
@@ -1833,6 +2430,20 @@ export class CombatEngine {
 
     log.push(`--- Turn ${this.state.turn} ---`);
 
+    // Decay Corruption by 1 at start of turn
+    const corruptEffect = this.state.player.statusEffects.find(e => e.type === StatusType.CORRUPT);
+    if (corruptEffect && corruptEffect.amount > 0) {
+      corruptEffect.amount -= 1;
+      if (corruptEffect.amount <= 0) {
+        this.state.player.statusEffects = this.state.player.statusEffects.filter(
+          e => e.type !== StatusType.CORRUPT
+        );
+        log.push('Corruption fades completely.');
+      } else {
+        log.push(`Corruption decays. (${corruptEffect.amount} remaining)`);
+      }
+    }
+
     // Process Prices at start of player turn (Bargainer mechanic)
     if (this.state.player.activePrices.length > 0) {
       const priceLogs = this.processPricesAtTurnStart();
@@ -1858,6 +2469,11 @@ export class CombatEngine {
     // Player action phase
     this.state.phase = CombatPhase.PLAYER_ACTION;
     this.emit(CombatEventType.PHASE_CHANGED, { phase: CombatPhase.PLAYER_ACTION });
+
+    // Start Chomp Timer for Hollow God fight
+    if (this.isHollowGodFight()) {
+      this.startChompTimer();
+    }
 
     return { log };
   }

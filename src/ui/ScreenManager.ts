@@ -91,6 +91,10 @@ export class ScreenManager {
       : null;
   }
 
+  getScreen(screenId: string): Screen | undefined {
+    return this.screens.get(screenId);
+  }
+
   private async animateOut(screen: Screen): Promise<void> {
     screen.element.classList.add('exiting');
     await sleep(300);

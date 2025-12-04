@@ -102,6 +102,48 @@ class SaveManagerClass {
     this.saveNow();
   }
 
+  spendSoulEchoes(amount: number): boolean {
+    if (this.saveData.meta.soulEchoes < amount) {
+      return false;
+    }
+    this.saveData.meta.soulEchoes -= amount;
+    this.saveNow();
+    return true;
+  }
+
+  // Upgrade management
+  getPurchasedUpgrades(): string[] {
+    return [...this.saveData.meta.purchasedUpgrades];
+  }
+
+  hasUpgrade(upgradeId: string): boolean {
+    return this.saveData.meta.purchasedUpgrades.includes(upgradeId);
+  }
+
+  purchaseUpgrade(upgradeId: string, cost: number): boolean {
+    if (this.hasUpgrade(upgradeId)) {
+      return false;
+    }
+    if (!this.spendSoulEchoes(cost)) {
+      return false;
+    }
+    this.saveData.meta.purchasedUpgrades.push(upgradeId);
+    this.saveNow();
+    return true;
+  }
+
+  respecUpgrades(refundAmount: number): void {
+    this.saveData.meta.purchasedUpgrades = [];
+    this.saveData.meta.soulEchoes += refundAmount;
+    this.saveNow();
+  }
+
+  getTotalUpgradesSpent(): number {
+    // This would need to be calculated from upgrade costs
+    // For now, we'll track it separately if needed
+    return 0;
+  }
+
   getStatistics(): PlayerStatistics {
     return { ...this.saveData.meta.statistics };
   }

@@ -17,7 +17,8 @@
       "Bash(xargs -I {} sh -c 'echo \"\"\"\"=== {} ===\"\"\"\" && grep \"\"\"\"## Status:\"\"\"\" {}')",
       "Bash(dir /s /b \"C:\\Users\\C\\Sanctum-Deep\\public\\audio\\*.ogg\")",
       "Bash(cd:*)",
-      "Bash(npx eslint:*)"
+      "Bash(npx eslint:*)",
+      "mcp__ide__getDiagnostics"
     ],
     "deny": [],
     "ask": []

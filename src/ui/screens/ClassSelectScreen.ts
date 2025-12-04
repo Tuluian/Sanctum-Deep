@@ -84,11 +84,15 @@ export function createClassSelectScreen(callbacks: ClassSelectCallbacks): Screen
           const info = CLASS_DESCRIPTIONS[cls.id];
           const isSelected = selectedClass === cls.id;
 
+          const classImage = getClassImage(cls.id);
           return `
             <div class="class-card ${isUnlocked ? 'unlocked' : 'locked'} ${isSelected ? 'selected' : ''}"
                  data-class="${cls.id}">
               <div class="class-portrait ${isUnlocked ? '' : 'locked-overlay'}">
-                <div class="class-icon">${getClassIcon(cls.id)}</div>
+                ${classImage
+                  ? `<img src="${classImage}" alt="${cls.name}" class="class-portrait-img" />`
+                  : `<div class="class-icon">${getClassIcon(cls.id)}</div>`
+                }
                 ${!isUnlocked ? '<span class="lock-icon">🔒</span>' : ''}
               </div>
               <div class="class-info">
@@ -149,6 +153,18 @@ export function createClassSelectScreen(callbacks: ClassSelectCallbacks): Screen
       render();
     },
   };
+}
+
+function getClassImage(classId: CharacterClassId): string | null {
+  const imageMap: Partial<Record<CharacterClassId, string>> = {
+    [CharacterClassId.CLERIC]: '/images/characters/CLERIC.jpg',
+    [CharacterClassId.DUNGEON_KNIGHT]: '/images/characters/KNIGHT.jpg',
+    [CharacterClassId.DIABOLIST]: '/images/characters/DIABOLIST.jpg',
+    [CharacterClassId.OATHSWORN]: '/images/characters/oathsworn.jpg',
+    [CharacterClassId.FEY_TOUCHED]: '/images/characters/fey-touched.jpg',
+    [CharacterClassId.CELESTIAL]: '/images/characters/celestial.jpg',
+  };
+  return imageMap[classId] || null;
 }
 
 function getClassIcon(classId: CharacterClassId): string {
