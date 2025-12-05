@@ -1,0 +1,9 @@
+# Sanctum Ruins robots.txt
+# https://sanctumruins.com/robots.txt
+
+User-agent: *
+Allow: /
+Disallow: /api/
+
+# Sitemap location
+Sitemap: https://sanctumruins.com/sitemap.xml

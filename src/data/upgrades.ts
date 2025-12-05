@@ -350,12 +350,12 @@ const diabolistUpgrades: Upgrade[] = [
   {
     id: 'diabolist_blood_familiar',
     name: 'Blood Familiar',
-    description: 'Start combats with a Pain card exhausted (not in deck)',
+    description: 'Start combats with a Pain card fractured (not in deck)',
     cost: 100,
     path: UpgradePath.CLASS,
     classId: CharacterClassId.DIABOLIST,
     prerequisites: [],
-    effect: { type: 'curse_start_exhausted' },
+    effect: { type: 'curse_start_fractured' },
     tier: 1,
   },
   {

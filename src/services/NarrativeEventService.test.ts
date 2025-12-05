@@ -19,7 +19,7 @@ function createTestPlayer(overrides: Partial<PlayerState> = {}): PlayerState {
     hand: [],
     drawPile: [],
     discardPile: [],
-    exhaustPile: [],
+    fracturePile: [],
     statusEffects: [],
     devotion: 0,
     fortify: 0,

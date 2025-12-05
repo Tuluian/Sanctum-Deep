@@ -55,7 +55,7 @@ export const VOW_OF_SILENCE: Vow = {
   bonus: { type: VowBonusType.DOUBLE_BLOCK, amount: 2 },
   restriction: { type: VowRestrictionType.NO_POWER, description: 'Cannot play Power cards' },
   charges: 4,
-  breakPenalty: [], // Exhaust random - handled specially
+  breakPenalty: [], // Fracture random - handled specially
 };
 
 export const MARTYRS_OATH: Vow = {
@@ -260,10 +260,10 @@ export const OATHSWORN_COMMON_CARDS: Record<string, CardDefinition> = {
     name: 'Binding Light',
     type: CardType.ATTACK,
     cost: 1,
-    description: 'Deal 5 damage. Apply Bound for 1 turn.',
+    description: 'Deal 5 damage. Apply Bound for 3 turns.',
     effects: [
       { type: EffectType.DAMAGE, amount: 5 },
-      { type: EffectType.APPLY_BOUND, amount: 1 },
+      { type: EffectType.APPLY_BOUND, amount: 3 },
     ],
     rarity: CardRarity.COMMON,
     classId: CharacterClassId.OATHSWORN,
@@ -352,10 +352,10 @@ export const OATHSWORN_UNCOMMON_CARDS: Record<string, CardDefinition> = {
     name: 'Divine Judgment',
     type: CardType.ATTACK,
     cost: 2,
-    description: 'Requires Vow. Deal 15 damage. Exhaust.',
+    description: 'Requires Vow. Deal 15 damage. Fracture.',
     effects: [{ type: EffectType.DAMAGE, amount: 15 }],
     requiresVow: true,
-    exhaust: true,
+    fracture: true,
     rarity: CardRarity.UNCOMMON,
     classId: CharacterClassId.OATHSWORN,
   },
@@ -435,10 +435,10 @@ export const OATHSWORN_RARE_CARDS: Record<string, CardDefinition> = {
     name: 'Final Judgment',
     type: CardType.ATTACK,
     cost: 4,
-    description: 'Requires Vow. Deal 50 damage. Ends Vow with penalty. Exhaust.',
+    description: 'Requires Vow. Deal 50 damage. Ends Vow with penalty. Fracture.',
     effects: [{ type: EffectType.DAMAGE, amount: 50 }],
     requiresVow: true,
-    exhaust: true,
+    fracture: true,
     rarity: CardRarity.RARE,
     classId: CharacterClassId.OATHSWORN,
   },
@@ -451,11 +451,11 @@ export const OATHSWORN_BLOCK_BONUS_CARD: Record<string, CardDefinition> = {
     name: 'Sanctified Bulwark',
     type: CardType.POWER,
     cost: 2,
-    description: 'Permanently increase all block from cards by 1. Exhaust.',
+    description: 'Permanently increase all block from cards by 1. Fracture.',
     effects: [{ type: EffectType.PERMANENT_BLOCK_BONUS, amount: 1 }],
     rarity: CardRarity.STARTER,
     classId: CharacterClassId.OATHSWORN,
-    exhaust: true,
+    fracture: true,
   },
 };
 

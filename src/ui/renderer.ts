@@ -10,6 +10,24 @@ import {
   BAD_ENDING,
 } from '@/data/endingNarratives';
 
+// Character portrait images for endings
+function getClassImage(classId: CharacterClassId): string | null {
+  const imageMap: Partial<Record<CharacterClassId, string>> = {
+    [CharacterClassId.CLERIC]: '/images/characters/CLERIC.jpg',
+    [CharacterClassId.DUNGEON_KNIGHT]: '/images/characters/KNIGHT.jpg',
+    [CharacterClassId.DIABOLIST]: '/images/characters/DIABOLIST.jpg',
+    [CharacterClassId.OATHSWORN]: '/images/characters/oathsworn.jpg',
+    [CharacterClassId.FEY_TOUCHED]: '/images/characters/fey-touched.jpg',
+    [CharacterClassId.CELESTIAL]: '/images/characters/celestial.jpg',
+    [CharacterClassId.SUMMONER]: '/images/characters/summoner.jpg',
+    [CharacterClassId.BARGAINER]: '/images/characters/bargainer.jpg',
+    [CharacterClassId.TIDECALLER]: '/images/characters/tidecaller.jpg',
+    [CharacterClassId.SHADOW_STALKER]: '/images/characters/shadow_stalker.jpg',
+    [CharacterClassId.GOBLIN]: '/images/characters/goblin.png',
+  };
+  return imageMap[classId] || null;
+}
+
 // Status effect display info
 const STATUS_INFO: Record<StatusType, { icon: string; name: string; description: string; isDebuff: boolean }> = {
   [StatusType.SUNDERED]: {
@@ -254,13 +272,74 @@ export class CombatRenderer {
         const debuffClass = info.isDebuff ? 'debuff' : 'buff';
 
         return `
-          <div class="status-effect ${debuffClass}" data-tooltip="${tooltipText}">
+          <div class="status-effect ${debuffClass}" data-status-type="${effect.type}" data-status-amount="${effect.amount}" data-tooltip="${tooltipText}">
             <span class="status-icon">${info.icon}</span>
             ${effect.amount > 1 ? `<span class="status-stacks">${effect.amount}</span>` : ''}
           </div>
         `;
       })
       .join('');
+  }
+
+  /**
+   * Trigger pop animation on a specific status effect
+   */
+  popStatusEffect(target: 'player' | 'enemy', statusType: string, enemyIndex?: number): void {
+    let container: Element | null = null;
+
+    if (target === 'player') {
+      container = document.querySelector('.player-hud .status-effects');
+    } else if (enemyIndex !== undefined) {
+      const enemyElements = document.querySelectorAll('.arena-enemy');
+      const enemyEl = enemyElements[enemyIndex];
+      if (enemyEl) {
+        container = enemyEl.querySelector('.enemy-status-effects');
+      }
+    }
+
+    if (!container) return;
+
+    const statusEl = container.querySelector(`[data-status-type="${statusType}"]`);
+    if (statusEl) {
+      statusEl.classList.remove('status-effect-pop');
+      // Force reflow to restart animation
+      void (statusEl as HTMLElement).offsetWidth;
+      statusEl.classList.add('status-effect-pop');
+    }
+  }
+
+  /**
+   * Trigger pop animation on all new/updated status effects
+   * (called when status effects change)
+   */
+  popNewStatusEffects(target: 'player' | 'enemy', effects: StatusEffect[], enemyIndex?: number): void {
+    let container: Element | null = null;
+
+    if (target === 'player') {
+      container = document.querySelector('.player-hud .status-effects');
+    } else if (enemyIndex !== undefined) {
+      const enemyElements = document.querySelectorAll('.arena-enemy');
+      const enemyEl = enemyElements[enemyIndex];
+      if (enemyEl) {
+        container = enemyEl.querySelector('.enemy-status-effects');
+      }
+    }
+
+    if (!container) return;
+
+    // Pop all status effects (simplified - could track changes for more precision)
+    effects.forEach((effect) => {
+      const statusEl = container!.querySelector(`[data-status-type="${effect.type}"]`);
+      if (statusEl) {
+        const prevAmount = statusEl.getAttribute('data-status-amount');
+        if (prevAmount !== String(effect.amount)) {
+          statusEl.classList.remove('status-effect-pop');
+          void (statusEl as HTMLElement).offsetWidth;
+          statusEl.classList.add('status-effect-pop');
+          statusEl.setAttribute('data-status-amount', String(effect.amount));
+        }
+      }
+    });
   }
 
   private renderVow(vow: Vow | null): string {
@@ -360,6 +439,13 @@ export class CombatRenderer {
   }
 
   private renderArenaEnemies(state: CombatState): void {
+    // Scale down enemy container when there are many enemies to fit screen
+    const aliveEnemies = state.enemies.filter(e => e.currentHp > 0).length;
+    const scaleFactor = aliveEnemies <= 2 ? 1 : Math.max(0.65, 1 - (aliveEnemies - 2) * 0.12);
+    const gap = aliveEnemies <= 2 ? '40px' : `${Math.max(20, 40 - (aliveEnemies - 2) * 8)}px`;
+    this.elements.enemySlots.style.transform = `translateY(-60%) scale(${scaleFactor})`;
+    this.elements.enemySlots.style.gap = gap;
+
     this.elements.enemySlots.innerHTML = state.enemies
       .map((enemy, index) => {
         const hpPercent = (enemy.currentHp / enemy.maxHp) * 100;
@@ -625,6 +711,43 @@ export class CombatRenderer {
       }
     }
 
+    // Handle DAMAGE_EQUAL_BLOCK - show current block value as damage
+    for (const effect of card.effects) {
+      if (effect.type === EffectType.DAMAGE_EQUAL_BLOCK) {
+        const currentBlock = player.block;
+        const highlightClass = currentBlock > 0 ? 'damage-buffed' : '';
+        // Replace "damage equal to your Block" with actual value
+        modifiedDesc = modifiedDesc.replace(
+          /damage equal to your Block/i,
+          `<span class="${highlightClass}">${currentBlock}</span> damage (your Block)`
+        );
+      }
+    }
+
+    // Handle DAMAGE_EQUAL_FORTIFY - show current fortify value as damage
+    for (const effect of card.effects) {
+      if (effect.type === EffectType.DAMAGE_EQUAL_FORTIFY) {
+        const currentFortify = player.fortify;
+        const highlightClass = currentFortify > 0 ? 'damage-buffed' : '';
+        modifiedDesc = modifiedDesc.replace(
+          /damage equal to your Fortify/i,
+          `<span class="${highlightClass}">${currentFortify}</span> damage (your Fortify)`
+        );
+      }
+    }
+
+    // Handle BLOCK_EQUAL_FORTIFY - show current fortify value as block
+    for (const effect of card.effects) {
+      if (effect.type === EffectType.BLOCK_EQUAL_FORTIFY) {
+        const currentFortify = player.fortify;
+        const highlightClass = currentFortify > 0 ? 'block-buffed' : '';
+        modifiedDesc = modifiedDesc.replace(
+          /block equal to your Fortify/i,
+          `<span class="${highlightClass}">${currentFortify}</span> Block (your Fortify)`
+        );
+      }
+    }
+
     return modifiedDesc;
   }
 
@@ -635,9 +758,12 @@ export class CombatRenderer {
         const canPlay = card.cost <= player.resolve && !state.gameOver;
         const typeClass = card.type.toLowerCase();
         const modifiedDescription = this.getModifiedCardDescription(card, player);
+        // Use card's classId if available, otherwise use player's class, fallback to neutral
+        const cardClassId = card.classId || player.classId || 'neutral';
+        const classStyleClass = `class-${cardClassId}`;
 
         return `
-          <div class="card ${typeClass} ${!canPlay ? 'unplayable' : ''}"
+          <div class="card ${typeClass} ${classStyleClass} ${!canPlay ? 'unplayable' : ''}"
                onclick="playCard(${index})">
             <div class="card-header">
               <div class="card-name">${card.name}</div>
@@ -708,7 +834,7 @@ export class CombatRenderer {
   showNarrativeDefeat(
     classId: CharacterClassId,
     act: ActNumber,
-    soulEchoesEarned: number,
+    _soulEchoesEarned: number,
     onContinue?: () => void
   ): void {
     const existing = document.querySelector('.game-over');
@@ -716,6 +842,7 @@ export class CombatRenderer {
 
     const characterName = getCharacterName(classId);
     const narrative = getDefeatNarrative(classId, act);
+    const classImage = getClassImage(classId);
 
     const div = document.createElement('div');
     div.className = 'game-over defeat narrative-ending';
@@ -724,11 +851,16 @@ export class CombatRenderer {
     const narrativeText = narrative?.narrative || 'The Sanctum claims another soul...';
     const wardenQuote = narrative?.wardenQuote || 'Another falls. The void grows.';
 
+    // Character portrait with image or fallback
+    const portraitContent = classImage
+      ? `<img src="${classImage}" alt="${characterName}" class="defeat-portrait-img" />`
+      : '';
+
     div.innerHTML = `
       <div class="ending-frame defeat-frame">
         <h2 class="ending-title">${DEFEAT_FRAME.title}</h2>
         <div class="ending-character">
-          <div class="character-portrait defeat-portrait"></div>
+          <div class="character-portrait defeat-portrait">${portraitContent}</div>
           <div class="character-name">${characterName}</div>
         </div>
         <p class="ending-subtitle">"${DEFEAT_FRAME.subtitle}"</p>
@@ -741,7 +873,6 @@ export class CombatRenderer {
         </div>
       </div>
       <div class="ending-footer">
-        <p class="soul-echoes-earned">+${soulEchoesEarned} 🔮 Soul Echoes</p>
         <button id="game-over-continue" class="ending-button">Return to Menu</button>
       </div>
     `;
@@ -1063,7 +1194,7 @@ export class CombatRenderer {
     }, 1200);
   }
 
-  // Forget attack effect (Hollow God permanently exhausts a card)
+  // Forget attack effect (Hollow God permanently fractures a card)
   playForgetAnimation(cardName: string): void {
     // Create overlay effect
     const forgetOverlay = document.createElement('div');
@@ -1081,5 +1212,305 @@ export class CombatRenderer {
       forgetOverlay.remove();
       cardDissolve.remove();
     }, 1500);
+  }
+
+  /**
+   * Show floating damage number on an enemy
+   */
+  showEnemyDamageNumber(enemyIndex: number, _damage: number, blocked: number, hpDamage: number): void {
+    const enemySlots = document.getElementById('enemy-slots');
+    if (!enemySlots) return;
+
+    const enemyElements = enemySlots.querySelectorAll('.arena-enemy');
+    const enemyEl = enemyElements[enemyIndex] as HTMLElement;
+    if (!enemyEl) return;
+
+    const rect = enemyEl.getBoundingClientRect();
+    const containerRect = enemySlots.getBoundingClientRect();
+
+    // Create damage number element
+    const damageEl = document.createElement('div');
+    damageEl.className = 'floating-damage';
+
+    // Determine style based on damage type
+    if (hpDamage === 0 && blocked > 0) {
+      damageEl.classList.add('blocked');
+      damageEl.textContent = `🛡️ ${blocked}`;
+    } else if (hpDamage > 0) {
+      // Size based on damage amount
+      if (hpDamage >= 16) {
+        damageEl.classList.add('large');
+      } else if (hpDamage >= 6) {
+        damageEl.classList.add('medium');
+      }
+      damageEl.textContent = String(hpDamage);
+      if (blocked > 0) {
+        damageEl.innerHTML = `${hpDamage} <span class="partial-block">(🛡️${blocked})</span>`;
+      }
+    } else {
+      return; // No visible damage
+    }
+
+    // Position above enemy with random X offset
+    const randomX = (Math.random() - 0.5) * 40;
+    damageEl.style.left = `${rect.left - containerRect.left + rect.width / 2 + randomX}px`;
+    damageEl.style.top = `${rect.top - containerRect.top + 20}px`;
+
+    enemySlots.appendChild(damageEl);
+
+    // Trigger animation
+    requestAnimationFrame(() => {
+      damageEl.classList.add('animate');
+    });
+
+    // Remove after animation
+    setTimeout(() => damageEl.remove(), 1000);
+  }
+
+  /**
+   * Show floating damage number on the player
+   */
+  showPlayerDamageNumber(_damage: number, blocked: number, fortifyAbsorbed: number, hpDamage: number): void {
+    const playerHud = document.getElementById('player-hud');
+    if (!playerHud) return;
+
+    const rect = playerHud.getBoundingClientRect();
+
+    // Create damage number element
+    const damageEl = document.createElement('div');
+    damageEl.className = 'floating-damage player-damage';
+
+    const totalBlocked = blocked + fortifyAbsorbed;
+
+    if (hpDamage === 0 && totalBlocked > 0) {
+      damageEl.classList.add('blocked');
+      damageEl.textContent = `🛡️ ${totalBlocked}`;
+    } else if (hpDamage > 0) {
+      if (hpDamage >= 16) {
+        damageEl.classList.add('large');
+      } else if (hpDamage >= 6) {
+        damageEl.classList.add('medium');
+      }
+      damageEl.textContent = String(hpDamage);
+      if (totalBlocked > 0) {
+        damageEl.innerHTML = `${hpDamage} <span class="partial-block">(🛡️${totalBlocked})</span>`;
+      }
+    } else {
+      return;
+    }
+
+    // Position above player HUD
+    const randomX = (Math.random() - 0.5) * 30;
+    damageEl.style.left = `${rect.left + rect.width / 2 + randomX}px`;
+    damageEl.style.top = `${rect.top - 20}px`;
+    damageEl.style.position = 'fixed';
+
+    document.body.appendChild(damageEl);
+
+    requestAnimationFrame(() => {
+      damageEl.classList.add('animate');
+    });
+
+    setTimeout(() => damageEl.remove(), 1000);
+  }
+
+  /**
+   * Show healing number (green, positive)
+   */
+  showHealNumber(target: 'player' | 'enemy', amount: number, enemyIndex?: number): void {
+    const healEl = document.createElement('div');
+    healEl.className = 'floating-damage heal';
+    healEl.textContent = `+${amount}`;
+
+    if (target === 'player') {
+      const playerHud = document.getElementById('player-hud');
+      if (!playerHud) return;
+      const rect = playerHud.getBoundingClientRect();
+      healEl.style.left = `${rect.left + rect.width / 2}px`;
+      healEl.style.top = `${rect.top - 20}px`;
+      healEl.style.position = 'fixed';
+      document.body.appendChild(healEl);
+    } else if (enemyIndex !== undefined) {
+      const enemySlots = document.getElementById('enemy-slots');
+      if (!enemySlots) return;
+      const enemyElements = enemySlots.querySelectorAll('.arena-enemy');
+      const enemyEl = enemyElements[enemyIndex] as HTMLElement;
+      if (!enemyEl) return;
+      const rect = enemyEl.getBoundingClientRect();
+      const containerRect = enemySlots.getBoundingClientRect();
+      healEl.style.left = `${rect.left - containerRect.left + rect.width / 2}px`;
+      healEl.style.top = `${rect.top - containerRect.top + 20}px`;
+      enemySlots.appendChild(healEl);
+    }
+
+    requestAnimationFrame(() => {
+      healEl.classList.add('animate');
+    });
+
+    setTimeout(() => healEl.remove(), 1000);
+  }
+
+  /**
+   * Screen shake effect
+   */
+  shakeScreen(intensity: number = 4, duration: number = 300): void {
+    // Check if screen shake is enabled in settings
+    const dungeon = document.querySelector('.dungeon-scene') as HTMLElement;
+    if (!dungeon) return;
+
+    dungeon.animate([
+      { transform: 'translate(0, 0)' },
+      { transform: `translate(${intensity}px, ${intensity / 2}px)` },
+      { transform: `translate(-${intensity}px, -${intensity / 2}px)` },
+      { transform: `translate(${intensity / 2}px, ${-intensity}px)` },
+      { transform: `translate(-${intensity / 2}px, ${intensity / 2}px)` },
+      { transform: 'translate(0, 0)' }
+    ], {
+      duration,
+      easing: 'ease-out'
+    });
+  }
+
+  /**
+   * Red vignette flash when player takes damage
+   */
+  showDamageVignette(intensity: number = 0.3): void {
+    const existing = document.querySelector('.damage-vignette');
+    if (existing) existing.remove();
+
+    const vignette = document.createElement('div');
+    vignette.className = 'damage-vignette';
+    vignette.style.opacity = String(intensity);
+    document.body.appendChild(vignette);
+
+    // Fade out
+    setTimeout(() => {
+      vignette.style.opacity = '0';
+      setTimeout(() => vignette.remove(), 300);
+    }, 150);
+  }
+
+  /**
+   * Play dramatic enemy death animation
+   */
+  playEnemyDeathAnimation(enemyIndex: number, isBoss: boolean = false): void {
+    const enemySlots = document.getElementById('enemy-slots');
+    if (!enemySlots) return;
+
+    const enemyElements = enemySlots.querySelectorAll('.arena-enemy');
+    const enemyEl = enemyElements[enemyIndex] as HTMLElement;
+    if (!enemyEl) return;
+
+    const figureEl = enemyEl.querySelector('.enemy-figure') as HTMLElement;
+    if (!figureEl) return;
+
+    // Stage 1: Hit stagger (0.1s)
+    figureEl.classList.add('death-stagger');
+
+    // Stage 2: Freeze frame (0.3s) - already paused via CSS animation-play-state
+    setTimeout(() => {
+      figureEl.classList.remove('death-stagger');
+      figureEl.classList.add('death-freeze');
+
+      // Screen shake on death
+      this.shakeScreen(isBoss ? 6 : 3, isBoss ? 400 : 150);
+    }, 100);
+
+    // Stage 3: Fade + shrink (0.4s)
+    setTimeout(() => {
+      figureEl.classList.remove('death-freeze');
+      figureEl.classList.add('death-dissolve');
+
+      // Create soul particles
+      this.createDeathParticles(enemyEl, isBoss);
+    }, 400);
+
+    // Stage 4: Mark as dead (cleanup happens in render)
+    setTimeout(() => {
+      enemyEl.classList.add('enemy-dead');
+    }, 800);
+  }
+
+  /**
+   * Create particle burst effect on enemy death
+   */
+  private createDeathParticles(enemyEl: HTMLElement, isBoss: boolean): void {
+    const rect = enemyEl.getBoundingClientRect();
+    const particleCount = isBoss ? 20 : 10;
+    const container = document.getElementById('enemy-slots');
+    if (!container) return;
+    const containerRect = container.getBoundingClientRect();
+
+    for (let i = 0; i < particleCount; i++) {
+      const particle = document.createElement('div');
+      particle.className = 'death-particle';
+
+      // Random position within enemy
+      const startX = rect.left - containerRect.left + rect.width / 2;
+      const startY = rect.top - containerRect.top + rect.height / 2;
+
+      // Random end position (spreading outward)
+      const angle = (Math.PI * 2 * i) / particleCount + (Math.random() - 0.5) * 0.5;
+      const distance = 60 + Math.random() * 80;
+      const endX = Math.cos(angle) * distance;
+      const endY = Math.sin(angle) * distance - 30; // Drift upward
+
+      particle.style.left = `${startX}px`;
+      particle.style.top = `${startY}px`;
+      particle.style.setProperty('--end-x', `${endX}px`);
+      particle.style.setProperty('--end-y', `${endY}px`);
+
+      // Stagger particle animations
+      particle.style.animationDelay = `${i * 0.03}s`;
+
+      container.appendChild(particle);
+
+      // Cleanup
+      setTimeout(() => particle.remove(), 1000);
+    }
+  }
+
+  /**
+   * Show boss dialogue during phase transitions
+   * Creates a dramatic text overlay that fades in and out
+   */
+  showBossDialogue(message: string, bossName?: string, duration: number = 4000): void {
+    // Remove any existing dialogue
+    const existing = document.querySelector('.boss-dialogue');
+    if (existing) existing.remove();
+
+    // Create dialogue container
+    const dialogueContainer = document.createElement('div');
+    dialogueContainer.className = 'boss-dialogue';
+
+    // Add boss name if provided
+    if (bossName) {
+      const nameEl = document.createElement('div');
+      nameEl.className = 'boss-dialogue-name';
+      nameEl.textContent = bossName;
+      dialogueContainer.appendChild(nameEl);
+    }
+
+    // Add dialogue text
+    const textEl = document.createElement('div');
+    textEl.className = 'boss-dialogue-text';
+    textEl.textContent = `"${message}"`;
+    dialogueContainer.appendChild(textEl);
+
+    document.body.appendChild(dialogueContainer);
+
+    // Fade out after duration
+    setTimeout(() => {
+      dialogueContainer.classList.add('fade-out');
+      setTimeout(() => dialogueContainer.remove(), 500);
+    }, duration);
+  }
+
+  /**
+   * Hide boss dialogue immediately
+   */
+  hideBossDialogue(): void {
+    const existing = document.querySelector('.boss-dialogue');
+    if (existing) existing.remove();
   }
 }

@@ -1,21 +1,19 @@
-** Gemini is CRAZY for making enemy vectors!!!! HOWEVER... usage only resets every 24 hours so we have some waiting/payments to do.
+** Gemini is CRAZY for making enemy vectors!!!! HOWEVER... usage only resets every 24 hours, seem to have higher usage with personal account rather than a business...
 
     Then Pixelcut.ai seems to work SUPER well for removing background quickly, can only do 4 a day.
     Adobe Express background remover is also very very good. 
-
-Need Act 1, 2, 3, and boss arena backgrounds. (and super enhance with AI so it can scale)
-
 -----------------------
-UNIVERSAL STYLE TAG (add this to all prompts)
-
-STYLE BASE (paste start the the BEGINNING, then once at the END of each prompt):
+For from behind player, looking out:
+Rear-view third-person camera angle behind the ____. 
+third-person over-the-shoulder from behind the player character, player shown only as a partial blurred silhouette from the back (shoulders/head), camera positioned slightly above and behind the player, clean vector silhouette, no background, no floor, transparent background
+-----------------------
+UNIVERSAL STYLE TAGS (add this to all prompts)
 Full body from head to feet.
 -- PROMPT --
 high-detail VECTOR illustration, bold outer line weight, simplified interior textures, clean game-ready silhouette, bold lines, subtle atmospheric texture, dramatic lighting built into the character only, no background, no floor, transparent background, game-ready asset, consistent art style, melancholy gothic-fantasy tone, Act-1 ‘forgotten pilgrims’ theme, faint hints of who they used to be, elegant but unsettling design
 
-need to finish these creatures for Act 1:
-
-6. Ghoul — “Starved Survivor”ddd
+-----------------------
+6. Ghoul — “Starved Survivor” ddd
 A twisted, emaciated humanoid ghoul formed from a desperate survivor who devoured others to live. Limbs long and tense, posture feral yet mournful. Mouth stretched but not grotesque—suggestive rather than gory. Remnants of clothing tied around its waist or arms. Eyes dim, unfocused, still searching for help it can no longer understand. STYLE BASE.
  
 7. Bone Archer — “Remnant Scout” ddd
@@ -74,29 +72,29 @@ ACT 2 — BOSS
 A regal, drowned monarch with a broken crown fused to sea-soaked hair. Pale skin marbled with waterlogged veins. He holds a grand trident carved with symbols of Thalassar’s lost kingdom. Armor is ornate but rusted, encrusted with barnacles and coral. His expression flickers between stern kingly pride and crushing grief. Behind him, faint water sigils spiral upward like rising tides of memory. STYLE BASE.
 
 ACT 3 — COMMON ENEMIES
-⭐ 1. Imp (Gleeful Void-Demons) (try again)
+⭐ 1. Imp (Gleeful Void-Demons) ddd
 A small, twisted imp with angular limbs, manic grin, and tiny ember-like eyes. Its body is wiry and charred as though burnt by void energy, with little horns curling backward. Wings made of tattered shadow, fluttering like torn pages from forgotten memories. Gleeful, mischievous, delighted by destruction. STYLE BASE.
 
-⭐ 2. Corrupted Angel
+⭐ 2. Corrupted Angel   (try again)
 A once-radiant angelic being whose wings are now split between feathers and dripping void strands. Face smooth on one side; the other distorted as if erased. Armor cracked open, leaking soft light that flickers like a dying candle. Halo fractured into segments orbiting chaotically. Pose expresses grief, not rage—an emissary betrayed by its own purpose. STYLE BASE.
 
-⭐ 3. Void Spawn
+⭐ 3. Void Spawn (try again)
 A floating, amorphous creature shaped like a warped silhouette of a person you almost recognize. Its form tears inward toward a small gravity point—a memory-core that devours identity. Edges glitch, ripple, or blur like corrupted data. Eyes absent; face half-suggested. Trails of stolen memories spiral off its body in faint glowing ribbons. STYLE BASE.
 
-⭐ 4. Sanctum Guardian
+⭐ 4. Sanctum Guardian ddd
 A majestic but unsettling guardian construct carved from white stone and living crystal. Joints glow with Warden-light. Helmet has no face, only a vertical slit that emits a soft pulse. Its posture is noble, designed to protect—but cracks across the armor show a long struggle against the Hollow God’s corruption. Silhouette imposing, like a fallen paladin-statue made animate. STYLE BASE.
 
-⭐ 5. Soul Fragment
+⭐ 5. Soul Fragment ddd
 A fragile, humanoid outline formed of splintered soul-light, like shattered stained glass barely holding together. Limbs taper into drifting shards, as if the person is desperately trying to remember how to exist. Their face is soft and blurred, flickering with lost expressions. Barely hostile—more like a plea for wholeness. STYLE BASE.
 
-⭐ 6. Infernal Hound
+⭐ 6. Infernal Hound ddd
 A multi-headed infernal hound forged from void-fire and cracked obsidian plates. Three heads, each with different emotional expressions (rage, sorrow, hunger). Flames leak between the plates like molten memory. Tail ends in splintered bone spikes. Stance low and predatory but shaped like a creature that was once loyal to something. STYLE BASE.
 
 ACT 3 — ELITES
-⭐ 1. Greater Demon
+⭐ 1. Arch Demon ddd
 A towering archdemon with elongated horns shaped like branching roots of a dying world. Muscular but lean, skin etched with runes that pulse with void-light. Wings torn into jagged membranes. Mouth full of too many teeth forming spirals. Chains of broken contracts or vows dangle from wrists. Stands like a fallen general leading the last horrors of the Sanctum. STYLE BASE.
 
-⭐ 2. Sanctum Warden
+⭐ 2. Sanctum Warden ddd
 A spectral knight-templar who appears as if carved from luminous crystal and cracked metal, representing a former Warden’s protective echo. Their armor is ornate but fractured, inner light spilling like sand from the cracks. Face hidden by a ceremonial helm engraved with forgotten names. Sword or spear made of hardened Warden-light. Their stance is unyielding, tragic, and noble—guarding the path to the Hollow God. STYLE BASE.
 
 Act 3 - "Shadow Self"
@@ -117,10 +115,10 @@ ACT 3 - SANCTUM CORE (arena)
 A vast crystalline chamber lined with petrified Wardens encased in shimmering soul-crystal, each with engraved regrets. At the center is an empty formation of light—a space where the Hollow God “sits,” but nothing occupies it. Reality bends softly around the emptiness, subtle cracks of light forming spirals around the void. Vector, transparent, symbolic not literal.
 
 ===================================================
-1. CLERIC
+
+  1. CLERIC
 
   The Divine Healer
-
   Portrait of a battle-worn holy warrior standing in the ruins of a sacred cathedral,
   soft golden light emanating from their hands. They wear weathered white and gold vestments
   layered over light chain mail, bearing prayer scrolls at their belt. Their face shows
@@ -132,7 +130,6 @@ A vast crystalline chamber lined with petrified Wardens encased in shimmering so
 
   ---
   2. DUNGEON KNIGHT
-
   The Unbreakable Bulwark
 
   Full-body portrait of a heavily armored knight standing resolute in a dark dungeon corridor,
@@ -140,13 +137,11 @@ A vast crystalline chamber lined with petrified Wardens encased in shimmering so
   of countless battles - dented, scratched, but unbroken. Blue-grey steel with brass rivets,
   a closed greathelm with a narrow visor revealing only determined eyes. Stance is defensive,
   low and immovable. Shield glows with faint runic fortification magic. Background is rough-hewn
-  stone walls with torch light flickering, casting dramatic shadows. Style: grimdark fantasy,
-  realistic metal textures, sense of weight and permanence. Fortify mechanic shown as
+  stone walls with torch light flickering, casting dramatic shadows. Style: grimdark fantasy, sense of weight and permanence. Fortify mechanic shown as
   crystalline barrier patterns forming on armor.
 
   ---
   3. DIABOLIST
-
   The Cursed Bargainer
 
   Three-quarter portrait of a corrupted mage wreathed in crimson and black smoke,
@@ -160,7 +155,6 @@ A vast crystalline chamber lined with petrified Wardens encased in shimmering so
 
   ---
   4. OATHSWORN
-
   The Bound Crusader
 
   Dynamic portrait of a holy warrior mid-stride, wrapped in glowing chains of their own
@@ -174,7 +168,6 @@ A vast crystalline chamber lined with petrified Wardens encased in shimmering so
 
   ---
   5. FEY-TOUCHED
-
   The Chaotic Trickster
 
   Whimsical portrait of a mortal transformed by fey magic, features shifting between
@@ -189,7 +182,6 @@ A vast crystalline chamber lined with petrified Wardens encased in shimmering so
 
   ---
   6. CELESTIAL
-
   The Divine Conduit
 
   Ethereal portrait of a being channeling pure radiant energy, their mortal form partially
@@ -204,7 +196,6 @@ A vast crystalline chamber lined with petrified Wardens encased in shimmering so
 
   ---
   7. SUMMONER
-
   The Spirit Caller
 
   Atmospheric portrait of a mystic surrounded by ghostly minions - a wisp floating at
@@ -219,12 +210,11 @@ A vast crystalline chamber lined with petrified Wardens encased in shimmering so
 
   ---
   8. BARGAINER
-
   The Debt Collector
 
   Sinister portrait of a merchant of souls, standing amid floating contracts and ledgers
   written in blood. They wear fine but corrupted attire - a once-elegant coat now stained
-  with otherworldly ink, a vest with buttons made of small skulls. Their smile is
+  with otherworldly ink, a vest with buttons made of small skulls. Their head is a demon's skull and is
   too wide, teeth slightly too sharp, eyes calculating the worth of everything they see.
   One hand holds a quill that drips with liquid shadow, the other gestures to a
   floating scale weighing souls against golden coins. Behind them, shadowy figures
@@ -233,6 +223,47 @@ A vast crystalline chamber lined with petrified Wardens encased in shimmering so
   demonic contract seals burning on their skin and a spectral ledger always open.
 
   ---
+  9. TIDECALLER 
+  The Tidal Executor - (Water-aligned finisher class — “Drown” low-HP enemies, gains gold)
+
+  PROMPT:
+  A full-body portrait of a drowned-but-reborn tide priest who commands crushing water pressure like an executioner’s blade. Their armor is a hybrid of rusted pilgrim gear and smooth tide-worn plating, etched with spiraling marine runes. Water constantly drips from their form, collecting into floating rings around their wrists and ankles. Their eyes glow with deep-ocean blue—calm, cold, and judging. One hand shapes a hovering orb of compressed water (their finishing “Drown” spell); inside it, faint silhouettes of coins swirl like captured spoils. The other hand holds a barnacle-encrusted sickle or tide-hook used to drag prey into the depths.
+  Their stance is upright, stoic, reminiscent of someone once sworn to rescue sailors—but now condemning those too weak to continue. Background: fractured sanctum walls with water pouring through impossible seams. Palette: deep blues, drowned turquoise, silver, hints of rusted metal. Lighting: moody, aquatic refractions.
+  Mechanic Visualization:  Floating water sigils orbiting like tidal halos; coins or treasure fragments trapped within water spheres.
+
+    Rear-view third-person camera angle behind the Tidecaller.
+    Third-person over-the-shoulder from behind the player character, player shown only as a partial blurred silhouette from the back (shoulders/head), camera positioned slightly above and behind the player, clean vector silhouette, no background, no floor, transparent background.
+    STYLE BASE (start + end).
+
+  ---
+  10. SHADOW STALKER
+  The Void-Threaded Assassin
+
+  PROMPT:
+  A full-body portrait of a cloaked, razor-thin assassin whose body flickers between solid form and dissolving shadow. Their silhouette is sharp yet unstable—edges glitching, parts of limbs phasing out as if selectively erased by the void. They wear tight, muted leathers with arcane seams glowing faint violet; a hood obscures most features except two piercing, ghostlike eyes.
+  Twin void-blades curve from their forearms, shaped from collapsed light—black steel veined with faint starlit cracks. Tiny motes of darkness fall from their steps like soot drifting upward. Background: a dungeon corridor where torches bend into warped shadows around them, as if dimmed by their presence. Palette: charcoal black, void purple, faint indigo, low saturation with sharp specular highlights.
+  Their posture is predatory but mournful—like a hunter who gave up their identity to track what others could not.
+  Mechanic Visualization:  Glitching afterimages echo behind their movement; faint tether-lines of shadow connecting the assassin to distant “kill marks.”
+
+  Rear-view third-person camera angle behind the Shadow Stalker.
+  Third-person over-the-shoulder from behind the player character, player shown only as a partial blurred silhouette from the back (shoulders/head), camera positioned slightly above and behind the player, clean vector silhouette, no background, no floor, transparent background.
+
+  ---
+  11. GOBLIN
+  The Cheeky Scrapmonger -  (Secret class)
+
+  PROMPT:
+  A full-body portrait of a small, wiry goblin scavenger with a toothy, mischievous grin and oversized ears that curl like torn parchment. Their gear is an absurd mix of stolen relics, dungeon junk, and makeshift armor: a breastplate that’s clearly a repurposed pot, a shield made from a broken sanctum tablet, mismatched straps and charms jangling everywhere.
+  They hold a “weapon” that is either a jury-rigged gadget—like a crossbow made from dungeon hinges—or a hilariously oversized wrench decorated with glowing runes they definitely do not understand. Their eyes shine with clever mischief; posture is leaning forward, ready to snatch loot the moment a foe dies.
+  Background: piles of dungeon debris, faintly glowing runes on random objects they’ve jammed into their satchel. Palette: dungeon bronze, moss green, rusted red, bright highlights of stolen magical energy.
+  Character Tone: Lightly comedic, but still within the dark-fantasy setting—like a creature surviving through wit, chaos, and shameless theft.
+  Mechanic Visualization: A floating scrap-sigil made of knives, gears, small relics, and coins orbiting around them—implying “loot synergy.”
+
+  Rear-View Third-Person Variant (Player-Camera Prompt):
+  Rear-view third-person camera angle behind the Goblin.
+  Third-person over-the-shoulder from behind the player character, player shown only as a partial blurred silhouette from the back (shoulders/head), camera positioned slightly above and behind the player, clean vector silhouette, no background, no floor, transparent background.
+
+  =============================================
   Style Guide Notes for All Characters
 
   Setting Context: All characters exist within the Sanctum Ruins - a sentient, ever-shifting dungeon that tests worthy souls. The environment should
@@ -257,3 +288,43 @@ A vast crystalline chamber lined with petrified Wardens encased in shimmering so
   - Celestial: Pure gold, radiant white, prismatic light
   - Summoner: Spirit blue, deep purple, silver, spectral green
   - Bargainer: Rich gold, blood red, shadow black, aged parchment
+  - Tidecaller: Primary Colors: 
+      Abyss Blue — #0C1F3A
+      Drowned Teal — #1B4E55
+      Saltwater Steel — #8BA2A5
+        Secondary Colors
+      Rusted Bronze — #6A4E31
+      Foam Grey — #C8D5D8
+        Accent Colors
+      Sunken Gold (for loot/“Drown” gold gain) — #C7A25A
+      Deep Current Glow — #3BC0C9
+        FX / Magic Colors
+      Hydrocore Blue (compressed water spell) — #46D9FF
+      Memory-Tide White (light caustics) — #E0F7FF
+  - SHADOW STALKER - Primary Colors
+      Null Black — #0A0A0D
+      Oblivion Charcoal — #1F1E26
+      Void Indigo — #312B52
+        Secondary Colors
+      Ashen Violet — #5A4F72
+      Faded Lavender Smoke — #847EA1
+        Accent Colors
+      Phantom Edge Purple (blade veins) — #A68CFF
+      Glimmer Silver (knife flash / tether lines) — #C7C4D9
+        FX / Magic Colors
+      Glitch-Lilac Light — #BB99FF
+      Shadow Static Blue — #2F66E6
+  - GOBLIN — “The Cheeky Scrapmonger”
+        Primary Colors
+      Goblin Moss Green — #5A7B3B
+      Rust-Brown Leather — #7A4E27
+      Scrap Metal Grey — #7C8388
+        Secondary Colors
+      Dungeon Bronze — #98733E
+      Moldy Olive — #6B7038
+        Accent Colors
+      Spark-Junk Yellow (looted magical glow) — #EED06F
+      Mischief Red (eyes, little glyphs) — #C24A3D
+        FX / Magic Colors
+      Chaotic Trinket Cyan — #77E0D4
+      Relic Rune Amber — #FFB45A

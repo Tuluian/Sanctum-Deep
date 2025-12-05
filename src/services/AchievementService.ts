@@ -95,7 +95,7 @@ class AchievementServiceClass {
   private loadFromStorage(): void {
     try {
       // Load unlocked achievements from SaveManager
-      const unlockedIds = this.getUnlockedAchievementIds();
+      const unlockedIds = SaveManager.getUnlockedAchievements();
       this.unlockedAchievements = new Set(unlockedIds);
 
       // Load progress data
@@ -125,38 +125,9 @@ class AchievementServiceClass {
     }
   }
 
-  private getUnlockedAchievementIds(): string[] {
-    // Access SaveManager's internal data
-    const saveData = localStorage.getItem('sanctum_ruins_save');
-    if (saveData) {
-      try {
-        const parsed = JSON.parse(saveData);
-        return parsed.meta?.unlockedAchievements || [];
-      } catch {
-        return [];
-      }
-    }
-    return [];
-  }
-
   private persistUnlockedAchievement(achievementId: string): void {
-    // Update SaveManager's achievement list
-    const saveData = localStorage.getItem('sanctum_ruins_save');
-    try {
-      const parsed = saveData ? JSON.parse(saveData) : { meta: {} };
-      if (!parsed.meta) {
-        parsed.meta = {};
-      }
-      if (!parsed.meta.unlockedAchievements) {
-        parsed.meta.unlockedAchievements = [];
-      }
-      if (!parsed.meta.unlockedAchievements.includes(achievementId)) {
-        parsed.meta.unlockedAchievements.push(achievementId);
-        localStorage.setItem('sanctum_ruins_save', JSON.stringify(parsed));
-      }
-    } catch (e) {
-      console.error('Failed to persist achievement:', e);
-    }
+    // Use SaveManager to persist achievement - this ensures it's saved properly
+    SaveManager.unlockAchievement(achievementId);
   }
 
   // ============================================
@@ -742,16 +713,7 @@ class AchievementServiceClass {
     this.totalCombatWins = 0;
 
     // Clear from SaveManager
-    const saveData = localStorage.getItem('sanctum_ruins_save');
-    if (saveData) {
-      try {
-        const parsed = JSON.parse(saveData);
-        parsed.meta.unlockedAchievements = [];
-        localStorage.setItem('sanctum_ruins_save', JSON.stringify(parsed));
-      } catch (e) {
-        console.error('Failed to reset achievements:', e);
-      }
-    }
+    SaveManager.resetAchievements();
 
     localStorage.removeItem('achievement_progress');
     this.saveToStorage();

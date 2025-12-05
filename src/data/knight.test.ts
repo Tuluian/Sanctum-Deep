@@ -25,7 +25,7 @@ function createKnightPlayerState(overrides: Partial<PlayerState> = {}): PlayerSt
     hand: [],
     drawPile: [],
     discardPile: [],
-    exhaustPile: [],
+    fracturePile: [],
     statusEffects: [],
     devotion: 0,
     fortify: 0,

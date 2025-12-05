@@ -61,11 +61,11 @@ export const SUMMONER_BLOCK_BONUS_CARD: Record<string, CardDefinition> = {
     name: 'Spirit Fortress',
     type: CardType.POWER,
     cost: 2,
-    description: 'Permanently increase all block from cards by 1. Exhaust.',
+    description: 'Permanently increase all block from cards by 1. Fracture.',
     effects: [{ type: EffectType.PERMANENT_BLOCK_BONUS, amount: 1 }],
     rarity: CardRarity.STARTER,
     classId: CharacterClassId.SUMMONER,
-    exhaust: true,
+    fracture: true,
   },
 };
 

@@ -45,30 +45,29 @@ To start boss fights or Act 2, open dev console in browser (fn+F12)
   - window.debugCombat('ghoul', 'cleric')
   - window.debugCombat('shade', 'cleric')
   - window.debugCombat('drowned_king', 'cleric')
-  window.debugCombat('slime', 'cleric')
-  window.debugCombat('high_cultist', 'cleric')
-  window.debugCombat('tomb_guardian', 'cleric')
-  window.debugCombat('bonelord', 'cleric')
+  - window.debugCombat('slime', 'cleric')
+  - window.debugCombat('high_cultist', 'cleric')
+  - window.debugCombat('tomb_guardian', 'cleric')
+  - window.debugCombat('bonelord', 'cleric')
 
 Thoughts... if I can publish 1 game per month...
     Then EVENTUALLY i should get to a point where I can make enough in salary? (depending on how much we bring in)
     Is it worth quitting to focus on this full-time? (Obviously not yet, its super early, but still.)
     Need an LLC? For Mug Meter, for Sanctum Ruins, etc...
-
+------------------
+/src/data/EndingNarratives.ts
+/src/data/classNarratives.ts 
+/src/data/narrativeEvents/universal.ts    # all random events
+/src/data/narrativeEvents/classSpecific.ts  # class events
+    Update these stories and revise to be more human.
 ------------------
 To-Do:  (PO makes work, Dev does it, QA REVIEWS!!!!, then PO Closes)
-Add more classes that are locked (6.3-6.6)
-Replace some enemy images with the ones I uploaded to /NOTES/char-images/
+
 We need to add to Shrines a random option to choose "+1 damage to spells this run" // "+1 to Block spells this run"
 We need to add Shops (and gold currency for each run)
-Should take longer to complete full upgrades path
-Define 3 types of upgrade:
-    Rest of this combat
-    Rest of this Run
-    Permanent, always
-Give a running debug log for dev that tells me (and agents) everything that happens when a card is played or enemy acts.
-Unlock Tier 4 upgrades when finishing the game as a class
 Connection nodes overlap a lot. They should only go to nodes one or two away, but not bypassing strings. 
 Decrease the lowest tier of upgrades, but increase significantly the better tiers
     And give more volume of options for Universal. 
 Need animation for drinking potion
+More animations, characters and should move slowly, at random times. 
+Need to pen-test.

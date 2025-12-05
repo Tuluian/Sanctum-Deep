@@ -1,0 +1,114 @@
+# Quality Gate: Story 15.7 - Environment Configuration
+schema: 1
+story: "15.7"
+story_title: "Environment Configuration"
+gate: PENDING
+status_reason: "Story not yet implemented"
+reviewer: "Quinn (Test Architect)"
+updated: "2025-12-05T00:00:00Z"
+
+waiver: { active: false }
+
+top_issues: []
+
+risk_summary:
+  totals: { critical: 0, high: 0, medium: 0, low: 0 }
+  highest: none
+  recommendations:
+    must_fix: []
+    monitor: []
+
+quality_score: 0
+expires: "2025-12-19T00:00:00Z"
+
+evidence:
+  tests_reviewed: 0
+  tests_passing: 0
+  risks_identified: 0
+  trace:
+    ac_covered: []
+    ac_gaps: [1, 2, 3, 4, 5, 6, 7]
+
+ac_trace:
+  - ac: 1
+    description: ".env.example file documents all required variables"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Verify .env.example exists"
+      - "Verify all VITE_ variables documented"
+      - "Verify server-side variables documented"
+      - "Verify comments explain each variable"
+
+  - ac: 2
+    description: "Environment variables load correctly in development"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Create .env.local from .env.example"
+      - "Run npm run dev"
+      - "Verify import.meta.env values accessible"
+
+  - ac: 3
+    description: "Production variables are set via Heroku config"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Verify heroku config includes required vars"
+      - "Verify production build uses Heroku vars"
+
+  - ac: 4
+    description: "Sensitive values are never committed to git"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Verify .gitignore includes .env*"
+      - "Verify .env.example has no real secrets"
+      - "Search git history for leaked secrets"
+
+  - ac: 5
+    description: "Vite exposes only VITE_-prefixed variables to client"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Add non-VITE_ var to .env"
+      - "Verify it's NOT in import.meta.env"
+      - "Verify it's NOT in built JS bundle"
+
+  - ac: 6
+    description: "Build-time vs runtime variables documented"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Verify .env.example has section comments"
+      - "Verify client vs server vars clearly separated"
+
+  - ac: 7
+    description: "Local development works without external services"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Delete .env.local"
+      - "Run npm run dev"
+      - "Verify game still playable"
+      - "Verify graceful degradation of optional services"
+
+nfr_validation:
+  security:
+    status: PENDING
+    notes: "Secrets must never be exposed to client"
+  performance:
+    status: N/A
+    notes: "No performance implications"
+  reliability:
+    status: PENDING
+    notes: "App must work with missing optional vars"
+  maintainability:
+    status: PENDING
+    notes: "All variables documented with purpose"
+
+recommendations:
+  immediate: []
+  future:
+    - action: "Add env validation on startup"
+      refs: ["src/utils/env.ts"]

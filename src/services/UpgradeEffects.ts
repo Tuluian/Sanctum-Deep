@@ -36,7 +36,7 @@ export interface CombatModifiers {
   startingFortify: number;
   fortifyCapBonus: number;
   fortifyReflect: number;
-  curseStartExhausted: boolean;
+  curseStartFractured: boolean;
   curseDamageReduction: number;
   contractPenaltyReduction: number;
   startingVowId: string | null;
@@ -161,7 +161,7 @@ export function getCombatModifiers(classId: CharacterClassId): CombatModifiers {
     startingFortify: service.getUpgradeEffectValue('starting_fortify', classId),
     fortifyCapBonus: service.getUpgradeEffectValue('fortify_cap_bonus', classId),
     fortifyReflect: service.getUpgradeEffectValue('fortify_reflect', classId),
-    curseStartExhausted: service.hasUpgradeEffect('curse_start_exhausted', classId),
+    curseStartFractured: service.hasUpgradeEffect('curse_start_fractured', classId),
     curseDamageReduction: service.getUpgradeEffectValue('curse_damage_reduction', classId),
     contractPenaltyReduction: service.getUpgradeEffectValue('contract_penalty_reduction', classId),
     startingVowId,

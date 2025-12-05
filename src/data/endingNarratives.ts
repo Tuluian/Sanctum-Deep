@@ -185,7 +185,7 @@ The void studies him.
 
 "But I can die trying. That's what Knights do. We die trying."
 
-He charges. The charge ends.`,
+He charges.`,
     wardenQuote:
       'He died as he lived. Devoted to the line. The line endures without him.',
   },

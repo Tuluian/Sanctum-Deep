@@ -164,6 +164,27 @@ export const DROWNED_SOLDIER: EnemyDefinition = {
   ],
 };
 
+/**
+ * Drowned King dialogue - displayed during phase transitions
+ * King Aldric sacrificed his soul to save 3000 children from drowning.
+ * Each phase shows his struggle between protecting others and his own grief.
+ */
+export const DROWNED_KING_DIALOGUE = {
+  phase1Entry: 'I am the last tide. The final barrier between my people and oblivion.',
+  phase2Entry: 'I gave EVERYTHING! My crown! My kingdom! My wife\'s face... her name...',
+  phase3Entry: 'The children... 3000 lived because I drowned. Was it... worth it?',
+  playerLowHp: 'Rest in the depths. It\'s peaceful there. I promise.',
+  onDamage: [
+    'I\'ve already lost everything. You cannot hurt me.',
+    'Strike me, then. I deserve far worse.',
+    'Every blow... reminds me I still exist...',
+    'Why do you fight? What do you protect?',
+    'ENOUGH! I will not fall to another Warden!',
+  ],
+  onVictory: 'The tide... recedes... at last... My children... are you... still there...?',
+  onSummon: 'Soldiers of Thalassar! One final duty!',
+};
+
 // Boss lookup by ID
 export const ACT2_BOSSES: Record<string, EnemyDefinition> = {
   drowned_king: DROWNED_KING,

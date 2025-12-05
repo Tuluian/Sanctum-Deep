@@ -19,11 +19,11 @@ export const ABANDONED_CAMP: NarrativeEvent = {
   triggerType: 'random',
   triggerCondition: { chance: 0.15 },
   content: {
-    text: `You find the remains of a camp. Bedrolls, scattered supplies, the cold ashes of a fire that died days ago.
+    text: `You find the remains of a camp: yellowed bedrolls, scattered supplies, and the cold ashes of a fire that died days ago.
 
-Someone made it this far. They didn't make it further.
+Someone made it this far. They did not make it further.
 
-Among the scattered belongings, you find useful items.`,
+Among the scattered belongings, you find useful items...`,
     speakerType: 'environment',
   },
   choices: [
@@ -35,19 +35,19 @@ Among the scattered belongings, you find useful items.`,
         {
           id: 'good',
           weight: 60,
-          resultText: 'You find healing herbs and preserved rations.',
+          resultText: 'You find some healing herbs and preserved rations.',
           rewards: [{ type: 'hp_max', amount: 5 }],
         },
         {
           id: 'neutral',
           weight: 30,
           resultText:
-            "Mostly personal effects. A letter never sent. A lock of hair.",
+            "Mostly personal effects: a handwritten letter never sent and some locks of hair.",
         },
         {
           id: 'bad',
           weight: 10,
-          resultText: 'Something was hiding in the pack. It bites.',
+          resultText: 'Something little and toothy was hiding in the pack. It bites.',
           penalties: [{ type: 'hp_loss', amount: 3 }],
           rewards: [{ type: 'gold', amount: 15 }],
         },
@@ -62,7 +62,7 @@ Among the scattered belongings, you find useful items.`,
           id: 'always',
           weight: 100,
           resultText:
-            'You say words for the dead. The Sanctum feels slightly less hostile.',
+            'You say words for the dead... and the Sanctum feels slightly less hostile.',
           rewards: [{ type: 'hp_heal', amount: 8 }],
         },
       ],
@@ -75,7 +75,7 @@ Among the scattered belongings, you find useful items.`,
         {
           id: 'always',
           weight: 100,
-          resultText: 'You leave the dead to their rest.',
+          resultText: 'You leave the dead to rest.',
         },
       ],
     },
@@ -90,11 +90,11 @@ export const WHISPERING_WALLS: NarrativeEvent = {
   triggerType: 'random',
   triggerCondition: { chance: 0.15 },
   content: {
-    text: `The stones here whisper. Not words—impressions. Fragments of final thoughts from those who died against this wall.
+    text: `The stones here whisper. Fragments of final thoughts from those who died against this wall.
 
-You could listen. You could learn.
+You could listen and from that, you could learn.
 
-Or you could preserve your sanity.`,
+Or... you could preserve your sanity.`,
     speakerType: 'environment',
   },
   choices: [
@@ -107,7 +107,7 @@ Or you could preserve your sanity.`,
           id: 'good',
           weight: 50,
           resultText:
-            "A dying knight's last thought: the enemy's weakness. You understand.",
+            "A dying knight's last thoughts, you understand.",
           rewards: [{ type: 'damage_bonus', amount: 2 }],
           unlocksCard: 'echo_strike',
         },
@@ -115,8 +115,8 @@ Or you could preserve your sanity.`,
           id: 'bad',
           weight: 50,
           resultText:
-            'Too many voices. Too much pain. You tear yourself away, shaken.',
-          penalties: [{ type: 'hp_loss', amount: 5 }],
+            'Too much pain. You tear yourself away, shaken and breathless.',
+          penalties: [{ type: 'hp_loss', amount: 10 }],
           rewards: [{ type: 'card_random' }],
         },
       ],
@@ -129,32 +129,32 @@ Or you could preserve your sanity.`,
         {
           id: 'good',
           weight: 40,
-          resultText: "A memory of comfort. Someone's last thought of home.",
+          resultText: "COMFORT.. Someone's last thought of a home-cooked meal.",
           rewards: [{ type: 'hp_heal', amount: 10 }],
         },
         {
           id: 'neutral',
           weight: 40,
-          resultText: 'Static. The wall has forgotten.',
+          resultText: 'STATIC.. The wall has forgotten.',
         },
         {
           id: 'bad',
           weight: 20,
-          resultText: 'PAIN. Someone died badly here.',
-          penalties: [{ type: 'hp_loss', amount: 8 }],
+          resultText: 'PAIN.. Someone died very badly here.',
+          penalties: [{ type: 'hp_loss', amount: 5 }],
         },
       ],
     },
     {
       id: 'walk_past',
       text: 'Walk Past',
-      flavorText: "Some knowledge isn't worth having.",
+      flavorText: "Some knowledge just isn't worth having.",
       outcomes: [
         {
           id: 'always',
           weight: 100,
           resultText:
-            "The whispers fade as you leave. Was that disappointment?",
+            "The whispers fade away... was that disappointment?",
         },
       ],
     },
@@ -169,9 +169,9 @@ export const BROKEN_SHRINE_ACT1: NarrativeEvent = {
   triggerType: 'random',
   triggerCondition: { chance: 0.1 },
   content: {
-    text: `A small shrine, half-collapsed. The deity's face has been scratched out—deliberately, violently.
+    text: `A small shrine, half-collapsed. The deity's face has been scratched out, deliberately and violently.
 
-But the offering bowl still glows faintly. Something divine lingers.`,
+But that offering bowl still glows faintly..`,
     speakerType: 'environment',
   },
   choices: [
@@ -184,7 +184,7 @@ But the offering bowl still glows faintly. Something divine lingers.`,
         {
           id: 'blessed',
           weight: 60,
-          resultText: 'Light warms you. The shrine accepts.',
+          resultText: 'Light warms you in your core. The shrine accepts.',
           rewards: [
             { type: 'resolve_max', amount: 1 },
             { type: 'hp_heal', amount: 999 }, // Heal to full
@@ -193,7 +193,7 @@ But the offering bowl still glows faintly. Something divine lingers.`,
         {
           id: 'ignored',
           weight: 40,
-          resultText: 'Nothing happens. The god is truly gone.',
+          resultText: 'Nothing happens. The god of this shrine is truly gone.',
         },
       ],
     },
@@ -205,7 +205,7 @@ But the offering bowl still glows faintly. Something divine lingers.`,
         {
           id: 'heard',
           weight: 30,
-          resultText: 'Something stirs. A whisper of blessing.',
+          resultText: 'Something stirs around you. A whisper of blessing.',
           rewards: [{ type: 'hp_max', amount: 3 }],
         },
         {
@@ -224,7 +224,7 @@ But the offering bowl still glows faintly. Something divine lingers.`,
           id: 'power',
           weight: 50,
           resultText:
-            'You smash the shrine. Power flows into you—stolen divinity.',
+            'You smash the shrine further into decay. Stolen divinity flows into you..',
           rewards: [{ type: 'damage_bonus', amount: 3 }],
           penalties: [{ type: 'curse_card', curseId: 'guilt' }],
           unlocksCard: 'stolen_divinity',
@@ -232,7 +232,7 @@ But the offering bowl still glows faintly. Something divine lingers.`,
         {
           id: 'nothing',
           weight: 50,
-          resultText: 'You smash the shrine. Nothing happens. You feel petty.',
+          resultText: 'You smash the shrine. Nothing happens. You feel petty. Like an upset child.',
         },
       ],
     },
@@ -250,7 +250,7 @@ export const MERCHANT_GHOST: NarrativeEvent = {
   content: {
     text: `A translucent figure sits behind spectral wares. His smile is sad but genuine.
 
-"I died here, but my inventory didn't. Care to browse? I accept... years."`,
+"I died here, but my wares are still here. Care to browse? I accept... parts of you."`,
     speakerName: 'Ghost Merchant',
     speakerType: 'unknown',
   },
@@ -265,7 +265,7 @@ export const MERCHANT_GHOST: NarrativeEvent = {
           weight: 100,
           resultText:
             'The ghost shows you three cards. Each costs something precious.',
-          // Note: This would open a special shop interface in actual implementation
+          // Note: This should open a special shop interface in actual implementation
           rewards: [{ type: 'card_random' }],
           penalties: [{ type: 'hp_max_loss', amount: 5 }],
         },
@@ -280,7 +280,7 @@ export const MERCHANT_GHOST: NarrativeEvent = {
           id: 'good_deal',
           weight: 100,
           resultText:
-            "The ghost takes a happy memory. You can't remember your mother's face. But you gain knowledge.",
+            "The ghost raises its hands and takes something from your chest. You can't remember your mother's face..",
           penalties: [{ type: 'hp_max_loss', amount: 5 }],
           rewards: [{ type: 'card_random' }], // Would be rare card
           unlocksCard: 'merchants_wisdom',
@@ -295,7 +295,7 @@ export const MERCHANT_GHOST: NarrativeEvent = {
         {
           id: 'respectful',
           weight: 100,
-          resultText: '"Wise. Or foolish. Time will tell." He fades.',
+          resultText: '"Wise. Or foolish... time will tell." He fades away.',
         },
       ],
     },
@@ -337,7 +337,7 @@ You could absorb it. Learn from it. Or let it float on.`,
         {
           id: 'grief',
           weight: 40,
-          resultText: 'You feel the loss. The water. The end.',
+          resultText: 'You feel the loss. The water engulfing us all. The end is near.',
           penalties: [{ type: 'hp_loss', amount: 5 }],
           rewards: [{ type: 'resolve_max', amount: 1 }],
         },
@@ -352,7 +352,7 @@ You could absorb it. Learn from it. Or let it float on.`,
           id: 'release',
           weight: 100,
           resultText:
-            "The memory dissolves. Somewhere, a child's ghost smiles.",
+            "The memory pops, then dissolves. Somewhere, a child giggles.",
           rewards: [{ type: 'skip_encounter' }],
         },
       ],
@@ -365,7 +365,7 @@ You could absorb it. Learn from it. Or let it float on.`,
         {
           id: 'always',
           weight: 100,
-          resultText: 'The bubble floats away. The moment is preserved.',
+          resultText: 'The bubble floats away. The moment is still preserved.',
         },
       ],
     },
@@ -381,7 +381,7 @@ export const CORAL_THRONE: NarrativeEvent = {
   triggerCondition: { chance: 0.1 },
   oncePerRun: true,
   content: {
-    text: `An empty throne of living coral. It wasn't Aldric's—too small, too humble. A child's throne.
+    text: `An empty throne of living coral. It wasn't Aldric's. Too small, too humble.
 
 The coral pulses with preserved life. If you sat in it...`,
     speakerType: 'environment',
@@ -395,7 +395,7 @@ The coral pulses with preserved life. If you sat in it...`,
         {
           id: 'blessed',
           weight: 40,
-          resultText: "For a moment, you're royalty. The coral accepts you.",
+          resultText: "For a moment, you're royalty. The coral accepts you with wonder and curiosity.",
           rewards: [
             { type: 'hp_max', amount: 5 },
             { type: 'block_bonus', amount: 5 },
@@ -404,7 +404,7 @@ The coral pulses with preserved life. If you sat in it...`,
         {
           id: 'rejected',
           weight: 40,
-          resultText: "The coral stings. You're not worthy.",
+          resultText: "The coral stings your rear end. You are not worthy.",
           penalties: [{ type: 'hp_loss', amount: 10 }],
         },
         {
@@ -474,7 +474,7 @@ He doesn't attack. He just... waits. For orders that will never come.`,
           id: 'obeys',
           weight: 70,
           resultText:
-            'He relaxes. Crumbles. Finally at peace. He leaves his sword.',
+            'He relaxes... Crumbles... Finally at peace. He leaves his sword behind.',
           rewards: [{ type: 'damage_bonus', amount: 3 }],
         },
         {
@@ -494,14 +494,14 @@ He doesn't attack. He just... waits. For orders that will never come.`,
           id: 'remembers',
           weight: 60,
           resultText:
-            '"...best king... loved us... saved the children..." He weeps and fades.',
+            '"...best king.. loved.. us... saved the children..." He weeps and fades.',
           rewards: [{ type: 'boss_damage_bonus', bossId: 'drowned_king', amount: 10 }],
         },
         {
           id: 'forgotten',
           weight: 40,
           resultText:
-            '"...who? I don\'t... I can\'t..." He wails and attacks.',
+            '"...who? I don\'t... I can\'t..." His eyes fill with tears. He wails and attacks.',
           penalties: [{ type: 'start_combat', enemyId: 'drowned_guard' }],
         },
       ],
@@ -514,7 +514,7 @@ He doesn't attack. He just... waits. For orders that will never come.`,
         {
           id: 'always',
           weight: 100,
-          resultText: "He doesn't notice you. Or pretends not to.",
+          resultText: "He doesn't notice you either. Or pretends not to.",
         },
       ],
     },
@@ -533,11 +533,11 @@ export const MIRROR_SELF: NarrativeEvent = {
   triggerType: 'random',
   triggerCondition: { chance: 0.15 },
   content: {
-    text: `A mirror that shows you—but wrong. The reflection moves independently. It's studying you.
+    text: `A mirror that shows your reflection, but it's fading. The reflection moves independently. It's studying you.
 
-"I could be you," it says. "I almost was. Before the void took me."
+"I could be you," it says. "I almost was. Before the void of the Sanctum took us all."
 
-It offers a trade.`,
+It offers a trade:`,
     speakerName: 'Mirror Self',
     speakerType: 'unknown',
   },
@@ -569,7 +569,7 @@ It offers a trade.`,
           id: 'trade',
           weight: 100,
           resultText:
-            'Your thoughts feel slower. Your arms feel powerful.',
+            'Your thoughts slow, but your arms surge with power.',
           penalties: [{ type: 'resolve_loss', amount: 1 }],
           rewards: [
             { type: 'hp_max', amount: 5 },
@@ -580,14 +580,14 @@ It offers a trade.`,
     },
     {
       id: 'attack_mirror',
-      text: 'Attack the Mirror',
+      text: 'Smash the Mirror',
       flavorText: "I don't negotiate with shadows.",
       outcomes: [
         {
           id: 'shatter',
           weight: 70,
           resultText:
-            "The mirror shatters. Seven years bad luck—or is that just superstition?",
+            "The mirror shatters. Seven years bad luck.",
           penalties: [{ type: 'corruption', amount: 2 }],
         },
         {
@@ -611,7 +611,7 @@ It offers a trade.`,
           id: 'respect',
           weight: 100,
           resultText:
-            'The reflection nods. "Maybe that\'s why you\'ll succeed." It fades.',
+            'The reflection nods. "Maybe that\'s why you\'ll be the first to succeed." It fades.',
           rewards: [{ type: 'hp_heal', amount: 999 }], // Heal to full
           unlocksCard: 'self_assurance',
         },
@@ -631,7 +631,7 @@ export const HOLLOW_WHISPER: NarrativeEvent = {
   content: {
     text: `A voice that isn't a voice. The Hollow God, speaking directly to you.
 
-"I can give you power. I can give you rest. I can give you nothing at all—and nothing is peaceful."
+"I can give you power. I can give you rest. I can make you nothing at all, and nothing is peaceful."
 
 It's not lying. That's the terrible part.`,
     speakerName: 'The Hollow God',
@@ -647,7 +647,7 @@ It's not lying. That's the terrible part.`,
           id: 'granted',
           weight: 100,
           resultText:
-            'Darkness flows into you. You are stronger. You are... less.',
+            'Darkness flows into you. You are stronger. You are also... less.',
           rewards: [
             { type: 'damage_bonus', amount: 10 },
             { type: 'hp_max', amount: 10 },
@@ -669,7 +669,7 @@ It's not lying. That's the terrible part.`,
           id: 'granted',
           weight: 100,
           resultText:
-            "Peace, for a moment. The pain stops. The fighting doesn't.",
+            "Peace, then... if not but for a moment. The pain stops.",
           rewards: [{ type: 'hp_heal', amount: 999 }],
           penalties: [{ type: 'resolve_loss', amount: 3 }],
         },
@@ -684,7 +684,7 @@ It's not lying. That's the terrible part.`,
           id: 'defiance',
           weight: 100,
           resultText:
-            '"...interesting. They usually accept something." The voice sounds almost impressed.',
+            '"...interesting. They usually accept something." The voice sounds impressed.',
           rewards: [{ type: 'boss_damage_bonus', bossId: 'hollow_god', amount: 5 }],
         },
       ],
@@ -701,9 +701,9 @@ export const WARDENS_GIFT: NarrativeEvent = {
   triggerCondition: { roomsCleared: 6 },
   oncePerRun: true,
   content: {
-    text: `Lyra's voice, clearer than it's been in hours.
+    text: `Lyra's voice, clearer than it's ever been.
 
-"I can't help you fight. But I can give you something I've been saving. A piece of what I was, before."
+"I can't help you fight.. But I can give you something I've been saving. A piece of what I was before."
 
 "Take it. Please. Let me be useful one last time."`,
     speakerName: 'Lyra',

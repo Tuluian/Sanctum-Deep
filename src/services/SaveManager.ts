@@ -23,12 +23,35 @@ export interface PlayerStatistics {
   cardsPlayed: number;
 }
 
+// Card collection entry - tracks owned cards and duplicates
+export interface CollectedCard {
+  cardId: string;
+  count: number; // Number of copies (duplicates provide upgrade currency)
+}
+
+// Class completion tracking for Story 9.6 Tier 4 upgrades
+export interface ClassCompletion {
+  classId: CharacterClassId;
+  completions: number; // Times beaten the game with this class
+  firstCompletionDate?: number; // Timestamp of first completion
+}
+
 export interface MetaSaveData {
   soulEchoes: number;
   unlockedAchievements: string[];
   purchasedUpgrades: string[];
   purchasedClasses: CharacterClassId[];
   statistics: PlayerStatistics;
+  // Card collection for meta-progression
+  cardCollection: Record<CharacterClassId, CollectedCard[]>;
+  // Class completion tracking for Tier 4 unlocks
+  classCompletions: Record<CharacterClassId, ClassCompletion>;
+}
+
+// Serializable card data for saving deck
+export interface SavedCard {
+  cardId: string;
+  instanceId: string;
 }
 
 export interface RunSaveData {
@@ -45,6 +68,8 @@ export interface RunSaveData {
   inCombat: boolean; // True if player is mid-combat (reload should return to map)
   // Potions
   potions: PotionSlot[];
+  // Deck (cards added during run)
+  deck?: SavedCard[];
 }
 
 export interface SaveData {
@@ -71,6 +96,42 @@ const DEFAULT_STATISTICS: PlayerStatistics = {
   cardsPlayed: 0,
 };
 
+function createDefaultCardCollection(): Record<CharacterClassId, CollectedCard[]> {
+  return {
+    [CharacterClassId.CLERIC]: [],
+    [CharacterClassId.DUNGEON_KNIGHT]: [],
+    [CharacterClassId.DIABOLIST]: [],
+    [CharacterClassId.OATHSWORN]: [],
+    [CharacterClassId.FEY_TOUCHED]: [],
+    [CharacterClassId.CELESTIAL]: [],
+    [CharacterClassId.SUMMONER]: [],
+    [CharacterClassId.BARGAINER]: [],
+    [CharacterClassId.TIDECALLER]: [],
+    [CharacterClassId.SHADOW_STALKER]: [],
+    [CharacterClassId.GOBLIN]: [],
+  };
+}
+
+function createDefaultClassCompletions(): Record<CharacterClassId, ClassCompletion> {
+  const createCompletion = (classId: CharacterClassId): ClassCompletion => ({
+    classId,
+    completions: 0,
+  });
+  return {
+    [CharacterClassId.CLERIC]: createCompletion(CharacterClassId.CLERIC),
+    [CharacterClassId.DUNGEON_KNIGHT]: createCompletion(CharacterClassId.DUNGEON_KNIGHT),
+    [CharacterClassId.DIABOLIST]: createCompletion(CharacterClassId.DIABOLIST),
+    [CharacterClassId.OATHSWORN]: createCompletion(CharacterClassId.OATHSWORN),
+    [CharacterClassId.FEY_TOUCHED]: createCompletion(CharacterClassId.FEY_TOUCHED),
+    [CharacterClassId.CELESTIAL]: createCompletion(CharacterClassId.CELESTIAL),
+    [CharacterClassId.SUMMONER]: createCompletion(CharacterClassId.SUMMONER),
+    [CharacterClassId.BARGAINER]: createCompletion(CharacterClassId.BARGAINER),
+    [CharacterClassId.TIDECALLER]: createCompletion(CharacterClassId.TIDECALLER),
+    [CharacterClassId.SHADOW_STALKER]: createCompletion(CharacterClassId.SHADOW_STALKER),
+    [CharacterClassId.GOBLIN]: createCompletion(CharacterClassId.GOBLIN),
+  };
+}
+
 function createDefaultSave(): SaveData {
   return {
     version: SAVE_VERSION,
@@ -81,6 +142,8 @@ function createDefaultSave(): SaveData {
       purchasedUpgrades: [],
       purchasedClasses: [],
       statistics: { ...DEFAULT_STATISTICS },
+      cardCollection: createDefaultCardCollection(),
+      classCompletions: createDefaultClassCompletions(),
     },
     run: null,
     settings: { ...DEFAULT_SETTINGS },
@@ -140,6 +203,29 @@ class SaveManagerClass {
     this.saveNow();
   }
 
+  // Achievement management
+  getUnlockedAchievements(): string[] {
+    return [...this.saveData.meta.unlockedAchievements];
+  }
+
+  hasAchievement(achievementId: string): boolean {
+    return this.saveData.meta.unlockedAchievements.includes(achievementId);
+  }
+
+  unlockAchievement(achievementId: string): boolean {
+    if (this.hasAchievement(achievementId)) {
+      return false; // Already unlocked
+    }
+    this.saveData.meta.unlockedAchievements.push(achievementId);
+    this.saveNow();
+    return true;
+  }
+
+  resetAchievements(): void {
+    this.saveData.meta.unlockedAchievements = [];
+    this.saveNow();
+  }
+
   getTotalUpgradesSpent(): number {
     // This would need to be calculated from upgrade costs
     // For now, we'll track it separately if needed
@@ -153,6 +239,135 @@ class SaveManagerClass {
   updateStatistics(updates: Partial<PlayerStatistics>): void {
     Object.assign(this.saveData.meta.statistics, updates);
     this.saveNow();
+  }
+
+  // Card collection management
+  getCardCollection(classId: CharacterClassId): CollectedCard[] {
+    // Ensure collection exists (migration support)
+    if (!this.saveData.meta.cardCollection) {
+      this.saveData.meta.cardCollection = createDefaultCardCollection();
+    }
+    if (!this.saveData.meta.cardCollection[classId]) {
+      this.saveData.meta.cardCollection[classId] = [];
+    }
+    return [...this.saveData.meta.cardCollection[classId]];
+  }
+
+  getAllCardCollections(): Record<CharacterClassId, CollectedCard[]> {
+    // Ensure collection exists (migration support)
+    if (!this.saveData.meta.cardCollection) {
+      this.saveData.meta.cardCollection = createDefaultCardCollection();
+    }
+    return { ...this.saveData.meta.cardCollection };
+  }
+
+  hasCard(classId: CharacterClassId, cardId: string): boolean {
+    const collection = this.getCardCollection(classId);
+    return collection.some(c => c.cardId === cardId);
+  }
+
+  getCardCount(classId: CharacterClassId, cardId: string): number {
+    const collection = this.getCardCollection(classId);
+    const card = collection.find(c => c.cardId === cardId);
+    return card?.count ?? 0;
+  }
+
+  /**
+   * Add a card to the collection
+   * @returns Object with isNew (first copy) and duplicateSoulEchoes (bonus for duplicates)
+   */
+  addCardToCollection(classId: CharacterClassId, cardId: string): { isNew: boolean; duplicateSoulEchoes: number } {
+    // Ensure collection exists
+    if (!this.saveData.meta.cardCollection) {
+      this.saveData.meta.cardCollection = createDefaultCardCollection();
+    }
+    if (!this.saveData.meta.cardCollection[classId]) {
+      this.saveData.meta.cardCollection[classId] = [];
+    }
+
+    const collection = this.saveData.meta.cardCollection[classId];
+    const existing = collection.find(c => c.cardId === cardId);
+
+    if (existing) {
+      // Duplicate card - increase count and award bonus Soul Echoes
+      existing.count++;
+      const duplicateSoulEchoes = 5; // 5 Soul Echoes per duplicate
+      this.saveData.meta.soulEchoes += duplicateSoulEchoes;
+      this.saveNow();
+      return { isNew: false, duplicateSoulEchoes };
+    } else {
+      // New card
+      collection.push({ cardId, count: 1 });
+      this.saveNow();
+      return { isNew: true, duplicateSoulEchoes: 0 };
+    }
+  }
+
+  getTotalCollectedCards(classId?: CharacterClassId): number {
+    if (classId) {
+      return this.getCardCollection(classId).length;
+    }
+    // Total across all classes
+    let total = 0;
+    const collections = this.getAllCardCollections();
+    for (const collection of Object.values(collections)) {
+      total += collection.length;
+    }
+    return total;
+  }
+
+  // Class completion management (Story 9.6)
+  getClassCompletion(classId: CharacterClassId): ClassCompletion {
+    // Ensure completions exist (migration support)
+    if (!this.saveData.meta.classCompletions) {
+      this.saveData.meta.classCompletions = createDefaultClassCompletions();
+    }
+    if (!this.saveData.meta.classCompletions[classId]) {
+      this.saveData.meta.classCompletions[classId] = { classId, completions: 0 };
+    }
+    return { ...this.saveData.meta.classCompletions[classId] };
+  }
+
+  getAllClassCompletions(): Record<CharacterClassId, ClassCompletion> {
+    if (!this.saveData.meta.classCompletions) {
+      this.saveData.meta.classCompletions = createDefaultClassCompletions();
+    }
+    return { ...this.saveData.meta.classCompletions };
+  }
+
+  hasCompletedClass(classId: CharacterClassId): boolean {
+    return this.getClassCompletion(classId).completions > 0;
+  }
+
+  recordClassCompletion(classId: CharacterClassId): { isFirst: boolean; totalCompletions: number } {
+    // Ensure completions exist
+    if (!this.saveData.meta.classCompletions) {
+      this.saveData.meta.classCompletions = createDefaultClassCompletions();
+    }
+    if (!this.saveData.meta.classCompletions[classId]) {
+      this.saveData.meta.classCompletions[classId] = { classId, completions: 0 };
+    }
+
+    const completion = this.saveData.meta.classCompletions[classId];
+    const isFirst = completion.completions === 0;
+
+    if (isFirst) {
+      completion.firstCompletionDate = Date.now();
+    }
+    completion.completions++;
+
+    this.saveNow();
+    return { isFirst, totalCompletions: completion.completions };
+  }
+
+  getCompletedClassCount(): number {
+    const completions = this.getAllClassCompletions();
+    return Object.values(completions).filter(c => c.completions > 0).length;
+  }
+
+  getTotalCompletions(): number {
+    const completions = this.getAllClassCompletions();
+    return Object.values(completions).reduce((sum, c) => sum + c.completions, 0);
   }
 
   // Settings
@@ -236,6 +451,37 @@ class SaveManagerClass {
 
   getPotions(): PotionSlot[] {
     return this.saveData.run?.potions ?? [];
+  }
+
+  // Deck management
+  getDeck(): SavedCard[] {
+    return this.saveData.run?.deck ?? [];
+  }
+
+  setDeck(deck: SavedCard[]): void {
+    if (this.saveData.run) {
+      this.saveData.run.deck = deck;
+      this.saveNow();
+    }
+  }
+
+  addCardToDeck(cardId: string, instanceId: string): void {
+    if (this.saveData.run) {
+      if (!this.saveData.run.deck) {
+        this.saveData.run.deck = [];
+      }
+      this.saveData.run.deck.push({ cardId, instanceId });
+      this.saveNow();
+    }
+  }
+
+  removeCardFromDeck(instanceId: string): boolean {
+    if (!this.saveData.run?.deck) return false;
+    const index = this.saveData.run.deck.findIndex(c => c.instanceId === instanceId);
+    if (index === -1) return false;
+    this.saveData.run.deck.splice(index, 1);
+    this.saveNow();
+    return true;
   }
 
   setInCombat(inCombat: boolean): void {

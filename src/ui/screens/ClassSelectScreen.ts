@@ -70,14 +70,30 @@ const CLASS_DESCRIPTIONS: Record<CharacterClassId, { desc: string; mechanic: str
   },
 };
 
+// Classes available from the start
 const FREE_CLASSES = [
   CharacterClassId.CLERIC,
   CharacterClassId.DUNGEON_KNIGHT,
-  CharacterClassId.DIABOLIST,
-  CharacterClassId.OATHSWORN,
-  CharacterClassId.FEY_TOUCHED,
-  CharacterClassId.CELESTIAL, // TODO: Remove after testing - DLC class
 ];
+
+// Classes unlocked by achievements (check SaveManager for unlock status)
+const UNLOCKABLE_CLASSES: Record<CharacterClassId, { requirement: string }> = {
+  [CharacterClassId.CELESTIAL]: { requirement: 'Beat the game with the Cleric.' },
+  [CharacterClassId.OATHSWORN]: { requirement: 'Beat the game with the Knight.' },
+  [CharacterClassId.FEY_TOUCHED]: { requirement: 'Beat the game twice.' },
+} as Record<CharacterClassId, { requirement: string }>;
+
+// DLC classes that require purchase
+const DLC_CLASSES = [
+  CharacterClassId.DIABOLIST,
+  CharacterClassId.SUMMONER,
+  CharacterClassId.BARGAINER,
+  CharacterClassId.TIDECALLER,
+  CharacterClassId.SHADOW_STALKER,
+  CharacterClassId.GOBLIN,
+];
+
+const DLC_PRICE = '$4.99';
 
 export function createClassSelectScreen(callbacks: ClassSelectCallbacks): Screen {
   const element = document.createElement('div');
@@ -148,6 +164,52 @@ export function createClassSelectScreen(callbacks: ClassSelectCallbacks): Screen
   };
 
   const render = () => {
+    // Separate classes into categories
+    const freeClasses = Object.values(CLASSES).filter(cls => FREE_CLASSES.includes(cls.id));
+    const unlockableClasses = Object.values(CLASSES).filter(cls => cls.id in UNLOCKABLE_CLASSES);
+    const dlcClasses = Object.values(CLASSES).filter(cls => DLC_CLASSES.includes(cls.id));
+
+    const renderClassCard = (cls: typeof CLASSES[CharacterClassId], isPlayable: boolean, lockReason?: string) => {
+      const info = CLASS_DESCRIPTIONS[cls.id];
+      const isSelected = selectedClass === cls.id;
+      const classImage = getClassImage(cls.id);
+      const isDLC = DLC_CLASSES.includes(cls.id);
+
+      return `
+        <div class="class-card ${isPlayable ? 'unlocked' : 'locked'} ${isSelected ? 'selected' : ''}"
+             data-class="${cls.id}">
+          <div class="class-portrait ${isPlayable ? '' : 'locked-overlay'}">
+            ${classImage
+              ? `<img src="${classImage}" alt="${cls.name}" class="class-portrait-img" />`
+              : `<div class="class-icon">${getClassIcon(cls.id)}</div>`
+            }
+            ${!isPlayable ? '<span class="lock-icon">🔒</span>' : ''}
+          </div>
+          <div class="class-info">
+            <h3>${cls.name}</h3>
+            <div class="class-stats">
+              <span>❤️ ${cls.maxHp} HP</span>
+              <span>⚡ ${cls.maxResolve} Resolve</span>
+            </div>
+            <p class="class-desc">${info.desc}</p>
+            ${isPlayable ? `
+              <div class="class-mechanic">
+                <div class="mechanic-header">
+                  <strong>${info.mechanic.split(':')[0]}:</strong>
+                  <span class="mechanic-help">ⓘ</span>
+                  <div class="mechanic-tooltip">${info.tooltip}</div>
+                </div>
+                <span class="mechanic-desc">${info.mechanic.split(':')[1] || ''}</span>
+              </div>
+            ` : `
+              <div class="lock-reason">${lockReason || ''}</div>
+              ${isDLC ? `<div class="dlc-price">${DLC_PRICE}</div>` : ''}
+            `}
+          </div>
+        </div>
+      `;
+    };
+
     element.innerHTML = `
       <header class="screen-header">
         <button class="back-btn" id="btn-back">← Back</button>
@@ -155,52 +217,30 @@ export function createClassSelectScreen(callbacks: ClassSelectCallbacks): Screen
         <div class="header-spacer"></div>
       </header>
 
-      <div class="class-grid">
-        ${Object.values(CLASSES).map(cls => {
-          const isUnlocked = FREE_CLASSES.includes(cls.id);
-          const info = CLASS_DESCRIPTIONS[cls.id];
-          const isSelected = selectedClass === cls.id;
+      <div class="class-sections">
+        <section class="class-section">
+          <h3 class="section-title">Available Classes</h3>
+          <div class="class-grid">
+            ${freeClasses.map(cls => renderClassCard(cls, true)).join('')}
+          </div>
+        </section>
 
-          const classImage = getClassImage(cls.id);
-          return `
-            <div class="class-card ${isUnlocked ? 'unlocked' : 'locked'} ${isSelected ? 'selected' : ''}"
-                 data-class="${cls.id}">
-              <div class="class-portrait ${isUnlocked ? '' : 'locked-overlay'}">
-                ${classImage
-                  ? `<img src="${classImage}" alt="${cls.name}" class="class-portrait-img" />`
-                  : `<div class="class-icon">${getClassIcon(cls.id)}</div>`
-                }
-                ${!isUnlocked ? '<span class="lock-icon">🔒</span>' : ''}
-              </div>
-              <div class="class-info">
-                <h3>${cls.name}</h3>
-                <div class="class-stats">
-                  <span>❤️ ${cls.maxHp} HP</span>
-                  <span>⚡ ${cls.maxResolve} Resolve</span>
-                </div>
-                <p class="class-desc">${info.desc}</p>
-                ${isUnlocked ? `
-                  <div class="class-mechanic">
-                    <div class="mechanic-header">
-                      <strong>${info.mechanic.split(':')[0]}:</strong>
-                      <span class="mechanic-help">ⓘ</span>
-                      <div class="mechanic-tooltip">${info.tooltip}</div>
-                    </div>
-                    <span class="mechanic-desc">${info.mechanic.split(':')[1] || ''}</span>
-                  </div>
-                ` : `
-                  <button class="purchase-btn" disabled>Coming Soon</button>
-                `}
-              </div>
-            </div>
-          `;
-        }).join('')}
-      </div>
+        <section class="class-section locked-section">
+          <h3 class="section-title">Locked Classes</h3>
+          <div class="class-grid">
+            ${unlockableClasses.map(cls => {
+              const requirement = UNLOCKABLE_CLASSES[cls.id as keyof typeof UNLOCKABLE_CLASSES]?.requirement || '';
+              return renderClassCard(cls, false, requirement);
+            }).join('')}
+          </div>
+        </section>
 
-      <div class="class-action-bar ${selectedClass ? 'visible' : ''}">
-        <button class="start-run-btn" id="btn-start" ${selectedClass ? '' : 'disabled'}>
-          Enter the Sanctum
-        </button>
+        <section class="class-section dlc-section">
+          <h3 class="section-title">Premium Classes</h3>
+          <div class="class-grid">
+            ${dlcClasses.map(cls => renderClassCard(cls, false, 'Premium DLC')).join('')}
+          </div>
+        </section>
       </div>
 
       ${showingDetailPopup ? renderDetailPopup(showingDetailPopup) : ''}
@@ -209,6 +249,7 @@ export function createClassSelectScreen(callbacks: ClassSelectCallbacks): Screen
     // Attach event listeners
     element.querySelector('#btn-back')?.addEventListener('click', callbacks.onBack);
 
+    // Only unlocked (free) classes are clickable
     element.querySelectorAll('.class-card.unlocked').forEach(card => {
       card.addEventListener('click', () => {
         const classId = card.getAttribute('data-class') as CharacterClassId;
@@ -218,18 +259,13 @@ export function createClassSelectScreen(callbacks: ClassSelectCallbacks): Screen
       });
     });
 
-    element.querySelector('#btn-start')?.addEventListener('click', () => {
-      if (selectedClass) {
-        callbacks.onSelectClass(selectedClass);
-      }
-    });
-
     // Detail popup event listeners
     element.querySelector('#btn-detail-back')?.addEventListener('click', () => {
       showingDetailPopup = null;
       render();
     });
 
+    // "Begin Descent" button in the detail popup starts the run
     element.querySelector('#btn-detail-start')?.addEventListener('click', () => {
       if (showingDetailPopup) {
         callbacks.onSelectClass(showingDetailPopup);
@@ -266,6 +302,9 @@ function getClassImage(classId: CharacterClassId): string | null {
     [CharacterClassId.CELESTIAL]: '/images/characters/celestial.jpg',
     [CharacterClassId.SUMMONER]: '/images/characters/summoner.jpg',
     [CharacterClassId.BARGAINER]: '/images/characters/bargainer.jpg',
+    [CharacterClassId.TIDECALLER]: '/images/characters/tidecaller.jpg',
+    [CharacterClassId.SHADOW_STALKER]: '/images/characters/shadow_stalker.jpg',
+    [CharacterClassId.GOBLIN]: '/images/characters/goblin.png',
   };
   return imageMap[classId] || null;
 }
@@ -280,6 +319,9 @@ function getClassIcon(classId: CharacterClassId): string {
     case CharacterClassId.CELESTIAL: return '☀️';
     case CharacterClassId.SUMMONER: return '👻';
     case CharacterClassId.BARGAINER: return '💀';
+    case CharacterClassId.TIDECALLER: return '🌊';
+    case CharacterClassId.SHADOW_STALKER: return '🗡️';
+    case CharacterClassId.GOBLIN: return '👺';
     default: return '❓';
   }
 }

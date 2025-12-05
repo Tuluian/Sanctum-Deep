@@ -1,0 +1,114 @@
+# Quality Gate: Story 16.2 - Steamworks SDK Integration
+schema: 1
+story: "16.2"
+story_title: "Steamworks SDK Integration"
+gate: PENDING
+status_reason: "Story not yet implemented"
+reviewer: "Quinn (Test Architect)"
+updated: "2025-12-05T00:00:00Z"
+
+waiver: { active: false }
+
+top_issues: []
+
+risk_summary:
+  totals: { critical: 0, high: 0, medium: 0, low: 0 }
+  highest: none
+  recommendations:
+    must_fix: []
+    monitor: []
+
+quality_score: 0
+expires: "2025-12-19T00:00:00Z"
+
+evidence:
+  tests_reviewed: 0
+  tests_passing: 0
+  risks_identified: 0
+  trace:
+    ac_covered: []
+    ac_gaps: [1, 2, 3, 4, 5, 6, 7]
+
+ac_trace:
+  - ac: 1
+    description: "Steamworks SDK added to Electron project"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Verify steamworks.js or greenworks installed"
+      - "Verify package.json has dependency"
+      - "Verify native modules rebuilt for Electron"
+
+  - ac: 2
+    description: "Steam App ID configured correctly"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Verify steam_appid.txt exists"
+      - "Verify App ID matches Steamworks dashboard"
+      - "Verify init uses correct App ID"
+
+  - ac: 3
+    description: "Steam overlay activates in-game (Shift+Tab)"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Launch game from Steam"
+      - "Press Shift+Tab"
+      - "Verify Steam overlay appears"
+
+  - ac: 4
+    description: "Steam client detected and connected"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Verify Steam.init() succeeds"
+      - "Verify Steam client running required"
+      - "Verify connection status logged"
+
+  - ac: 5
+    description: "Steamworks API calls work (user ID, name)"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Retrieve Steam user ID"
+      - "Retrieve Steam display name"
+      - "Verify values match logged-in account"
+
+  - ac: 6
+    description: "App launches correctly from Steam client"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Add game to Steam library"
+      - "Launch from Steam"
+      - "Verify game starts correctly"
+
+  - ac: 7
+    description: "Non-Steam launch shows appropriate message"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Launch .exe directly (not from Steam)"
+      - "Verify message about Steam not connected"
+      - "Verify game still playable"
+
+nfr_validation:
+  security:
+    status: PENDING
+    notes: "Steam API key must not be exposed"
+  performance:
+    status: PENDING
+    notes: "Steam init should not slow game launch"
+  reliability:
+    status: PENDING
+    notes: "Game must work without Steam (degraded)"
+  maintainability:
+    status: PENDING
+    notes: "Steam integration isolated in module"
+
+recommendations:
+  immediate: []
+  future:
+    - action: "Add Steam rich presence"
+      refs: ["electron/steam.js"]

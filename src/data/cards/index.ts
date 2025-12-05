@@ -112,6 +112,21 @@ export function getClassRewardPool(classId: CharacterClassId): CardDefinition[] 
   }
 }
 
+// Get a random rare card for a class
+export function getRandomRareCard(classId: CharacterClassId): CardDefinition | undefined {
+  const pool = getClassRewardPool(classId);
+  const rareCards = pool.filter((c) => c.rarity === CardRarity.RARE);
+  if (rareCards.length === 0) return undefined;
+  return rareCards[Math.floor(Math.random() * rareCards.length)];
+}
+
+// Get a random card of any rarity for a class
+export function getRandomCard(classId: CharacterClassId): CardDefinition | undefined {
+  const pool = getClassRewardPool(classId);
+  if (pool.length === 0) return undefined;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
 // Get random card reward based on rarity weights
 export function getRandomCardReward(
   classId: CharacterClassId,

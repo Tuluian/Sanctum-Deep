@@ -224,6 +224,20 @@ export const KNIGHT_COMMON_CARDS: Record<string, CardDefinition> = {
 
 // Uncommon Cards (8 cards)
 export const KNIGHT_UNCOMMON_CARDS: Record<string, CardDefinition> = {
+  salvage: {
+    id: 'salvage',
+    name: 'Salvage',
+    type: CardType.SKILL,
+    cost: 1,
+    description: 'Gain 4 Block. If you have Fortify, generate a Minor Health Potion.',
+    effects: [
+      { type: EffectType.BLOCK, amount: 4 },
+      // Conditional potion gen handled by special flag
+    ],
+    conditionalPotionGen: { requireFortify: true, potionId: 'minor_health_potion' },
+    rarity: CardRarity.UNCOMMON,
+    classId: CharacterClassId.DUNGEON_KNIGHT,
+  },
   shieldbash: {
     id: 'shieldbash',
     name: 'Shieldbash',
@@ -348,14 +362,14 @@ export const KNIGHT_RARE_CARDS: Record<string, CardDefinition> = {
     name: 'Fortress',
     type: CardType.SKILL,
     cost: 3,
-    description: 'Gain 20 block. Gain Fortify equal to your max HP / 5. Exhaust.',
+    description: 'Gain 20 block. Gain Fortify equal to your max HP / 5. Fracture.',
     effects: [
       { type: EffectType.BLOCK, amount: 20 },
       { type: EffectType.GAIN_FORTIFY, amount: 16 }, // Assuming ~80 HP max
     ],
     rarity: CardRarity.RARE,
     classId: CharacterClassId.DUNGEON_KNIGHT,
-    exhaust: true,
+    fracture: true,
   },
 };
 
@@ -366,11 +380,11 @@ export const KNIGHT_BLOCK_BONUS_CARD: Record<string, CardDefinition> = {
     name: 'Iron Mastery',
     type: CardType.POWER,
     cost: 2,
-    description: 'Permanently increase all block from cards by 1. Exhaust.',
+    description: 'Permanently increase all block from cards by 1. Fracture.',
     effects: [{ type: EffectType.PERMANENT_BLOCK_BONUS, amount: 1 }],
     rarity: CardRarity.STARTER,
     classId: CharacterClassId.DUNGEON_KNIGHT,
-    exhaust: true,
+    fracture: true,
   },
 };
 

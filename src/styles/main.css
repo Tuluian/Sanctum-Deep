@@ -1,3 +1,62 @@
+/* ===========================================
+   CSS VARIABLES - Class Color Palettes
+   =========================================== */
+:root {
+  /* Cleric - Gold, White/Cream, Soft Amber */
+  --card-bg-cleric: linear-gradient(135deg, #3d3520 0%, #4a4025 50%, #3d3520 100%);
+  --card-border-cleric: #d4a437;
+  --card-glow-cleric: rgba(212, 164, 55, 0.4);
+  --card-accent-cleric: #f4d03f;
+
+  /* Dungeon Knight - Steel Blue, Iron Grey, Brass */
+  --card-bg-knight: linear-gradient(135deg, #2a3540 0%, #354555 50%, #2a3540 100%);
+  --card-border-knight: #6b8bad;
+  --card-glow-knight: rgba(107, 139, 173, 0.4);
+  --card-accent-knight: #b5a642;
+
+  /* Diabolist - Crimson, Black, Ember Orange */
+  --card-bg-diabolist: linear-gradient(135deg, #2a1515 0%, #3d2020 50%, #2a1515 100%);
+  --card-border-diabolist: #8b0000;
+  --card-glow-diabolist: rgba(139, 0, 0, 0.4);
+  --card-accent-diabolist: #ff6b35;
+
+  /* Oathsworn - White, Gold, Pale Blue */
+  --card-bg-oathsworn: linear-gradient(135deg, #35353f 0%, #454555 50%, #35353f 100%);
+  --card-border-oathsworn: #d4c9a8;
+  --card-glow-oathsworn: rgba(212, 201, 168, 0.4);
+  --card-accent-oathsworn: #a8c9f0;
+
+  /* Fey-Touched - Emerald, Violet, Dreamlike Pastels */
+  --card-bg-fey: linear-gradient(135deg, #1a2a20 0%, #253530 50%, #1a2a20 100%);
+  --card-border-fey: #3da87a;
+  --card-glow-fey: rgba(61, 168, 122, 0.4);
+  --card-accent-fey: #c49bd4;
+
+  /* Celestial - Pure Gold, Radiant White, Prismatic Light */
+  --card-bg-celestial: linear-gradient(135deg, #3d3a28 0%, #4d4830 50%, #3d3a28 100%);
+  --card-border-celestial: #ffd700;
+  --card-glow-celestial: rgba(255, 215, 0, 0.5);
+  --card-accent-celestial: #fffacd;
+
+  /* Summoner - Spirit Blue, Deep Purple, Silver/Spectral Green */
+  --card-bg-summoner: linear-gradient(135deg, #202535 0%, #2a3045 50%, #202535 100%);
+  --card-border-summoner: #5c7bd4;
+  --card-glow-summoner: rgba(92, 123, 212, 0.4);
+  --card-accent-summoner: #88d4a0;
+
+  /* Bargainer - Rich Gold, Blood Red, Shadow Black */
+  --card-bg-bargainer: linear-gradient(135deg, #2a2018 0%, #3a2a20 50%, #2a2018 100%);
+  --card-border-bargainer: #c9a227;
+  --card-glow-bargainer: rgba(201, 162, 39, 0.4);
+  --card-accent-bargainer: #8b0000;
+
+  /* Neutral/Universal cards */
+  --card-bg-neutral: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+  --card-border-neutral: #555;
+  --card-glow-neutral: rgba(85, 85, 85, 0.3);
+  --card-accent-neutral: #888;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -47,6 +106,50 @@ h1 {
   height: 400px;
   background: linear-gradient(180deg, #0a0a0f 0%, #1a1520 50%, #2a2030 100%);
   overflow: hidden;
+}
+
+/* Arena background images based on act */
+.dungeon-scene[data-act="1"][data-boss="false"] {
+  background: url('/images/backgrounds/act1_arena.png') center bottom / cover no-repeat;
+  background-size: 100%;      /* zooms out by making the image smaller */
+  background-position: center bottom;
+}
+
+.dungeon-scene[data-act="1"][data-boss="true"] {
+  background: url('/images/backgrounds/act1_boss_arena.png') center center / cover no-repeat;
+  background-size: 100%;   
+  background-position: center bottom;
+}
+
+.dungeon-scene[data-act="2"][data-boss="false"] {
+  background: url('/images/backgrounds/act2_arena.png') center center / cover no-repeat;
+  background-size: 100%;
+  background-position: center bottom;
+}
+
+.dungeon-scene[data-act="2"][data-boss="true"] {
+  background: url('/images/backgrounds/act2_boss_arena.png') center center / cover no-repeat;
+  background-size: 100%;
+  background-position: center bottom;
+}
+
+.dungeon-scene[data-act="3"][data-boss="false"] {
+  background: url('/images/backgrounds/act3_arena.png') center center / cover no-repeat;
+  background-size: 100%;
+  background-position: center bottom;
+}
+
+.dungeon-scene[data-act="3"][data-boss="true"] {
+  background: url('/images/backgrounds/act3_boss_arena.png') center center / cover no-repeat;
+  background-size: 100%;
+  background-position: center bottom;
+}
+
+/* Hide procedural scene layers when background image is used */
+.dungeon-scene[data-act] .scene-back-wall,
+.dungeon-scene[data-act] .scene-side-wall,
+.dungeon-scene[data-act] .scene-floor {
+  display: none;
 }
 
 /* Scene layers */
@@ -231,6 +334,8 @@ h1 {
   justify-content: center;
   align-items: flex-start;
   gap: 40px;
+  transition: transform 0.3s ease-out, gap 0.3s ease-out;
+  transform-origin: center top;
 }
 
 /* Individual enemy in arena */
@@ -363,11 +468,12 @@ h1 {
 }
 
 /* Act 1 Enemy Images */
+
 .enemy-figure[data-enemy-type="cultist"] {
   background-image: url('/images/enemies/cultist.png');
   background-color: transparent;
-  background-size: contain;
-  background-position: center -10px;   /* raised 20px above container */
+  background-size: 105%;
+  background-position: center -1px;   /* raised 20px above container */
   border-radius: 0;
   box-shadow: none;
   width: 90px;
@@ -381,8 +487,8 @@ h1 {
 .enemy-figure[data-enemy-type="skeleton"] {
   background-image: url('/images/enemies/skeleton.png');
   background-color: transparent;
-  background-size: contain;
-  background-position: center -10px;   /* raised 20px above container */
+  background-size: 120%;
+  background-position: center;   /* raised 20px above container */
   border-radius: 0;
   box-shadow: none;
   width: 90px;
@@ -410,8 +516,8 @@ h1 {
 .enemy-figure[data-enemy-type="haunted_armor"] {
   background-image: url('/images/enemies/haunted_armor.png');
   background-color: transparent;
-  background-size: contain;
-  background-position: center -10px;   /* raised 20px above container */
+  background-size: 150%;
+  background-position: center -5px;   /* raised 20px above container */
   border-radius: 0;
   box-shadow: none;
   width: 90px;
@@ -426,7 +532,7 @@ h1 {
   background-image: url('/images/enemies/acolyte.png');
   background-color: transparent;
   background-size: contain;
-  background-position: center -18px;   /* raised 20px above container */
+  background-position: center -3px;   /* raised 20px above container */
   border-radius: 0;
   box-shadow: none;
   width: 90px;
@@ -456,8 +562,8 @@ h1 {
 .enemy-figure[data-enemy-type="ghoul"] {
   background-image: url('/images/enemies/ghoul.png');
   background-color: transparent;
-  background-size: contain;
-  background-position: center -15px;   /* raised 20px above container */
+  background-size: 90%;
+  background-position: center 0px;
   border-radius: 0;
   box-shadow: none;
   width: 180px;
@@ -516,19 +622,19 @@ h1 {
 }
 
 /* Act 2 Boss Images */
-.enemy-figure[data-enemy-type="drowned_king"] {
-  background-image: url('/images/enemies/drowned_king.png');
-  background-color: transparent;
-  background-size: contain;
-  background-position: center -10px;   /* raised 20px above container */
-  border-radius: 0;
-  box-shadow: none;
-  width: 200px;
-  height: 300px;
+.enemy-figure[data-enemy-type="drowned_king"],
+.enemy-figure.boss-figure[data-enemy-type="drowned_king"] {
+  background: url('/images/enemies/drowned_king.png') no-repeat center -10px !important;
+  background-size: 80% !important;
+  background-position: center 50px !important;   /* raised 20px above container */
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  width: 200px !important;
+  height: 300px !important;
 }
 .enemy-figure[data-enemy-type="drowned_king"]::before,
 .enemy-figure[data-enemy-type="drowned_king"]::after {
-  display: none;
+  display: none !important;
 }
 
 /* Act 1 Elite Images */
@@ -660,17 +766,124 @@ h1 {
 }
 
 /* Act 1 Boss Images */
-.enemy-figure[data-enemy-type="bonelord"] {
-  background-image: url('/images/enemies/the_bonelord.png');
-  background-color: transparent;
-  background-size: contain;
-  border-radius: 0;
-  box-shadow: none;
-  width: 400px;
-  height: 560px;
+.enemy-figure[data-enemy-type="bonelord"],
+.enemy-figure.boss-figure[data-enemy-type="bonelord"] {
+  background: url('/images/enemies/the_bonelord.png') no-repeat center -5px !important;
+  background-size: 150% !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  width: 120px !important;
+  height: 200px !important;
 }
 .enemy-figure[data-enemy-type="bonelord"]::before,
 .enemy-figure[data-enemy-type="bonelord"]::after {
+  display: none !important;
+}
+
+/* Act 3 Boss Images */
+.enemy-figure[data-enemy-type="hollow_god"],
+.enemy-figure.boss-figure[data-enemy-type="hollow_god"] {
+  background: url('/images/enemies/hollow_god.png') no-repeat center center !important;
+  background-size: contain !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  width: 200px !important;
+  height: 300px !important;
+}
+.enemy-figure[data-enemy-type="hollow_god"]::before,
+.enemy-figure[data-enemy-type="hollow_god"]::after {
+  display: none !important;
+}
+
+/* Act 3 Common Enemy Images */
+.enemy-figure[data-enemy-type="imp"] {
+  background-image: url('/images/enemies/imp.png');
+  background-color: transparent;
+  background-size: contain;
+  background-position: center -10px;
+  border-radius: 0;
+  box-shadow: none;
+  width: 90px;
+  height: 120px;
+}
+.enemy-figure[data-enemy-type="imp"]::before,
+.enemy-figure[data-enemy-type="imp"]::after {
+  display: none;
+}
+
+.enemy-figure[data-enemy-type="void_spawn"] {
+  background-image: url('/images/enemies/void_spawn.png');
+  background-color: transparent;
+  background-size: contain;
+  background-position: center -10px;
+  border-radius: 0;
+  box-shadow: none;
+  width: 120px;
+  height: 160px;
+}
+.enemy-figure[data-enemy-type="void_spawn"]::before,
+.enemy-figure[data-enemy-type="void_spawn"]::after {
+  display: none;
+}
+
+.enemy-figure[data-enemy-type="sanctum_guardian"] {
+  background-image: url('/images/enemies/sanctum_guardian.png');
+  background-color: transparent;
+  background-size: contain;
+  background-position: center -10px;
+  border-radius: 0;
+  box-shadow: none;
+  width: 140px;
+  height: 190px;
+}
+.enemy-figure[data-enemy-type="sanctum_guardian"]::before,
+.enemy-figure[data-enemy-type="sanctum_guardian"]::after {
+  display: none;
+}
+
+.enemy-figure[data-enemy-type="infernal_hound"] {
+  background-image: url('/images/enemies/inferno_hound.png');
+  background-color: transparent;
+  background-size: contain;
+  background-position: center -10px;
+  border-radius: 0;
+  box-shadow: none;
+  width: 140px;
+  height: 190px;
+}
+.enemy-figure[data-enemy-type="infernal_hound"]::before,
+.enemy-figure[data-enemy-type="infernal_hound"]::after {
+  display: none;
+}
+
+/* Act 3 Elite Enemy Images */
+.enemy-figure[data-enemy-type="greater_demon"] {
+  background-image: url('/images/enemies/arch_demon.png');
+  background-color: transparent;
+  background-size: contain;
+  background-position: center -10px;
+  border-radius: 0;
+  box-shadow: none;
+  width: 200px;
+  height: 280px;
+}
+.enemy-figure[data-enemy-type="greater_demon"]::before,
+.enemy-figure[data-enemy-type="greater_demon"]::after {
+  display: none;
+}
+
+.enemy-figure[data-enemy-type="sanctum_warden"] {
+  background-image: url('/images/enemies/sanctum_warden.png');
+  background-color: transparent;
+  background-size: contain;
+  background-position: center -10px;
+  border-radius: 0;
+  box-shadow: none;
+  width: 200px;
+  height: 280px;
+}
+.enemy-figure[data-enemy-type="sanctum_warden"]::before,
+.enemy-figure[data-enemy-type="sanctum_warden"]::after {
   display: none;
 }
 
@@ -964,13 +1177,14 @@ h1 {
 /* Enemy HP bar in arena - above the figure */
 .arena-enemy-hp {
   width: 100px;
-  height: 12px;
+  height: 14px;
   background: #1a1a1a;
   border-radius: 6px;
   overflow: hidden;
   border: 2px solid #333;
   position: relative;
   order: 2;
+  z-index: 5;
 }
 
 .arena-enemy-hp-fill {
@@ -984,16 +1198,17 @@ h1 {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: 0.65em;
+  font-size: 0.6em;
   font-weight: bold;
   color: white;
   text-shadow: 1px 1px 2px black;
+  white-space: nowrap;
 }
 
 /* Enemy block display in arena */
 .arena-enemy-block {
   position: absolute;
-  top: 30px;
+  top: 20px;
   right: -15px;
   background: rgba(100, 149, 237, 0.8);
   border: 2px solid #6495ed;
@@ -1821,6 +2036,68 @@ h1 {
   pointer-events: none;
 }
 
+/* =============================================
+   Player Character Images by Class
+   ============================================= */
+
+/* Base styling for player silhouettes with custom images */
+.player-silhouette[data-class] .player-figure {
+  width: 120px;
+  height: 180px;
+  background-color: transparent;
+  background-size: contain;
+  background-position: center bottom;
+  background-repeat: no-repeat;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* Hide head and glow when using custom image */
+.player-silhouette[data-class] .player-figure::before,
+.player-silhouette[data-class] .player-figure::after {
+  display: none;
+}
+
+/* Cleric */
+.player-silhouette[data-class="cleric"] .player-figure {
+  background-image: url('/images/players/cleric.png');
+}
+
+/* Dungeon Knight */
+.player-silhouette[data-class="dungeon_knight"] .player-figure {
+  background-image: url('/images/players/dungeon_knight.png');
+}
+
+/* Diabolist */
+.player-silhouette[data-class="diabolist"] .player-figure {
+  background-image: url('/images/players/diabolist.png');
+}
+
+/* Oathsworn */
+.player-silhouette[data-class="oathsworn"] .player-figure {
+  background-image: url('/images/players/oathsworn.png');
+}
+
+/* Fey-Touched */
+.player-silhouette[data-class="fey_touched"] .player-figure {
+  background-image: url('/images/players/fey_touched.png');
+}
+
+/* Celestial */
+.player-silhouette[data-class="celestial"] .player-figure {
+  background-image: url('/images/players/celestial.png');
+}
+
+/* Summoner */
+.player-silhouette[data-class="summoner"] .player-figure {
+  background-image: url('/images/players/summoner.png');
+}
+
+/* Bargainer */
+.player-silhouette[data-class="bargainer"] .player-figure {
+  background-image: url('/images/players/bargainer.png');
+}
+
 /* Turn announcement banner */
 .turn-banner {
   position: absolute;
@@ -2094,6 +2371,96 @@ h2 {
   background: linear-gradient(135deg, #1a1a1a 0%, #2c2c2c 100%);
 }
 
+/* ===========================================
+   CLASS-SPECIFIC CARD COLORS
+   =========================================== */
+
+/* Cleric cards - Gold and divine warmth */
+.card.class-cleric {
+  background: var(--card-bg-cleric);
+  box-shadow: inset 0 0 20px var(--card-glow-cleric);
+}
+.card.class-cleric.attack { border-color: #c9a227; }
+.card.class-cleric.skill { border-color: var(--card-border-cleric); }
+.card.class-cleric.power { border-color: var(--card-accent-cleric); }
+.card.class-cleric .card-cost { background: var(--card-accent-cleric); }
+
+/* Dungeon Knight cards - Steel blue and iron */
+.card.class-knight {
+  background: var(--card-bg-knight);
+  box-shadow: inset 0 0 20px var(--card-glow-knight);
+}
+.card.class-knight.attack { border-color: #7899b5; }
+.card.class-knight.skill { border-color: var(--card-border-knight); }
+.card.class-knight.power { border-color: var(--card-accent-knight); }
+.card.class-knight .card-cost { background: var(--card-accent-knight); color: #1a1a2e; }
+
+/* Diabolist cards - Crimson and infernal */
+.card.class-diabolist {
+  background: var(--card-bg-diabolist);
+  box-shadow: inset 0 0 20px var(--card-glow-diabolist);
+}
+.card.class-diabolist.attack { border-color: #c00; }
+.card.class-diabolist.skill { border-color: var(--card-border-diabolist); }
+.card.class-diabolist.power { border-color: var(--card-accent-diabolist); }
+.card.class-diabolist .card-cost { background: var(--card-accent-diabolist); color: #1a1a2e; }
+
+/* Oathsworn cards - White and pale nobility */
+.card.class-oathsworn {
+  background: var(--card-bg-oathsworn);
+  box-shadow: inset 0 0 20px var(--card-glow-oathsworn);
+}
+.card.class-oathsworn.attack { border-color: #c9c9d4; }
+.card.class-oathsworn.skill { border-color: var(--card-border-oathsworn); }
+.card.class-oathsworn.power { border-color: var(--card-accent-oathsworn); }
+.card.class-oathsworn .card-cost { background: var(--card-accent-oathsworn); color: #1a1a2e; }
+
+/* Fey-Touched cards - Emerald and violet mysticism */
+.card.class-fey_touched {
+  background: var(--card-bg-fey);
+  box-shadow: inset 0 0 20px var(--card-glow-fey);
+}
+.card.class-fey_touched.attack { border-color: #6bd490; }
+.card.class-fey_touched.skill { border-color: var(--card-border-fey); }
+.card.class-fey_touched.power { border-color: var(--card-accent-fey); }
+.card.class-fey_touched .card-cost { background: var(--card-accent-fey); color: #1a1a2e; }
+
+/* Celestial cards - Radiant gold and divine light */
+.card.class-celestial {
+  background: var(--card-bg-celestial);
+  box-shadow: inset 0 0 25px var(--card-glow-celestial);
+}
+.card.class-celestial.attack { border-color: #ffc800; }
+.card.class-celestial.skill { border-color: var(--card-border-celestial); }
+.card.class-celestial.power { border-color: var(--card-accent-celestial); }
+.card.class-celestial .card-cost { background: var(--card-border-celestial); color: #1a1a2e; }
+
+/* Summoner cards - Spirit blue and ethereal */
+.card.class-summoner {
+  background: var(--card-bg-summoner);
+  box-shadow: inset 0 0 20px var(--card-glow-summoner);
+}
+.card.class-summoner.attack { border-color: #7090d4; }
+.card.class-summoner.skill { border-color: var(--card-border-summoner); }
+.card.class-summoner.power { border-color: var(--card-accent-summoner); }
+.card.class-summoner .card-cost { background: var(--card-accent-summoner); color: #1a1a2e; }
+
+/* Bargainer cards - Gold and shadow deals */
+.card.class-bargainer {
+  background: var(--card-bg-bargainer);
+  box-shadow: inset 0 0 20px var(--card-glow-bargainer);
+}
+.card.class-bargainer.attack { border-color: #d4a025; }
+.card.class-bargainer.skill { border-color: var(--card-border-bargainer); }
+.card.class-bargainer.power { border-color: var(--card-accent-bargainer); }
+.card.class-bargainer .card-cost { background: var(--card-border-bargainer); color: #1a1a2e; }
+
+/* Neutral/Universal cards - Default grey theme */
+.card.class-neutral {
+  background: var(--card-bg-neutral);
+  box-shadow: inset 0 0 15px var(--card-glow-neutral);
+}
+
 .card.unplayable {
   opacity: 0.5;
   cursor: not-allowed;
@@ -2129,12 +2496,14 @@ h2 {
   color: #aaa;
   text-transform: uppercase;
   margin-bottom: 6px;
+  text-align: center;
 }
 
 .card-description {
   font-size: 0.85em;
   line-height: 1.3;
   color: #ddd;
+  text-align: center;
 }
 
 /* Modified damage values in card descriptions */
@@ -2671,11 +3040,36 @@ button.icon-btn:hover {
 
 .menu-footer {
   margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
 }
 
 .version {
   font-size: 0.8em;
   color: #555;
+}
+
+.footer-links {
+  font-size: 0.8em;
+}
+
+.footer-links a {
+  color: #666;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.footer-links a:hover {
+  color: #9b59b6;
+  text-decoration: underline;
+}
+
+.footer-divider {
+  color: #444;
+  margin: 0 5px;
 }
 
 /* ===========================================
@@ -2863,40 +3257,51 @@ button.icon-btn:hover {
   color: #ccc;
 }
 
-.purchase-btn {
-  width: 100%;
-  background: #555;
+/* Class sections layout */
+.class-sections {
+  padding: 10px 20px 40px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.class-section {
+  margin-bottom: 30px;
+}
+
+.section-title {
+  font-size: 1.3em;
+  color: #f4d03f;
+  margin-bottom: 15px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #4a3728;
+}
+
+.locked-section .section-title {
   color: #888;
-  padding: 10px;
+}
+
+.dlc-section .section-title {
+  color: #9b59b6;
+}
+
+/* Lock reason text */
+.lock-reason {
+  font-size: 0.85em;
+  color: #e67e22;
+  font-style: italic;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+/* DLC price badge */
+.dlc-price {
+  display: inline-block;
+  background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 4px;
   font-size: 0.9em;
-  cursor: not-allowed;
-}
-
-.class-action-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 20px;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
-  display: flex;
-  justify-content: center;
-  opacity: 0;
-  transform: translateY(20px);
-  transition: all 0.3s ease;
-  pointer-events: none;
-}
-
-.class-action-bar.visible {
-  opacity: 1;
-  transform: translateY(0);
-  pointer-events: auto;
-}
-
-.start-run-btn {
-  padding: 16px 40px;
-  font-size: 1.2em;
-  max-width: 300px;
+  font-weight: bold;
 }
 
 .start-run-btn:disabled {
@@ -3935,11 +4340,36 @@ button.icon-btn:hover {
   }
 }
 
+.boss-dialogue-name {
+  color: #ff4444;
+  font-size: 0.9em;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+  text-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+}
+
 .boss-dialogue-text {
   color: #ff6666;
   font-style: italic;
   font-size: 1.1em;
   text-shadow: 0 0 10px rgba(255, 0, 0, 0.3);
+}
+
+.boss-dialogue.fade-out {
+  animation: dialogue-fade-out 0.5s ease-out forwards;
+}
+
+@keyframes dialogue-fade-out {
+  0% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+  }
 }
 
 /* Hollow God Special Styling */
@@ -4066,8 +4496,8 @@ button.icon-btn:hover {
   }
 }
 
-/* Permanently Exhausted Card Display */
-.permanently-exhausted-cards {
+/* Permanently Fractured Card Display */
+.permanently-fractured-cards {
   position: fixed;
   top: 80px;
   right: 20px;
@@ -4079,7 +4509,7 @@ button.icon-btn:hover {
   z-index: 100;
 }
 
-.permanently-exhausted-title {
+.permanently-fractured-title {
   color: #ff4444;
   font-size: 0.8em;
   font-weight: bold;
@@ -4087,7 +4517,7 @@ button.icon-btn:hover {
   text-align: center;
 }
 
-.permanently-exhausted-list {
+.permanently-fractured-list {
   display: flex;
   flex-direction: column;
   gap: 3px;
@@ -4095,7 +4525,7 @@ button.icon-btn:hover {
   overflow-y: auto;
 }
 
-.permanently-exhausted-card {
+.permanently-fractured-card {
   color: #888;
   font-size: 0.75em;
   text-decoration: line-through;
@@ -4933,7 +5363,14 @@ button.icon-btn:hover {
 .defeat-portrait {
   border-color: #8b0000;
   background: linear-gradient(135deg, #2a1a1a 0%, #1a0a0a 100%);
-  opacity: 0.8;
+  overflow: hidden;
+}
+
+.defeat-portrait-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(50%) brightness(0.7);
 }
 
 .victory-portrait {
@@ -5543,6 +5980,260 @@ button.icon-btn:hover {
 
   .outcome-lore {
     padding: 0.85rem 1rem;
+  }
+}
+
+/* ===========================================
+   COMBAT JUICE - FLOATING DAMAGE NUMBERS
+   =========================================== */
+
+.floating-damage {
+  position: absolute;
+  font-family: 'Georgia', serif;
+  font-weight: bold;
+  font-size: 24px;
+  color: #fff;
+  text-shadow:
+    0 0 4px rgba(0, 0, 0, 0.9),
+    0 0 8px rgba(0, 0, 0, 0.7),
+    2px 2px 2px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, 0);
+  opacity: 0;
+  transition: none;
+}
+
+.floating-damage.animate {
+  animation: floatUp 0.9s ease-out forwards;
+}
+
+.floating-damage.medium {
+  font-size: 32px;
+}
+
+.floating-damage.large {
+  font-size: 42px;
+  color: #ff4444;
+  text-shadow:
+    0 0 6px rgba(255, 0, 0, 0.6),
+    0 0 12px rgba(255, 0, 0, 0.4),
+    2px 2px 3px rgba(0, 0, 0, 0.9);
+}
+
+.floating-damage.blocked {
+  font-size: 20px;
+  color: #6bb8ff;
+  text-shadow:
+    0 0 4px rgba(100, 180, 255, 0.5),
+    0 0 8px rgba(0, 0, 0, 0.7);
+}
+
+.floating-damage.heal {
+  font-size: 28px;
+  color: #44ff66;
+  text-shadow:
+    0 0 6px rgba(50, 255, 100, 0.5),
+    0 0 12px rgba(0, 0, 0, 0.7);
+}
+
+.floating-damage .partial-block {
+  font-size: 0.6em;
+  color: #88ccff;
+  opacity: 0.9;
+}
+
+.floating-damage.player-damage {
+  color: #ff6666;
+}
+
+@keyframes floatUp {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(0.5);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -10px) scale(1.2);
+  }
+  40% {
+    transform: translate(-50%, -25px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -60px) scale(0.8);
+  }
+}
+
+/* ===========================================
+   COMBAT JUICE - DAMAGE VIGNETTE
+   =========================================== */
+
+.damage-vignette {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 9998;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 40%,
+    rgba(180, 0, 0, 0.3) 70%,
+    rgba(120, 0, 0, 0.6) 100%
+  );
+  transition: opacity 0.3s ease-out;
+}
+
+/* ===========================================
+   COMBAT JUICE - STATUS EFFECT POP
+   =========================================== */
+
+.status-effect.status-effect-pop {
+  animation: statusPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.status-effect.status-effect-pop .status-icon {
+  animation: statusIconPop 0.4s ease-out;
+}
+
+.status-effect.status-effect-pop .status-stacks {
+  animation: stacksBounce 0.4s ease-out;
+}
+
+@keyframes statusPop {
+  0% {
+    transform: scale(0.5);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.3);
+    filter: brightness(1.5);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+    filter: brightness(1);
+  }
+}
+
+@keyframes statusIconPop {
+  0% {
+    transform: scale(0.8) rotate(-10deg);
+  }
+  50% {
+    transform: scale(1.2) rotate(5deg);
+  }
+  100% {
+    transform: scale(1) rotate(0);
+  }
+}
+
+@keyframes stacksBounce {
+  0% {
+    transform: scale(0.5);
+  }
+  60% {
+    transform: scale(1.3);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Status badge update animation */
+.status-badge.updating {
+  animation: statusUpdate 0.3s ease-out;
+}
+
+@keyframes statusUpdate {
+  0% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.2);
+    filter: brightness(1.5);
+  }
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+}
+
+/* ===========================================
+   COMBAT JUICE - ENEMY DEATH ANIMATION
+   =========================================== */
+
+/* Stage 1: Hit stagger */
+.enemy-figure.death-stagger {
+  animation: deathStagger 0.1s ease-out forwards;
+}
+
+@keyframes deathStagger {
+  0% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(-15px) rotate(-3deg);
+  }
+  100% {
+    transform: translateX(-10px) rotate(-2deg);
+  }
+}
+
+/* Stage 2: Freeze frame with white flash */
+.enemy-figure.death-freeze {
+  transform: translateX(-10px) rotate(-2deg);
+  filter: brightness(2) saturate(0.5);
+  animation-play-state: paused;
+}
+
+/* Stage 3: Fade + shrink dissolve */
+.enemy-figure.death-dissolve {
+  animation: deathDissolve 0.4s ease-in forwards;
+}
+
+@keyframes deathDissolve {
+  0% {
+    opacity: 1;
+    transform: translateX(-10px) rotate(-2deg) scale(1);
+    filter: brightness(2) saturate(0.5);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-10px) rotate(-5deg) scale(0.6) translateY(20px);
+    filter: brightness(1) saturate(0);
+  }
+}
+
+/* Dead enemy slot - hide completely */
+.arena-enemy.enemy-dead {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Death particles (soul essence) */
+.death-particle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: radial-gradient(circle, rgba(147, 112, 219, 0.9) 0%, rgba(147, 112, 219, 0) 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 100;
+  animation: particleBurst 0.8s ease-out forwards;
+}
+
+@keyframes particleBurst {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--end-x, 50px), var(--end-y, -50px)) scale(0.3);
   }
 }
 

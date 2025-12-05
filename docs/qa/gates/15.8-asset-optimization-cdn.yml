@@ -1,0 +1,116 @@
+# Quality Gate: Story 15.8 - Asset Optimization & CDN
+schema: 1
+story: "15.8"
+story_title: "Asset Optimization & CDN"
+gate: PENDING
+status_reason: "Story not yet implemented"
+reviewer: "Quinn (Test Architect)"
+updated: "2025-12-05T00:00:00Z"
+
+waiver: { active: false }
+
+top_issues: []
+
+risk_summary:
+  totals: { critical: 0, high: 0, medium: 0, low: 0 }
+  highest: none
+  recommendations:
+    must_fix: []
+    monitor: []
+
+quality_score: 0
+expires: "2025-12-19T00:00:00Z"
+
+evidence:
+  tests_reviewed: 0
+  tests_passing: 0
+  risks_identified: 0
+  trace:
+    ac_covered: []
+    ac_gaps: [1, 2, 3, 4, 5, 6, 7]
+
+ac_trace:
+  - ac: 1
+    description: "Static assets served with proper cache headers"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Check Cache-Control headers for JS/CSS"
+      - "Verify hashed assets have long cache (1 year)"
+      - "Verify index.html has no-cache"
+
+  - ac: 2
+    description: "Images converted to modern formats (WebP)"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Audit images for WebP conversion candidates"
+      - "Verify large PNGs converted to WebP"
+      - "Verify fallbacks for older browsers"
+
+  - ac: 3
+    description: "Audio files optimized for web delivery"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Verify audio in OGG format"
+      - "Verify appropriate bitrates (128kbps music, 96kbps SFX)"
+      - "Verify no unnecessary silence"
+
+  - ac: 4
+    description: "CDN evaluated and optionally configured"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Document CDN evaluation results"
+      - "If CDN used, verify configuration"
+      - "Verify assets served from CDN"
+
+  - ac: 5
+    description: "Asset versioning prevents stale cache issues"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Verify Vite generates hashed filenames"
+      - "Verify new builds have new hashes"
+      - "Verify old assets invalidated"
+
+  - ac: 6
+    description: "Total asset payload documented and optimized"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Document total image size"
+      - "Document total audio size"
+      - "Verify total payload reasonable (< 10MB)"
+
+  - ac: 7
+    description: "Loading screen shows meaningful progress"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Verify loading indicator displays"
+      - "Verify progress updates as assets load"
+      - "Verify loading tips/lore shown (optional)"
+
+nfr_validation:
+  security:
+    status: N/A
+    notes: "No security implications for asset optimization"
+  performance:
+    status: PENDING
+    notes: "This is the primary focus of this story"
+  reliability:
+    status: PENDING
+    notes: "Optimized assets must not break game"
+  maintainability:
+    status: PENDING
+    notes: "Asset optimization pipeline documented"
+
+recommendations:
+  immediate: []
+  future:
+    - action: "Automate image optimization in build"
+      refs: ["vite.config.ts"]
+    - action: "Add asset budget enforcement"
+      refs: [".github/workflows/ci.yml"]

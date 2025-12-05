@@ -15,6 +15,7 @@ import { NarrativeEventService, initNarrativeEventService } from '@/services/Nar
 import { ShrineService, initShrineService } from '@/services/ShrineService';
 import { applyCombatModifiersToPlayer, getRunModifiers, type RunModifiers } from '@/services/UpgradeEffects';
 import { createStarterDeck, CLASSES } from '@/data/classes';
+import { getCardById, getRandomRareCard, getRandomCard, PAIN_CURSE, DIABOLIST_CURSES } from '@/data/cards';
 import { ACT1_ENEMIES } from '@/data/enemies/act1';
 import { ELITE_ENEMIES, ELITE_MINIONS } from '@/data/enemies/elites';
 import { BOSSES, MINIONS } from '@/data/enemies/bosses';
@@ -25,7 +26,7 @@ import { ACT2_ENEMIES } from '@/data/enemies/act2';
 import { ACT2_BOSSES } from '@/data/enemies/act2-boss';
 import { ACT2_ELITE_MINIONS } from '@/data/enemies/act2-elites';
 import { generateFloor } from '@/map/MapGenerator';
-import { CardType, CharacterClassId, CombatEventType, PlayerState, FloorMap, MapNode, NodeType, EnemyDefinition, StatusType, ActNumber } from '@/types';
+import { CardType, CharacterClassId, CombatEventType, PlayerState, FloorMap, MapNode, NodeType, EnemyDefinition, StatusType, ActNumber, CardDefinition } from '@/types';
 import { NarrativeEvent, NarrativeChoice } from '@/types/narrativeEvents';
 import { ShrineDefinition, ShrineChoice } from '@/types/shrines';
 import { getPotion } from '@/data/potions';
@@ -334,7 +335,7 @@ class Game {
         hand: [],
         drawPile: [],
         discardPile: [],
-        exhaustPile: [],
+        fracturePile: [],
         statusEffects: [],
         devotion: 0,
         fortify: 0,
@@ -379,12 +380,19 @@ class Game {
         playerMaxHp: tempPlayer.maxHp,
       });
 
-      // Handle gold changes
+      // Handle special reward types
       for (const reward of result.appliedRewards) {
         if (reward.type === 'gold') {
           SaveManager.updateRun({
             gold: (runData.gold || 0) + (reward.amount || 0),
           });
+        } else if (reward.type === 'card_specific' && reward.cardId) {
+          // Add the specific card to the player's deck
+          const cardDef = getCardById(reward.cardId);
+          if (cardDef) {
+            const instanceId = `${reward.cardId}_event_${Date.now()}`;
+            SaveManager.addCardToDeck(reward.cardId, instanceId);
+          }
         }
       }
 
@@ -441,7 +449,7 @@ class Game {
       hand: [],
       drawPile: [],
       discardPile: [],
-      exhaustPile: [],
+      fracturePile: [],
       statusEffects: [],
       devotion: 0,
       fortify: 0,
@@ -506,7 +514,7 @@ class Game {
       hand: [],
       drawPile: [],
       discardPile: [],
-      exhaustPile: [],
+      fracturePile: [],
       statusEffects: [],
       devotion: 0,
       fortify: 0,
@@ -662,6 +670,18 @@ class Game {
     const starterDeck = createStarterDeck(classId);
     const runData = SaveManager.getActiveRun();
 
+    // Add any cards acquired during the run
+    const savedDeck = SaveManager.getDeck();
+    for (const savedCard of savedDeck) {
+      const cardDef = getCardById(savedCard.cardId);
+      if (cardDef) {
+        starterDeck.push({
+          ...cardDef,
+          instanceId: savedCard.instanceId,
+        });
+      }
+    }
+
     const player: PlayerState = {
       classId,
       maxHp: runData?.playerMaxHp ?? characterClass.maxHp,
@@ -672,7 +692,7 @@ class Game {
       hand: [],
       drawPile: starterDeck,
       discardPile: [],
-      exhaustPile: [],
+      fracturePile: [],
       statusEffects: [],
       devotion: 0,
       fortify: 0,
@@ -738,6 +758,46 @@ class Game {
       // Card corruption - re-render to show corrupted visual
       if (event.type === CombatEventType.CARD_CORRUPTED) {
         this.render();
+      }
+
+      // Combat Juice: Floating damage numbers and effects
+      if (event.type === CombatEventType.ENEMY_DAMAGED) {
+        const data = event.data as { enemyId: string; damage: number; blocked: number; hpDamage: number };
+        // Find enemy index by id
+        const combatState = this.combat!.getState();
+        const enemyIndex = combatState.enemies.findIndex((e) => e.id === data.enemyId);
+        if (enemyIndex !== -1) {
+          this.renderer.showEnemyDamageNumber(enemyIndex, data.damage, data.blocked, data.hpDamage);
+          // Screen shake for big hits
+          if (data.hpDamage >= 10) {
+            this.renderer.shakeScreen(Math.min(data.hpDamage / 2, 8), 200);
+          }
+        }
+      }
+
+      if (event.type === CombatEventType.PLAYER_DAMAGED) {
+        const data = event.data as { damage: number; blocked: number; fortifyAbsorbed: number; hpDamage: number };
+        this.renderer.showPlayerDamageNumber(data.damage, data.blocked, data.fortifyAbsorbed, data.hpDamage);
+        // Screen shake and vignette for player damage
+        if (data.hpDamage > 0) {
+          this.renderer.shakeScreen(Math.min(data.hpDamage / 3, 6), 250);
+          this.renderer.showDamageVignette(Math.min(data.hpDamage / 30, 0.5));
+        }
+      }
+
+      if (event.type === CombatEventType.PLAYER_HEALED) {
+        const data = event.data as { amount: number };
+        this.renderer.showHealNumber('player', data.amount);
+      }
+
+      if (event.type === CombatEventType.ENEMY_DIED) {
+        const data = event.data as { enemyId: string };
+        const combatState = this.combat!.getState();
+        const enemyIndex = combatState.enemies.findIndex((e) => e.id === data.enemyId);
+        const enemy = combatState.enemies.find((e) => e.id === data.enemyId);
+        if (enemyIndex !== -1 && enemy) {
+          this.renderer.playEnemyDeathAnimation(enemyIndex, enemy.isBoss || false);
+        }
       }
     });
 
@@ -843,7 +903,7 @@ class Game {
     }
 
     this.initCombat(this.currentClassId!);
-    this.showCombatScreen();
+    this.showCombatScreen(node.type === NodeType.BOSS);
 
     // No longer first combat after this
     this.isFirstCombat = false;
@@ -961,7 +1021,7 @@ class Game {
       hand: [],
       drawPile: [],
       discardPile: [],
-      exhaustPile: [],
+      fracturePile: [],
       statusEffects: [],
       devotion: 0,
       fortify: 0,
@@ -992,10 +1052,108 @@ class Game {
     };
 
     // Apply rewards
-    const rewardDescriptions = this.shrineService.applyRewardsToPlayer(
+    let rewardDescriptions = this.shrineService.applyRewardsToPlayer(
       tempPlayer,
       result.appliedRewards
     );
+
+    // Check if curse_remove reward can actually be applied (player has curses)
+    const hasCurseRemoveReward = result.appliedRewards.some(r => r.type === 'curse_remove');
+    if (hasCurseRemoveReward) {
+      // Get the player's deck and check for curses
+      const savedDeck = SaveManager.getDeck();
+      const starterDeck = createStarterDeck(this.currentClassId!);
+      // Combine starter deck + saved cards to check for curses
+      const allCards = [
+        ...starterDeck,
+        ...savedDeck.map(sc => {
+          const cardDef = getCardById(sc.cardId);
+          return cardDef ? { ...cardDef, instanceId: sc.instanceId } : null;
+        }).filter(Boolean),
+      ];
+      const hasCurses = allCards.some(card => card && card.type === CardType.CURSE);
+
+      if (!hasCurses) {
+        // Filter out the "Removed a curse from deck" description since there are no curses
+        rewardDescriptions = rewardDescriptions.filter(desc => desc !== 'Removed a curse from deck');
+        rewardDescriptions.push('No curses to remove');
+      } else {
+        // Actually remove a curse from the deck
+        // Find the first curse in saved deck and remove it
+        const curseIndex = savedDeck.findIndex(sc => {
+          const cardDef = getCardById(sc.cardId);
+          return cardDef && cardDef.type === CardType.CURSE;
+        });
+        if (curseIndex !== -1) {
+          SaveManager.removeCardFromDeck(savedDeck[curseIndex].instanceId);
+        }
+        // Note: We can't remove starter deck curses easily, so only removes from saved deck
+      }
+    }
+
+    // Handle card_rare reward - add a random rare card to deck
+    const hasRareCardReward = result.appliedRewards.some(r => r.type === 'card_rare');
+    if (hasRareCardReward && this.currentClassId) {
+      const rareCardReward = result.appliedRewards.find(r => r.type === 'card_rare');
+      let cardToAdd: CardDefinition | undefined;
+
+      // Check if a specific cardId was provided
+      if (rareCardReward?.cardId) {
+        cardToAdd = getCardById(rareCardReward.cardId);
+      } else {
+        // Get a random rare card for the player's class
+        cardToAdd = getRandomRareCard(this.currentClassId);
+      }
+
+      if (cardToAdd) {
+        const instanceId = `shrine_rare_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        SaveManager.addCardToDeck(cardToAdd.id, instanceId);
+        // Update the description with the actual card name
+        const descIndex = rewardDescriptions.findIndex(d => d === 'Gained a rare card');
+        if (descIndex !== -1) {
+          rewardDescriptions[descIndex] = `Gained ${cardToAdd.name} (Rare)`;
+        }
+      }
+    }
+
+    // Handle card_random reward - add a random card to deck
+    const hasRandomCardReward = result.appliedRewards.some(r => r.type === 'card_random');
+    if (hasRandomCardReward && this.currentClassId) {
+      const randomCard = getRandomCard(this.currentClassId);
+      if (randomCard) {
+        const instanceId = `shrine_random_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        SaveManager.addCardToDeck(randomCard.id, instanceId);
+        // Update the description with the actual card name
+        const descIndex = rewardDescriptions.findIndex(d => d === 'Gained a random card');
+        if (descIndex !== -1) {
+          rewardDescriptions[descIndex] = `Gained ${randomCard.name}`;
+        }
+      }
+    }
+
+    // Handle curse_add reward/cost - add curses to deck
+    const curseAddRewards = [...result.appliedRewards, ...result.appliedCosts].filter(r => r.type === 'curse_add');
+    for (const curseReward of curseAddRewards) {
+      const count = curseReward.amount || 1;
+      const curseKeys = Object.keys(DIABOLIST_CURSES);
+      for (let i = 0; i < count; i++) {
+        // Pick a random curse type
+        const curseKey = curseKeys[Math.floor(Math.random() * curseKeys.length)];
+        const curse = DIABOLIST_CURSES[curseKey as keyof typeof DIABOLIST_CURSES];
+        const instanceId = `shrine_curse_${Date.now()}_${i}_${Math.random().toString(36).substr(2, 9)}`;
+        SaveManager.addCardToDeck(curse.id, instanceId);
+      }
+    }
+
+    // Handle pain_add reward/cost - add Pain cards to deck
+    const painAddRewards = [...result.appliedRewards, ...result.appliedCosts].filter(r => r.type === 'pain_add');
+    for (const painReward of painAddRewards) {
+      const count = painReward.amount || 1;
+      for (let i = 0; i < count; i++) {
+        const instanceId = `shrine_pain_${Date.now()}_${i}_${Math.random().toString(36).substr(2, 9)}`;
+        SaveManager.addCardToDeck(PAIN_CURSE.id, instanceId);
+      }
+    }
 
     // Apply costs
     const costDescriptions = this.shrineService.applyCostsToPlayer(
@@ -1330,10 +1488,25 @@ class Game {
     }
   }
 
-  private showCombatScreen(): void {
+  private showCombatScreen(isBoss: boolean = false): void {
     this.combatScreen.style.display = 'block';
     document.getElementById('screen-container')!.style.display = 'none';
     AudioManager.playMusic('combat');
+
+    // Set arena background based on act and boss status
+    const runData = SaveManager.getActiveRun();
+    const act = runData?.currentAct || 1;
+    const dungeonScene = document.querySelector('.dungeon-scene');
+    if (dungeonScene) {
+      dungeonScene.setAttribute('data-act', String(act));
+      dungeonScene.setAttribute('data-boss', isBoss ? 'true' : 'false');
+    }
+
+    // Set player silhouette based on class
+    const playerSilhouette = document.querySelector('.player-silhouette');
+    if (playerSilhouette && this.currentClassId) {
+      playerSilhouette.setAttribute('data-class', this.currentClassId);
+    }
   }
 
   private hideCombatScreen(): void {
@@ -1495,7 +1668,7 @@ class Game {
       hand: [],
       drawPile: starterDeck,
       discardPile: [],
-      exhaustPile: [],
+      fracturePile: [],
       statusEffects: [],
       devotion: 0,
       fortify: 0,
@@ -1573,15 +1746,17 @@ class Game {
         console.log('Card corrupted:', data);
         this.render();
       }
-      if (event.type === CombatEventType.CARD_PERMANENTLY_EXHAUSTED) {
+      if (event.type === CombatEventType.CARD_PERMANENTLY_FRACTURED) {
         const data = event.data as { card: { name: string }; taunt: string };
-        console.log('Card permanently exhausted:', data);
+        console.log('Card permanently fractured:', data);
         this.renderer.playForgetAnimation(data.card.name);
         this.renderer.addLog(`You forget how to ${data.card.name}... "${data.taunt}"`);
         this.render();
       }
       if (event.type === CombatEventType.BOSS_DIALOGUE) {
-        console.log('Boss dialogue:', event.data);
+        const data = event.data as { message: string; phase: number; bossId?: string; bossName?: string };
+        console.log('Boss dialogue:', data);
+        this.renderer.showBossDialogue(data.message, data.bossName);
       }
       // Act 3 mechanics - Card consumed by void
       if (event.type === CombatEventType.CARD_CONSUMED) {
@@ -1610,8 +1785,9 @@ class Game {
     this.renderer.setSelectedEnemy(0);
     this.render();
 
-    // Show combat screen
-    this.showCombatScreen();
+    // Show combat screen (determine if boss fight)
+    const isBossFight = ['hollow_god', 'bonelord', 'drowned_king'].includes(enemyType);
+    this.showCombatScreen(isBossFight);
 
     // Show "Your Turn" banner
     this.renderer.showTurnBanner(true);
@@ -1667,8 +1843,6 @@ class Game {
         return [ELITE_ENEMIES.high_cultist];
       case 'tomb_guardian':
         return [ELITE_ENEMIES.tomb_guardian];
-      case 'bonelord':
-        return [BOSSES.bonelord];
       default:
         return [];
     }

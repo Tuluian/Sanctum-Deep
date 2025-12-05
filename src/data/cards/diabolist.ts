@@ -10,10 +10,10 @@ export const PAIN_CURSE: CardDefinition = {
   name: 'Pain',
   type: CardType.CURSE,
   cost: 0,
-  description: 'Unplayable. When drawn, lose 1 HP. Exhausts when discarded.',
+  description: 'Unplayable. When drawn, lose 1 HP. Fractures when discarded.',
   effects: [],
   unplayable: true,
-  exhaustOnDiscard: true,
+  fractureOnDiscard: true,
   onDraw: [{ type: EffectType.LOSE_HP, amount: 1 }],
 };
 
@@ -23,10 +23,10 @@ export const WEAKNESS_CURSE: CardDefinition = {
   name: 'Weakness',
   type: CardType.CURSE,
   cost: 0,
-  description: 'Unplayable. Deal 25% less damage this combat. Exhausts when discarded.',
+  description: 'Unplayable. Deal 25% less damage this combat. Fractures when discarded.',
   effects: [],
   unplayable: true,
-  exhaustOnDiscard: true,
+  fractureOnDiscard: true,
   onDraw: [{ type: EffectType.APPLY_STATUS, amount: 1, target: 'self' }], // IMPAIRED status
 };
 
@@ -36,10 +36,10 @@ export const DOOM_CURSE: CardDefinition = {
   name: 'Doom',
   type: CardType.CURSE,
   cost: 0,
-  description: 'Unplayable. At end of combat, lose 5 max HP. Exhausts when discarded.',
+  description: 'Unplayable. At end of combat, lose 5 max HP. Fractures when discarded.',
   effects: [],
   unplayable: true,
-  exhaustOnDiscard: true,
+  fractureOnDiscard: true,
   onCombatEnd: [{ type: EffectType.LOSE_MAX_HP, amount: 5 }],
 };
 
@@ -49,10 +49,10 @@ export const TORMENT_CURSE: CardDefinition = {
   name: 'Torment',
   type: CardType.CURSE,
   cost: 0,
-  description: 'Unplayable. Lose 1 HP at end of each turn. Exhausts when discarded.',
+  description: 'Unplayable. Lose 1 HP at end of each turn. Fractures when discarded.',
   effects: [],
   unplayable: true,
-  exhaustOnDiscard: true,
+  fractureOnDiscard: true,
   onTurnEnd: [{ type: EffectType.LOSE_HP, amount: 1 }],
 };
 
@@ -281,9 +281,9 @@ export const DIABOLIST_COMMON_CARDS: Record<string, CardDefinition> = {
     name: 'Consume Soul',
     type: CardType.ATTACK,
     cost: 1,
-    description: 'Exhaust a Curse from hand. Deal 10 damage.',
+    description: 'Fracture a Curse from hand. Deal 10 damage.',
     effects: [
-      { type: EffectType.EXHAUST_CURSE_FROM_HAND, amount: 1 },
+      { type: EffectType.FRACTURE_CURSE_FROM_HAND, amount: 1 },
       { type: EffectType.DAMAGE, amount: 10 },
     ],
     rarity: CardRarity.COMMON,
@@ -362,8 +362,8 @@ export const DIABOLIST_UNCOMMON_CARDS: Record<string, CardDefinition> = {
     name: 'Debt Transfer',
     type: CardType.SKILL,
     cost: 2,
-    description: 'Exhaust all Curses from deck. Deal 5 damage per Curse exhausted.',
-    effects: [], // Handled specially - exhaust all curses and deal damage
+    description: 'Fracture all Curses from deck. Deal 5 damage per Curse fractured.',
+    effects: [], // Handled specially - fracture all curses and deal damage
     rarity: CardRarity.UNCOMMON,
     classId: CharacterClassId.DIABOLIST,
   },
@@ -396,9 +396,9 @@ export const DIABOLIST_UNCOMMON_CARDS: Record<string, CardDefinition> = {
     name: 'Curse Eater',
     type: CardType.SKILL,
     cost: 1,
-    description: 'Exhaust a Curse. Heal 5 HP. Gain 5 block.',
+    description: 'Fracture a Curse. Heal 5 HP. Gain 5 block.',
     effects: [
-      { type: EffectType.EXHAUST_CURSE_FROM_HAND, amount: 1 },
+      { type: EffectType.FRACTURE_CURSE_FROM_HAND, amount: 1 },
       { type: EffectType.HEAL, amount: 5 },
       { type: EffectType.BLOCK, amount: 5 },
     ],
@@ -442,6 +442,19 @@ export const DIABOLIST_UNCOMMON_CARDS: Record<string, CardDefinition> = {
     rarity: CardRarity.UNCOMMON,
     classId: CharacterClassId.DIABOLIST,
   },
+  blood_tithe: {
+    id: 'blood_tithe',
+    name: 'Blood Tithe',
+    type: CardType.SKILL,
+    cost: 0,
+    description: 'Lose 3 HP. Generate a Health Potion.',
+    effects: [
+      { type: EffectType.LOSE_HP, amount: 3 },
+      { type: EffectType.GENERATE_POTION, amount: 1, potionId: 'health_potion' },
+    ],
+    rarity: CardRarity.UNCOMMON,
+    classId: CharacterClassId.DIABOLIST,
+  },
 };
 
 // ============================================
@@ -454,14 +467,14 @@ export const DIABOLIST_RARE_CARDS: Record<string, CardDefinition> = {
     name: 'Soul Shatter',
     type: CardType.ATTACK,
     cost: 3,
-    description: 'Deal 30 damage. Add 3 Pain to deck. Exhaust.',
+    description: 'Deal 30 damage. Add 3 Pain to deck. Fracture.',
     effects: [
       { type: EffectType.DAMAGE, amount: 30 },
       { type: EffectType.ADD_CARD_TO_DECK, amount: 1, cardId: 'pain' },
       { type: EffectType.ADD_CARD_TO_DECK, amount: 1, cardId: 'pain' },
       { type: EffectType.ADD_CARD_TO_DECK, amount: 1, cardId: 'pain' },
     ],
-    exhaust: true,
+    fracture: true,
     rarity: CardRarity.RARE,
     classId: CharacterClassId.DIABOLIST,
   },
@@ -480,9 +493,9 @@ export const DIABOLIST_RARE_CARDS: Record<string, CardDefinition> = {
     name: 'Final Sacrifice',
     type: CardType.ATTACK,
     cost: 0,
-    description: 'Set HP to 1. Deal damage equal to HP lost × 2. Exhaust.',
+    description: 'Set HP to 1. Deal damage equal to HP lost × 2. Fracture.',
     effects: [], // Handled specially
-    exhaust: true,
+    fracture: true,
     rarity: CardRarity.RARE,
     classId: CharacterClassId.DIABOLIST,
   },
@@ -495,11 +508,11 @@ export const DIABOLIST_BLOCK_BONUS_CARD: Record<string, CardDefinition> = {
     name: 'Hellforged Ward',
     type: CardType.POWER,
     cost: 2,
-    description: 'Permanently increase all block from cards by 1. Exhaust.',
+    description: 'Permanently increase all block from cards by 1. Fracture.',
     effects: [{ type: EffectType.PERMANENT_BLOCK_BONUS, amount: 1 }],
     rarity: CardRarity.STARTER,
     classId: CharacterClassId.DIABOLIST,
-    exhaust: true,
+    fracture: true,
   },
 };
 

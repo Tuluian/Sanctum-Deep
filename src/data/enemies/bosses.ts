@@ -184,6 +184,27 @@ export const BONE_ARCHER: EnemyDefinition = {
   ],
 };
 
+/**
+ * Bonelord dialogue - displayed during phase transitions
+ * Lord Vexal was once a noble knight who sought immortality to protect his realm forever.
+ * Each phase shows his descent from arrogant immortal to tragic realization.
+ */
+export const BONELORD_DIALOGUE = {
+  phase1Entry: 'Another mortal seeking death? I have granted that wish many times.',
+  phase2Entry: 'Your persistence... I remember this feeling. When I still had hope.',
+  phase3Entry: 'NO! I will not fade! I sacrificed EVERYTHING for eternity!',
+  playerLowHp: 'Rest now. Join my legion. You\'ll serve forever.',
+  onDamage: [
+    'Mortal weapons against immortal bone? Amusing.',
+    'I\'ve endured worse. I\'ve endured centuries.',
+    'You wound what cannot die!',
+    'The pain... I\'d forgotten what pain felt like...',
+    'How? HOW DO YOU HURT ME?!',
+  ],
+  onVictory: 'Free... at last... Lyra... I\'m coming home...',
+  onSummon: 'Rise, my eternal guard!',
+};
+
 // Boss lookup by ID
 export const BOSSES: Record<string, EnemyDefinition> = {
   bonelord: BONELORD,

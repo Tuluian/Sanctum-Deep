@@ -1,0 +1,113 @@
+# Quality Gate: Story 15.2 - CI/CD Pipeline
+schema: 1
+story: "15.2"
+story_title: "CI/CD Pipeline (GitHub Actions)"
+gate: PENDING
+status_reason: "Story not yet implemented"
+reviewer: "Quinn (Test Architect)"
+updated: "2025-12-05T00:00:00Z"
+
+waiver: { active: false }
+
+top_issues: []
+
+risk_summary:
+  totals: { critical: 0, high: 0, medium: 0, low: 0 }
+  highest: none
+  recommendations:
+    must_fix: []
+    monitor: []
+
+quality_score: 0
+expires: "2025-12-19T00:00:00Z"
+
+evidence:
+  tests_reviewed: 0
+  tests_passing: 0
+  risks_identified: 0
+  trace:
+    ac_covered: []
+    ac_gaps: [1, 2, 3, 4, 5, 6, 7]
+
+ac_trace:
+  - ac: 1
+    description: "GitHub Actions workflow runs on push to main branch"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Verify .github/workflows/ci.yml exists"
+      - "Verify workflow triggers on push to main"
+      - "Verify workflow triggers on PR to main"
+
+  - ac: 2
+    description: "Workflow runs TypeScript type checking"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Verify npm run build step in workflow"
+      - "Introduce type error, verify workflow fails"
+
+  - ac: 3
+    description: "Workflow runs all tests"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Verify npm run test:run step in workflow"
+      - "Introduce failing test, verify workflow fails"
+
+  - ac: 4
+    description: "Workflow runs linting"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Verify npm run lint step in workflow"
+      - "Introduce lint error, verify workflow fails"
+
+  - ac: 5
+    description: "Build artifacts are produced on successful pipeline"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Verify actions/upload-artifact step"
+      - "Verify dist/ folder uploaded"
+      - "Verify artifact downloadable from GitHub"
+
+  - ac: 6
+    description: "Failed checks block merging to main"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Verify branch protection rule exists"
+      - "Verify status checks required"
+      - "Test: failing PR cannot be merged"
+
+  - ac: 7
+    description: "Deployment to Heroku triggers automatically on main branch success"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Verify deploy job in workflow"
+      - "Verify HEROKU_API_KEY secret configured"
+      - "Verify successful push deploys to Heroku"
+
+nfr_validation:
+  security:
+    status: PENDING
+    notes: "Secrets must not be logged, use GitHub secrets"
+  performance:
+    status: PENDING
+    notes: "Pipeline should complete in < 5 minutes"
+  reliability:
+    status: PENDING
+    notes: "Pipeline should handle transient failures gracefully"
+  maintainability:
+    status: PENDING
+    notes: "Workflow file well-documented"
+
+recommendations:
+  immediate: []
+  future:
+    - action: "Add caching for npm dependencies"
+      refs: [".github/workflows/ci.yml"]
+    - action: "Add parallel test execution"
+      refs: [".github/workflows/ci.yml"]

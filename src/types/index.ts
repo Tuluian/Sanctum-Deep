@@ -35,7 +35,7 @@ export enum EffectType {
   GAIN_RESOLVE = 'GAIN_RESOLVE', // Gain Resolve this turn
   DAMAGE_PER_CURSE = 'DAMAGE_PER_CURSE', // Deal damage equal to curses in deck × amount
   BLOCK_PER_CURSE = 'BLOCK_PER_CURSE', // Gain block per curse in deck
-  EXHAUST_CURSE_FROM_HAND = 'EXHAUST_CURSE_FROM_HAND', // Exhaust a curse from hand for bonus
+  FRACTURE_CURSE_FROM_HAND = 'FRACTURE_CURSE_FROM_HAND', // Fracture a curse from hand for bonus
   DAMAGE_IF_LOW_HP = 'DAMAGE_IF_LOW_HP', // Deal bonus damage if HP below threshold
   LOSE_MAX_HP = 'LOSE_MAX_HP', // Permanently reduce max HP
   HEAL_EQUAL_DAMAGE = 'HEAL_EQUAL_DAMAGE', // Heal for damage dealt (requires tracking)
@@ -85,6 +85,8 @@ export enum EffectType {
   REGURGITATE_CARD = 'REGURGITATE_CARD', // Return a random Gobbled card to hand
   // Permanent upgrade effects
   PERMANENT_BLOCK_BONUS = 'PERMANENT_BLOCK_BONUS', // Permanently increase all block from cards by X
+  // Potion generation effects
+  GENERATE_POTION = 'GENERATE_POTION', // Generate a potion (uses potionId in CardEffect)
 }
 
 export enum CardRarity {
@@ -102,6 +104,8 @@ export interface CardEffect {
   perStack?: number; // For consume effects - damage per stack consumed (Celestial)
   minionId?: string; // For SUMMON_MINION effects - which minion to summon
   multiplier?: number; // For DAMAGE_PER_PRICE - damage per price × multiplier
+  statusType?: StatusType; // For APPLY_STATUS effects - which status to apply
+  potionId?: string; // For GENERATE_POTION effects - which potion to generate
 }
 
 export interface CardDefinition {
@@ -113,13 +117,13 @@ export interface CardDefinition {
   effects: CardEffect[];
   rarity?: CardRarity;
   classId?: CharacterClassId;
-  exhaust?: boolean;
+  fracture?: boolean;
   // For spend devotion effects
   devotionCost?: number;
   devotionBonus?: CardEffect[];
   // Diabolist properties
   unplayable?: boolean; // Cannot be played (Curses)
-  exhaustOnDiscard?: boolean; // Card is exhausted when discarded (Curses)
+  fractureOnDiscard?: boolean; // Card is fractured when discarded (Curses)
   onDraw?: CardEffect[]; // Effects triggered when card is drawn
   onTurnEnd?: CardEffect[]; // Effects triggered at end of turn (while in deck)
   onCombatEnd?: CardEffect[]; // Effects triggered at end of combat (while in deck)
@@ -131,6 +135,11 @@ export interface CardDefinition {
   whimsy?: WhimsyEffect[]; // Random outcomes
   // Bargainer properties
   price?: PriceDefinition; // Price paid when card is played
+  // Conditional potion generation
+  conditionalPotionGen?: {
+    requireFortify?: boolean; // Generate if player has Fortify > 0
+    potionId: string;
+  };
 }
 
 // Fey-Touched Whimsy Types
@@ -306,7 +315,7 @@ export interface PlayerState {
   hand: Card[];
   drawPile: Card[];
   discardPile: Card[];
-  exhaustPile: Card[];
+  fracturePile: Card[];
   statusEffects: StatusEffect[];
   // Class-specific
   devotion: number;
@@ -509,7 +518,7 @@ export interface CombatState {
   // Hollow God boss state
   corruptedCardIds: Set<string>; // instanceIds of corrupted cards
   lastPlayerCardPlayed: Card | null; // For Hollow Echo
-  permanentlyExhaustedCards: Card[]; // Cards removed from the run
+  permanentlyFracturedCards: Card[]; // Cards removed from the run
 }
 
 // Events for UI updates
@@ -541,6 +550,7 @@ export enum CombatEventType {
   ENEMY_PHASE_CHANGED = 'ENEMY_PHASE_CHANGED',
   ENEMY_SUMMONED = 'ENEMY_SUMMONED',
   PLAYER_DAMAGED = 'PLAYER_DAMAGED',
+  PLAYER_HEALED = 'PLAYER_HEALED',
   COMBAT_LOG = 'COMBAT_LOG',
   GAME_OVER = 'GAME_OVER',
   // Minion events
@@ -573,13 +583,15 @@ export enum CombatEventType {
   DEMON_SYNERGY = 'DEMON_SYNERGY', // Imp's Giggle or Hound's Howl
   // Hollow God boss events
   CARD_CORRUPTED = 'CARD_CORRUPTED', // Card becomes corrupted
-  CARD_PERMANENTLY_EXHAUSTED = 'CARD_PERMANENTLY_EXHAUSTED', // Forget attack
+  CARD_PERMANENTLY_FRACTURED = 'CARD_PERMANENTLY_FRACTURED', // Forget attack
   HOLLOW_ECHO = 'HOLLOW_ECHO', // Boss copies player's card
   CHOMP_TIMER_TICK = 'CHOMP_TIMER_TICK', // Chomp timer update
   CHOMP_TRIGGERED = 'CHOMP_TRIGGERED', // Chomp discards a card
   SHADOW_SELF_SUMMONED = 'SHADOW_SELF_SUMMONED', // Shadow Self appears
   SHADOW_SELF_DIED = 'SHADOW_SELF_DIED', // Shadow Self defeated (heals player)
   BOSS_DIALOGUE = 'BOSS_DIALOGUE', // Boss speaks
+  // Potion events
+  POTION_GENERATED = 'POTION_GENERATED', // Card generated a potion
 }
 
 export interface CombatEvent {
@@ -636,6 +648,13 @@ export enum UpgradePath {
   CLASS = 'class',
 }
 
+// Upgrade Duration - determines when upgrade effects are cleared
+export enum UpgradeDuration {
+  COMBAT = 'combat', // Cleared at end of combat
+  RUN = 'run', // Cleared at end of run (death/victory)
+  PERMANENT = 'permanent', // Never cleared - persists forever
+}
+
 export type UpgradeEffectType =
   | { type: 'max_hp'; amount: number }
   | { type: 'starting_hp_heal'; amount: number }
@@ -664,7 +683,7 @@ export type UpgradeEffectType =
   | { type: 'starting_fortify'; amount: number }
   | { type: 'fortify_cap_bonus'; amount: number }
   | { type: 'fortify_reflect'; damage: number }
-  | { type: 'curse_start_exhausted' }
+  | { type: 'curse_start_fractured' }
   | { type: 'curse_damage_reduction'; amount: number }
   | { type: 'contract_penalty_reduction'; percent: number }
   | { type: 'starting_vow'; vowId: string; charges: number }
@@ -696,6 +715,10 @@ export interface Upgrade {
   prerequisites: string[];
   effect: UpgradeEffectType;
   tier: 1 | 2 | 3 | 4;
+  // Story 9.5: Duration determines when upgrade effects apply
+  duration?: UpgradeDuration; // Defaults to PERMANENT for meta-progression upgrades
+  // Story 9.6: Tier 4 upgrades require class completion
+  requiresClassCompletion?: boolean; // If true, can only unlock after beating game with classId
 }
 
 // Soul Echoes persistence

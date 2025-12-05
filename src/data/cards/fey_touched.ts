@@ -5,6 +5,7 @@ import {
   EffectType,
   CharacterClassId,
   WhimsyEffect,
+  StatusType,
 } from '@/types';
 
 // Helper to create damage whimsy effects for a range
@@ -183,8 +184,8 @@ export const FEY_TOUCHED_COMMON_CARDS: Record<string, CardDefinition> = {
       },
       {
         weight: 1,
-        effects: [{ type: EffectType.APPLY_STATUS, amount: 1 }], // Impaired
-        description: 'Apply Impaired for 1 turn',
+        effects: [{ type: EffectType.APPLY_STATUS, amount: 3, statusType: StatusType.IMPAIRED, target: 'enemy' }], // Impaired for 3 turns
+        description: 'Apply Impaired for 3 turns',
       },
     ],
     rarity: CardRarity.COMMON,
@@ -579,7 +580,7 @@ export const FEY_TOUCHED_RARE_CARDS: Record<string, CardDefinition> = {
     name: 'Wish',
     type: CardType.SKILL,
     cost: 4,
-    description: 'Choose: Deal 20 damage OR Gain 20 block OR Heal 20 OR Draw 5. Exhaust.',
+    description: 'Choose: Deal 20 damage OR Gain 20 block OR Heal 20 OR Draw 5. Fracture.',
     effects: [],
     whimsy: [
       {
@@ -603,7 +604,7 @@ export const FEY_TOUCHED_RARE_CARDS: Record<string, CardDefinition> = {
         description: 'Draw 5 cards',
       },
     ],
-    exhaust: true,
+    fracture: true,
     rarity: CardRarity.RARE,
     classId: CharacterClassId.FEY_TOUCHED,
   },
@@ -667,11 +668,11 @@ export const FEY_TOUCHED_BLOCK_BONUS_CARD: Record<string, CardDefinition> = {
     name: 'Enchanted Ward',
     type: CardType.POWER,
     cost: 2,
-    description: 'Permanently increase all block from cards by 1. Exhaust.',
+    description: 'Permanently increase all block from cards by 1. Fracture.',
     effects: [{ type: EffectType.PERMANENT_BLOCK_BONUS, amount: 1 }],
     rarity: CardRarity.STARTER,
     classId: CharacterClassId.FEY_TOUCHED,
-    exhaust: true,
+    fracture: true,
   },
 };
 

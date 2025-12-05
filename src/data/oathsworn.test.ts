@@ -27,7 +27,7 @@ function createOathswornPlayerState(overrides: Partial<PlayerState> = {}): Playe
     hand: [],
     drawPile: [],
     discardPile: [],
-    exhaustPile: [],
+    fracturePile: [],
     statusEffects: [],
     devotion: 0,
     fortify: 0,

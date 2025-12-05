@@ -1,0 +1,116 @@
+# Quality Gate: Story 16.3 - Steam Achievements
+schema: 1
+story: "16.3"
+story_title: "Steam Achievements"
+gate: PENDING
+status_reason: "Story not yet implemented"
+reviewer: "Quinn (Test Architect)"
+updated: "2025-12-05T00:00:00Z"
+
+waiver: { active: false }
+
+top_issues: []
+
+risk_summary:
+  totals: { critical: 0, high: 0, medium: 0, low: 0 }
+  highest: none
+  recommendations:
+    must_fix: []
+    monitor: []
+
+quality_score: 0
+expires: "2025-12-19T00:00:00Z"
+
+evidence:
+  tests_reviewed: 0
+  tests_passing: 0
+  risks_identified: 0
+  trace:
+    ac_covered: []
+    ac_gaps: [1, 2, 3, 4, 5, 6, 7]
+
+ac_trace:
+  - ac: 1
+    description: "Achievement definitions created in Steamworks"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Log into Steamworks dashboard"
+      - "Verify achievements listed"
+      - "Verify icons uploaded (64x64)"
+      - "Verify display names and descriptions"
+
+  - ac: 2
+    description: "Achievements sync with existing game achievement system"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Verify STEAM_ACHIEVEMENT_MAP covers all game achievements"
+      - "Verify no game achievement missing Steam mapping"
+
+  - ac: 3
+    description: "Achievements unlock correctly during gameplay"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Trigger achievement unlock in game"
+      - "Verify Steam API called"
+      - "Verify achievement marked unlocked in Steam"
+
+  - ac: 4
+    description: "Achievement popup appears via Steam overlay"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Unlock achievement while playing"
+      - "Verify Steam notification popup appears"
+      - "Verify sound plays (if enabled)"
+
+  - ac: 5
+    description: "Achievements persist across sessions"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Unlock achievement"
+      - "Close and reopen game"
+      - "Verify achievement still unlocked"
+      - "Check Steam profile"
+
+  - ac: 6
+    description: "Achievement progress tracked for multi-step achievements"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Identify progress achievements (e.g., 'Kill 100 enemies')"
+      - "Make partial progress"
+      - "Verify Steam shows progress bar"
+
+  - ac: 7
+    description: "Offline achievements sync when Steam reconnects"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Play offline"
+      - "Unlock achievement offline"
+      - "Reconnect to Steam"
+      - "Verify achievement synced"
+
+nfr_validation:
+  security:
+    status: N/A
+    notes: "Steam handles achievement security"
+  performance:
+    status: PENDING
+    notes: "Achievement calls should not block gameplay"
+  reliability:
+    status: PENDING
+    notes: "Offline queue must not lose achievements"
+  maintainability:
+    status: PENDING
+    notes: "Achievement mapping documented"
+
+recommendations:
+  immediate: []
+  future:
+    - action: "Add achievement stats tracking"
+      refs: ["src/services/SteamAchievementService.ts"]

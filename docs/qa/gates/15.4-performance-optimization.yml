@@ -1,0 +1,116 @@
+# Quality Gate: Story 15.4 - Performance Optimization
+schema: 1
+story: "15.4"
+story_title: "Performance Optimization"
+gate: PENDING
+status_reason: "Story not yet implemented"
+reviewer: "Quinn (Test Architect)"
+updated: "2025-12-05T00:00:00Z"
+
+waiver: { active: false }
+
+top_issues: []
+
+risk_summary:
+  totals: { critical: 0, high: 0, medium: 0, low: 0 }
+  highest: none
+  recommendations:
+    must_fix: []
+    monitor: []
+
+quality_score: 0
+expires: "2025-12-19T00:00:00Z"
+
+evidence:
+  tests_reviewed: 0
+  tests_passing: 0
+  risks_identified: 0
+  trace:
+    ac_covered: []
+    ac_gaps: [1, 2, 3, 4, 5, 6, 7]
+
+ac_trace:
+  - ac: 1
+    description: "Initial page load under 3 seconds on 3G connection"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Run Lighthouse with 3G throttling"
+      - "Measure Time to Interactive"
+      - "Verify < 3 seconds on simulated 3G"
+
+  - ac: 2
+    description: "Lighthouse Performance score 90+"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Run Lighthouse audit on production build"
+      - "Performance score >= 90"
+      - "Document baseline and final scores"
+
+  - ac: 3
+    description: "JavaScript bundle size under 500KB (gzipped)"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Run npm run build"
+      - "Check gzipped size of JS bundles"
+      - "Total JS < 500KB gzipped"
+
+  - ac: 4
+    description: "Images optimized and lazy-loaded where appropriate"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Verify images converted to WebP where beneficial"
+      - "Verify loading='lazy' on below-fold images"
+      - "Verify width/height attributes present"
+
+  - ac: 5
+    description: "Audio files compressed and loaded on demand"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Verify audio files in OGG format"
+      - "Verify audio not loaded on page load"
+      - "Verify audio loads when first needed"
+
+  - ac: 6
+    description: "No layout shifts during load (CLS < 0.1)"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Run Lighthouse CLS measurement"
+      - "CLS score < 0.1"
+      - "Verify no visible layout jumps"
+
+  - ac: 7
+    description: "First Contentful Paint under 1.5 seconds"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Run Lighthouse FCP measurement"
+      - "FCP < 1.5 seconds"
+      - "Verify meaningful content visible quickly"
+
+nfr_validation:
+  security:
+    status: N/A
+    notes: "No security implications for performance"
+  performance:
+    status: PENDING
+    notes: "This is the primary focus of this story"
+  reliability:
+    status: PENDING
+    notes: "Performance optimizations must not break functionality"
+  maintainability:
+    status: PENDING
+    notes: "Performance budget documented and enforced"
+
+recommendations:
+  immediate: []
+  future:
+    - action: "Add performance budget to CI/CD"
+      refs: [".github/workflows/ci.yml"]
+    - action: "Set up real user monitoring"
+      refs: ["src/main.ts"]

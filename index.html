@@ -3,8 +3,71 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Sanctum Ruins</title>
+
+    <!-- Primary Meta Tags -->
+    <title>Sanctum Ruins - Roguelike Deck-Builder Game</title>
+    <meta name="title" content="Sanctum Ruins - Roguelike Deck-Builder Game" />
+    <meta name="description" content="A strategic roguelike deck-builder inspired by Slay the Spire. Build your deck, master 8 unique classes, and conquer the Sanctum in quick 15-30 minute sessions." />
+    <meta name="keywords" content="deck builder, roguelike, card game, strategy, fantasy, indie game, slay the spire, browser game, free to play" />
+    <meta name="author" content="Sanctum Ruins Team" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#16213e" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://sanctumruins.com/" />
+    <meta property="og:title" content="Sanctum Ruins - Roguelike Deck-Builder Game" />
+    <meta property="og:description" content="A strategic roguelike deck-builder inspired by Slay the Spire. Build your deck, defeat enemies, and conquer the Sanctum." />
+    <meta property="og:image" content="https://sanctumruins.com/images/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="Sanctum Ruins" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://sanctumruins.com/" />
+    <meta property="twitter:title" content="Sanctum Ruins - Roguelike Deck-Builder Game" />
+    <meta property="twitter:description" content="A strategic roguelike deck-builder inspired by Slay the Spire. Build your deck, defeat enemies, and conquer the Sanctum." />
+    <meta property="twitter:image" content="https://sanctumruins.com/images/og-image.png" />
+
+    <!-- Favicons -->
     <link rel="icon" type="image/webp" href="/favicon.webp" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Sanctum Ruins" />
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "VideoGame",
+      "name": "Sanctum Ruins",
+      "description": "A strategic roguelike deck-builder inspired by Slay the Spire with 8 unique character classes.",
+      "url": "https://sanctumruins.com/",
+      "image": "https://sanctumruins.com/images/og-image.png",
+      "genre": ["Card Game", "Roguelike", "Strategy"],
+      "gamePlatform": ["Web Browser", "iOS"],
+      "applicationCategory": "Game",
+      "operatingSystem": "Any",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD",
+        "availability": "https://schema.org/InStock"
+      },
+      "author": {
+        "@type": "Organization",
+        "name": "Sanctum Ruins Team"
+      }
+    }
+    </script>
   </head>
   <body>
     <!-- Screen container for menu system -->
@@ -118,5 +181,20 @@
     </div>
 
     <script type="module" src="/src/main.ts"></script>
+
+    <!-- Service Worker Registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then((registration) => {
+              console.log('[App] Service Worker registered:', registration.scope);
+            })
+            .catch((error) => {
+              console.error('[App] Service Worker registration failed:', error);
+            });
+        });
+      }
+    </script>
   </body>
 </html>

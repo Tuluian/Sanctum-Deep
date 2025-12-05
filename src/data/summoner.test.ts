@@ -181,7 +181,7 @@ describe('Story 6.2: Summoner Class & Minion System', () => {
         hand: [],
         drawPile: createStarterDeck(CharacterClassId.SUMMONER),
         discardPile: [],
-        exhaustPile: [],
+        fracturePile: [],
         statusEffects: [],
         devotion: 0,
         fortify: 0,

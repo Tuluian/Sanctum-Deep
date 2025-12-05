@@ -35,7 +35,7 @@ function createDiabolistPlayerState(overrides: Partial<PlayerState> = {}): Playe
     hand: [],
     drawPile: [],
     discardPile: [],
-    exhaustPile: [],
+    fracturePile: [],
     statusEffects: [],
     devotion: 0,
     fortify: 0,
@@ -99,14 +99,14 @@ function createMockEnemyDefinition(overrides: Partial<EnemyDefinition> = {}): En
 describe('Story 3.4: Diabolist Card Pool', () => {
   // AC 1: Diabolist has 32 total cards
   describe('AC 1: Card Count', () => {
-    it('should have 33 total unique cards (5 starter + 28 obtainable)', () => {
-      // 4 starter + 1 block bonus + 4 curses + 16 common + 9 uncommon + 3 rare = 37 total definitions
+    it('should have 34 total unique cards (5 starter + 29 obtainable)', () => {
+      // 4 starter + 1 block bonus + 4 curses + 16 common + 10 uncommon + 3 rare = 38 total definitions
       // But starter deck is 11 cards using 5 unique definitions
       const totalCards = Object.keys(DIABOLIST_CARDS).length;
-      expect(totalCards).toBe(37); // Includes curses
+      expect(totalCards).toBe(38); // Includes curses
 
-      // Reward pool should have 28 obtainable cards (16 common + 9 uncommon + 3 rare)
-      expect(DIABOLIST_REWARD_POOL.length).toBe(28);
+      // Reward pool should have 29 obtainable cards (16 common + 10 uncommon + 3 rare)
+      expect(DIABOLIST_REWARD_POOL.length).toBe(29);
     });
   });
 
@@ -120,9 +120,9 @@ describe('Story 3.4: Diabolist Card Pool', () => {
       });
     });
 
-    it('should have 9 Uncommon cards', () => {
+    it('should have 10 Uncommon cards', () => {
       const uncommonCards = Object.values(DIABOLIST_UNCOMMON_CARDS);
-      expect(uncommonCards.length).toBe(9);
+      expect(uncommonCards.length).toBe(10);
       uncommonCards.forEach(card => {
         expect(card.rarity).toBe(CardRarity.UNCOMMON);
       });
@@ -227,7 +227,7 @@ describe('Story 3.4: Diabolist Card Pool', () => {
       expect(state.player.block).toBe(11);
     });
 
-    it('Consume Soul should exhaust a curse from hand and deal damage', () => {
+    it('Consume Soul should fracture a curse from hand and deal damage', () => {
       const consumeSoul = createMockCard({
         ...DIABOLIST_COMMON_CARDS.consume_soul,
         instanceId: 'consume_soul_0',
@@ -255,9 +255,9 @@ describe('Story 3.4: Diabolist Card Pool', () => {
       engine.playCard(0, 0);
 
       const state = engine.getState();
-      // Curse should be exhausted
-      expect(state.player.exhaustPile.length).toBe(1);
-      expect(state.player.exhaustPile[0].id).toBe('pain');
+      // Curse should be fractured
+      expect(state.player.fracturePile.length).toBe(1);
+      expect(state.player.fracturePile[0].id).toBe('pain');
       // Should deal 10 damage
       expect(state.enemies[0].currentHp).toBe(40);
     });
@@ -480,8 +480,8 @@ describe('Story 3.4: Diabolist Card Pool', () => {
       // Check 3 Pain added to deck
       const painInDeck = state.player.drawPile.filter(c => c.id === 'pain');
       expect(painInDeck.length).toBe(3);
-      // Soul Shatter should be exhausted
-      expect(state.player.exhaustPile.some(c => c.id === 'soul_shatter')).toBe(true);
+      // Soul Shatter should be fractured
+      expect(state.player.fracturePile.some(c => c.id === 'soul_shatter')).toBe(true);
     });
   });
 

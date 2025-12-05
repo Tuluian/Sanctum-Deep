@@ -85,11 +85,11 @@ export const BARGAINER_BLOCK_BONUS_CARD: Record<string, CardDefinition> = {
     name: 'Infernal Bulwark',
     type: CardType.POWER,
     cost: 2,
-    description: 'Permanently increase all block from cards by 1. Exhaust.',
+    description: 'Permanently increase all block from cards by 1. Fracture.',
     effects: [{ type: EffectType.PERMANENT_BLOCK_BONUS, amount: 1 }],
     rarity: CardRarity.STARTER,
     classId: CharacterClassId.BARGAINER,
-    exhaust: true,
+    fracture: true,
   },
 };
 

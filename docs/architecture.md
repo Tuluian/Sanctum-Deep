@@ -18,6 +18,7 @@ The architecture is designed for a phased approach:
 |------|---------|-------------|--------|
 | 2024-12-03 | 1.0 | Initial architecture document | Winston (Architect) |
 | 2024-12-03 | 1.1 | Added iOS/Capacitor strategy for post-MVP | Winston (Architect) |
+| 2024-12-05 | 1.2 | Updated backend to Heroku Postgres (was Supabase), added Epic 14 reference | Mary (Analyst) |
 
 ---
 
@@ -32,16 +33,22 @@ Sanctum Ruins uses a **monorepo architecture** with TypeScript throughout, enabl
 **Platform:** Static hosting (Vercel/Netlify) for MVP, expanding to serverless functions and native mobile post-MVP
 
 **Key Services:**
-- **Vercel**: Frontend hosting with edge CDN, serverless functions for API
-- **LocalStorage**: MVP persistence (browser-based saves)
-- **Supabase** (Post-MVP): PostgreSQL database, authentication, real-time subscriptions
+- **Heroku**: Backend API hosting with Express.js, Postgres database
+- **Heroku Postgres** (Post-MVP): PostgreSQL database for user accounts and cloud saves
+- **LocalStorage**: Primary persistence (browser-based saves, offline-first)
 - **Stripe** (Post-MVP): Payment processing for DLC purchases
 - **Capacitor** (Post-MVP): Native iOS app wrapper for App Store deployment
 - **Apple App Store** (Post-MVP): iOS distribution with in-app purchases
 
-**Deployment Regions:** Auto (Vercel Edge) - global CDN distribution
+**Deployment Regions:** Heroku US region, Vercel Edge for static assets
 
-**Rationale:** Vercel provides zero-config deployment for Vite projects, automatic HTTPS, preview deployments for PRs, and seamless serverless function integration when backend is needed. Supabase offers a generous free tier with built-in auth that integrates well with the JavaScript ecosystem. Capacitor enables iOS deployment with the same web codebase, minimizing additional development effort.
+**Rationale:** Heroku provides simple deployment for Node.js APIs with integrated Postgres. The game uses an offline-first architecture where localStorage is primary storage and cloud sync is supplementary. This ensures 100% offline playability while enabling cross-device sync for logged-in users. See [Epic 14: Cloud Save & User Accounts](./stories/14.0-cloud-save-epic-overview.md) for detailed implementation plan.
+
+**Authentication Strategy:**
+- Google OAuth for quick sign-in
+- Email/Password for universal access
+- Guest mode (no account required) - full game playable without login
+- Conflict resolution: Last-write-wins (timestamp-based)
 
 ### Repository Structure
 
@@ -80,9 +87,9 @@ graph TB
     end
 
     subgraph "Future Backend (Post-MVP)"
-        API[API Layer<br/>Vercel Functions]
-        AUTH[Auth Service<br/>Supabase Auth]
-        DB[(Database<br/>Supabase PostgreSQL)]
+        API[API Layer<br/>Heroku Express]
+        AUTH[Auth Service<br/>JWT + OAuth]
+        DB[(Database<br/>Heroku Postgres)]
         PAY[Payments<br/>Stripe / Apple IAP]
     end
 
@@ -135,11 +142,11 @@ graph TB
 | State Management | Custom EventEmitter | - | Game state changes | Game-specific needs don't fit standard patterns |
 | CSS | CSS Modules + CSS Variables | - | Scoped styling with theming | Simple, no runtime, good isolation |
 | Backend Language | TypeScript | 5.3+ | API services (Post-MVP) | Same language as frontend, shared types |
-| Backend Framework | Vercel Functions | - | Serverless API (Post-MVP) | Zero config, scales automatically |
+| Backend Framework | Express.js | 4.x | API server (Post-MVP) | Simple, well-documented, Heroku-native |
 | API Style | REST | - | Client-server communication | Simple, well-understood, sufficient for game needs |
-| Database (MVP) | LocalStorage | - | Save game data | Browser-native, no setup required |
-| Database (Post-MVP) | Supabase (PostgreSQL) | - | User data, cloud saves | Generous free tier, built-in auth, real-time |
-| Authentication | Supabase Auth | - | User accounts (Post-MVP) | Email, Google, Discord providers built-in |
+| Database (MVP) | LocalStorage | - | Save game data | Browser-native, no setup required, offline-first |
+| Database (Post-MVP) | Heroku Postgres | - | User data, cloud saves | Scalable tiers, integrated with Heroku |
+| Authentication | JWT + Google OAuth | - | User accounts (Post-MVP) | Google for convenience, email/password for universal access |
 | Testing | Vitest | 1.x | Unit and integration tests | Fast, Vite-native, Jest-compatible API |
 | E2E Testing | Playwright | 1.x | End-to-end game testing | Cross-browser, reliable, good debugging |
 | Linting | ESLint + Prettier | 8.x / 3.x | Code quality | Industry standard, TypeScript support |
@@ -386,7 +393,35 @@ interface CharacterClass {
 
 For MVP (Phases 1-3), all game logic runs client-side with LocalStorage persistence. No API endpoints are needed.
 
-### Post-MVP REST API (Phase 6+)
+### Post-MVP REST API (Heroku Express)
+
+> **Note:** Detailed API implementation is documented in [Epic 14: Cloud Save & User Accounts](./stories/14.0-cloud-save-epic-overview.md). See individual story cards for endpoint specifications.
+
+**Base URL:** `https://sanctum-ruins.herokuapp.com/api`
+
+**Authentication Endpoints:**
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| POST | /auth/register | No | Create account with email/password |
+| POST | /auth/login | No | Login with email/password |
+| GET | /auth/google | No | Initiate Google OAuth flow |
+| GET | /auth/google/callback | No | Google OAuth callback |
+| POST | /auth/refresh | No | Refresh access token |
+| POST | /auth/logout | Yes | Revoke refresh token |
+
+**Sync Endpoints:**
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | /sync/pull | Yes | Get cloud save data |
+| POST | /sync/push | Yes | Upload save to cloud |
+
+**Purchase Endpoints:**
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | /purchases | Yes | Get user's purchased DLC |
+| POST | /purchases/checkout | Yes | Create Stripe checkout session |
+
+**Leaderboards:** Not implemented (out of scope per brainstorming session).
 
 ```yaml
 openapi: 3.0.0
@@ -396,55 +431,72 @@ info:
   description: Backend API for cloud saves, auth, and payments
 
 servers:
-  - url: https://api.sanctumruins.com/v1
-    description: Production API
+  - url: https://sanctum-ruins.herokuapp.com/api
+    description: Production API (Heroku)
 
 paths:
-  /auth/login:
+  /auth/register:
     post:
-      summary: Authenticate user
+      summary: Create account with email/password
       tags: [Auth]
       requestBody:
         content:
           application/json:
             schema:
               type: object
+              required: [email, password, displayName]
               properties:
-                provider: { type: string, enum: [email, google, discord] }
-                token: { type: string }
+                email: { type: string, format: email }
+                password: { type: string, minLength: 8 }
+                displayName: { type: string, maxLength: 50 }
+      responses:
+        201:
+          description: Account created, JWT tokens returned
+
+  /auth/login:
+    post:
+      summary: Login with email/password
+      tags: [Auth]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string }
       responses:
         200:
-          description: JWT token returned
+          description: JWT tokens returned
 
-  /saves:
+  /sync/pull:
     get:
-      summary: List user's saved runs
-      tags: [Saves]
+      summary: Get cloud save data
+      tags: [Sync]
       security: [bearerAuth: []]
       responses:
         200:
-          description: Array of save metadata
+          description: Compressed save data
+        404:
+          description: No cloud save exists
 
+  /sync/push:
     post:
-      summary: Create or update save
-      tags: [Saves]
+      summary: Upload save to cloud
+      tags: [Sync]
       security: [bearerAuth: []]
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SaveData'
-
-  /saves/{saveId}:
-    get:
-      summary: Get specific save data
-      tags: [Saves]
-      security: [bearerAuth: []]
-
-    delete:
-      summary: Delete a save
-      tags: [Saves]
-      security: [bearerAuth: []]
+              type: object
+              properties:
+                data: { type: string, description: "LZ-compressed JSON" }
+                timestamp: { type: integer, description: "JS timestamp" }
+      responses:
+        200:
+          description: Save uploaded successfully
 
   /purchases:
     get:
@@ -463,17 +515,6 @@ paths:
               type: object
               properties:
                 classId: { type: string, enum: [diabolist, oathbound, fey_touched] }
-
-  /leaderboards/{type}:
-    get:
-      summary: Get leaderboard entries
-      tags: [Leaderboards]
-      parameters:
-        - name: type
-          in: path
-          schema:
-            type: string
-            enum: [fastest_run, highest_score]
 ```
 
 ---
@@ -991,70 +1032,82 @@ class Router {
 
 ## Backend Architecture (Post-MVP)
 
-### Serverless Function Organization
+> **Note:** Detailed backend implementation is documented in [Epic 14: Cloud Save & User Accounts](./stories/14.0-cloud-save-epic-overview.md).
+
+### Express.js API Organization (Heroku)
 
 ```
-apps/api/
+server/
 ├── src/
-│   ├── functions/
-│   │   ├── auth/
-│   │   │   └── callback.ts       # OAuth callback handler
-│   │   ├── saves/
-│   │   │   ├── list.ts           # GET /saves
-│   │   │   ├── get.ts            # GET /saves/:id
-│   │   │   ├── upsert.ts         # POST /saves
-│   │   │   └── delete.ts         # DELETE /saves/:id
-│   │   ├── purchases/
-│   │   │   ├── list.ts           # GET /purchases
-│   │   │   └── checkout.ts       # POST /purchases
-│   │   └── leaderboards/
-│   │       └── get.ts            # GET /leaderboards/:type
+│   ├── index.ts              # Entry point, Express app
+│   ├── config.ts             # Environment configuration
+│   ├── db.ts                 # Postgres connection pool
+│   ├── routes/
+│   │   ├── auth.ts           # /api/auth/* endpoints
+│   │   ├── sync.ts           # /api/sync/* endpoints
+│   │   ├── purchases.ts      # /api/purchases/* endpoints
+│   │   └── health.ts         # /api/health endpoint
 │   ├── middleware/
-│   │   ├── auth.ts               # JWT verification
-│   │   └── error.ts              # Error handling
+│   │   ├── auth.ts           # JWT verification
+│   │   ├── cors.ts           # CORS configuration
+│   │   ├── rateLimit.ts      # Rate limiting
+│   │   └── errorHandler.ts   # Error handling
 │   ├── services/
-│   │   ├── supabase.ts           # Supabase client
-│   │   └── stripe.ts             # Stripe client
-│   └── utils/
-│       └── response.ts           # Standard response helpers
-└── vercel.json                   # Vercel config
+│   │   ├── userService.ts    # User CRUD operations
+│   │   ├── tokenService.ts   # JWT generation/validation
+│   │   ├── saveService.ts    # Save data operations
+│   │   └── stripe.ts         # Stripe client
+│   └── types/
+│       └── index.ts          # Shared types
+├── package.json
+├── tsconfig.json
+└── Procfile                  # Heroku deployment
 ```
 
-### Function Template
+### Route Handler Template
 
 ```typescript
-// apps/api/src/functions/saves/list.ts
+// server/src/routes/sync.ts
 
-import { VercelRequest, VercelResponse } from '@vercel/node';
-import { authenticateRequest } from '../../middleware/auth';
-import { supabase } from '../../services/supabase';
-import { apiResponse, apiError } from '../../utils/response';
+import { Router } from 'express';
+import { authMiddleware, AuthRequest } from '../middleware/auth';
+import { saveService } from '../services/saveService';
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (req.method !== 'GET') {
-    return apiError(res, 405, 'Method not allowed');
+const router = Router();
+
+// GET /api/sync/pull - Get cloud save
+router.get('/pull', authMiddleware, async (req: AuthRequest, res) => {
+  try {
+    const saveData = await saveService.getSaveData(req.user!.userId);
+
+    if (!saveData) {
+      return res.status(404).json({ error: 'No cloud save found' });
+    }
+
+    res.json({
+      data: saveData.data,
+      timestamp: saveData.lastSaved
+    });
+  } catch (error) {
+    console.error('Failed to pull save:', error);
+    res.status(500).json({ error: 'Failed to retrieve save' });
   }
+});
 
-  const user = await authenticateRequest(req);
-  if (!user) {
-    return apiError(res, 401, 'Unauthorized');
-  }
+// POST /api/sync/push - Upload save to cloud
+router.post('/push', authMiddleware, async (req: AuthRequest, res) => {
+  const { data, timestamp } = req.body;
 
   try {
-    const { data, error } = await supabase
-      .from('saves')
-      .select('id, character_class, current_act, current_hp, saved_at')
-      .eq('user_id', user.id)
-      .order('saved_at', { ascending: false });
-
-    if (error) throw error;
-
-    return apiResponse(res, 200, { saves: data });
+    await saveService.upsertSaveData(req.user!.userId, data, timestamp);
+    res.json({ success: true });
   } catch (error) {
-    console.error('Failed to list saves:', error);
-    return apiError(res, 500, 'Failed to retrieve saves');
+    console.error('Failed to push save:', error);
+    res.status(500).json({ error: 'Failed to save' });
   }
-}
+});
+
+export { router as syncRouter };
 ```
 
 ---

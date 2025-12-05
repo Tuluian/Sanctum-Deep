@@ -1,0 +1,115 @@
+# Quality Gate: Story 15.1 - PWA Configuration
+schema: 1
+story: "15.1"
+story_title: "PWA Configuration"
+gate: PENDING
+status_reason: "Story not yet implemented"
+reviewer: "Quinn (Test Architect)"
+updated: "2025-12-05T00:00:00Z"
+
+waiver: { active: false }
+
+top_issues: []
+
+risk_summary:
+  totals: { critical: 0, high: 0, medium: 0, low: 0 }
+  highest: none
+  recommendations:
+    must_fix: []
+    monitor: []
+
+quality_score: 0
+expires: "2025-12-19T00:00:00Z"
+
+evidence:
+  tests_reviewed: 0
+  tests_passing: 0
+  risks_identified: 0
+  trace:
+    ac_covered: []
+    ac_gaps: [1, 2, 3, 4, 5, 6, 7]
+
+# Acceptance Criteria Traceability
+ac_trace:
+  - ac: 1
+    description: "manifest.json configured with app metadata"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Verify manifest.json exists at /manifest.json"
+      - "Verify all required fields present (name, short_name, icons, etc.)"
+      - "Validate JSON schema"
+
+  - ac: 2
+    description: "Service worker caches all game assets for offline play"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Verify sw.js registered successfully"
+      - "Verify critical assets cached on install"
+      - "Verify fetch interception works"
+
+  - ac: 3
+    description: "Game is installable on mobile (Add to Home Screen)"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Test on iOS Safari - Add to Home Screen prompt"
+      - "Test on Android Chrome - Install prompt"
+      - "Verify installed app launches correctly"
+
+  - ac: 4
+    description: "Game works fully offline after first load"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Load game with network"
+      - "Go offline (airplane mode or DevTools)"
+      - "Refresh page - game should load"
+      - "Play a full combat encounter offline"
+
+  - ac: 5
+    description: "App icons display correctly on all platforms"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Verify icon-192x192.png exists"
+      - "Verify icon-512x512.png exists"
+      - "Verify icons display on home screen (iOS, Android)"
+
+  - ac: 6
+    description: "Splash/launch screen displays during load"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Verify apple-touch-startup-image configured"
+      - "Test splash screen on iOS PWA launch"
+
+  - ac: 7
+    description: "Lighthouse PWA score 90+"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Run Lighthouse audit on production build"
+      - "PWA category score >= 90"
+      - "All PWA checklist items pass"
+
+nfr_validation:
+  security:
+    status: PENDING
+    notes: "Service worker must use HTTPS"
+  performance:
+    status: PENDING
+    notes: "Cache strategy should not impact first load"
+  reliability:
+    status: PENDING
+    notes: "Offline mode must handle network errors gracefully"
+  maintainability:
+    status: PENDING
+    notes: "Cache versioning strategy documented"
+
+recommendations:
+  immediate: []
+  future:
+    - action: "Consider vite-plugin-pwa for automated SW generation"
+      refs: ["vite.config.ts"]

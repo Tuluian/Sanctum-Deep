@@ -1,0 +1,120 @@
+# Quality Gate: Story 16.6 - Steam Submission & Review
+schema: 1
+story: "16.6"
+story_title: "Steam Submission & Review"
+gate: PENDING
+status_reason: "Story not yet implemented"
+reviewer: "Quinn (Test Architect)"
+updated: "2025-12-05T00:00:00Z"
+
+waiver: { active: false }
+
+top_issues: []
+
+risk_summary:
+  totals: { critical: 0, high: 0, medium: 0, low: 0 }
+  highest: none
+  recommendations:
+    must_fix: []
+    monitor: []
+
+quality_score: 0
+expires: "2025-12-19T00:00:00Z"
+
+evidence:
+  tests_reviewed: 0
+  tests_passing: 0
+  risks_identified: 0
+  trace:
+    ac_covered: []
+    ac_gaps: [1, 2, 3, 4, 5, 6, 7]
+
+ac_trace:
+  - ac: 1
+    description: "All store page assets uploaded and approved"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "All capsules uploaded"
+      - "All screenshots uploaded"
+      - "Description complete"
+      - "No Steamworks warnings"
+
+  - ac: 2
+    description: "Build uploaded to Steam and playable"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Build uploaded via SteamCMD"
+      - "Build set live on branch"
+      - "Download and launch from Steam"
+      - "Game fully playable"
+
+  - ac: 3
+    description: "Pricing and regional pricing configured"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Base USD price set"
+      - "Regional prices reviewed"
+      - "DLC pricing configured (if applicable)"
+
+  - ac: 4
+    description: "Release date set (or Early Access configured)"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Release type chosen"
+      - "Release date set"
+      - "Coming Soon page live (if pre-release)"
+
+  - ac: 5
+    description: "Steam review passed"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Submitted for review"
+      - "Review approved"
+      - "No outstanding issues"
+
+  - ac: 6
+    description: "Launch checklist completed"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Store page finalized"
+      - "Build stable"
+      - "Support channels ready"
+      - "Social media posts prepared"
+
+  - ac: 7
+    description: "Game visible and purchasable on Steam"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Search for game on Steam"
+      - "Store page displays correctly"
+      - "Purchase flow works"
+      - "Download and play successful"
+
+nfr_validation:
+  security:
+    status: PENDING
+    notes: "Build must not contain debug code"
+  performance:
+    status: PENDING
+    notes: "Build must be stable"
+  reliability:
+    status: PENDING
+    notes: "No critical crashes"
+  maintainability:
+    status: PENDING
+    notes: "Build process documented"
+
+recommendations:
+  immediate: []
+  future:
+    - action: "Plan launch marketing"
+      refs: ["docs/steam-assets/"]
+    - action: "Set up community hub"
+      refs: ["Steamworks dashboard"]

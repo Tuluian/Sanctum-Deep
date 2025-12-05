@@ -1,0 +1,118 @@
+# Quality Gate: Story 16.5 - Steam Store Page Assets
+schema: 1
+story: "16.5"
+story_title: "Steam Store Page Assets"
+gate: PENDING
+status_reason: "Story not yet implemented"
+reviewer: "Quinn (Test Architect)"
+updated: "2025-12-05T00:00:00Z"
+
+waiver: { active: false }
+
+top_issues: []
+
+risk_summary:
+  totals: { critical: 0, high: 0, medium: 0, low: 0 }
+  highest: none
+  recommendations:
+    must_fix: []
+    monitor: []
+
+quality_score: 0
+expires: "2025-12-19T00:00:00Z"
+
+evidence:
+  tests_reviewed: 0
+  tests_passing: 0
+  risks_identified: 0
+  trace:
+    ac_covered: []
+    ac_gaps: [1, 2, 3, 4, 5, 6, 7]
+
+ac_trace:
+  - ac: 1
+    description: "Store header image (capsule) in all required sizes"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Header Capsule: 460x215"
+      - "Small Capsule: 231x87"
+      - "Main Capsule: 616x353"
+      - "Hero Capsule: 1920x620"
+      - "Vertical Capsule: 374x448"
+
+  - ac: 2
+    description: "Screenshots showing key gameplay (5-10)"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Minimum 5 screenshots"
+      - "Resolution 1920x1080 minimum"
+      - "Shows combat, map, class selection"
+      - "No placeholder content"
+
+  - ac: 3
+    description: "Store description written and formatted"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Description complete"
+      - "Features listed"
+      - "Classes described"
+      - "No placeholder text"
+
+  - ac: 4
+    description: "Short description/tagline complete"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Under 300 characters"
+      - "Compelling and accurate"
+      - "Includes genre keywords"
+
+  - ac: 5
+    description: "Trailer video created (optional but recommended)"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "If created: 30-90 seconds"
+      - "If created: 1080p minimum"
+      - "If created: Shows actual gameplay"
+
+  - ac: 6
+    description: "Library assets (hero, logo, icons)"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Library Hero: 3840x1240"
+      - "Library Logo: 1280x720 (transparent)"
+      - "Displays correctly in Steam library"
+
+  - ac: 7
+    description: "Community assets (avatars, backgrounds)"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "3-5 avatars: 184x184"
+      - "Profile background: 1920x1080"
+      - "Feature game characters/art"
+
+nfr_validation:
+  security:
+    status: N/A
+    notes: "No security implications for assets"
+  performance:
+    status: PENDING
+    notes: "Images optimized for web"
+  reliability:
+    status: N/A
+    notes: "Static assets"
+  maintainability:
+    status: PENDING
+    notes: "Source files preserved for updates"
+
+recommendations:
+  immediate: []
+  future:
+    - action: "Create seasonal/update capsules"
+      refs: ["docs/steam-assets/"]

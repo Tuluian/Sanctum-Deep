@@ -1,0 +1,118 @@
+# Quality Gate: Story 16.4 - Steam Cloud Saves
+schema: 1
+story: "16.4"
+story_title: "Steam Cloud Saves"
+gate: PENDING
+status_reason: "Story not yet implemented"
+reviewer: "Quinn (Test Architect)"
+updated: "2025-12-05T00:00:00Z"
+
+waiver: { active: false }
+
+top_issues: []
+
+risk_summary:
+  totals: { critical: 0, high: 0, medium: 0, low: 0 }
+  highest: none
+  recommendations:
+    must_fix: []
+    monitor: []
+
+quality_score: 0
+expires: "2025-12-19T00:00:00Z"
+
+evidence:
+  tests_reviewed: 0
+  tests_passing: 0
+  risks_identified: 0
+  trace:
+    ac_covered: []
+    ac_gaps: [1, 2, 3, 4, 5, 6, 7]
+
+ac_trace:
+  - ac: 1
+    description: "Steam Cloud configured in Steamworks dashboard"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Verify Steam Cloud enabled in Steamworks"
+      - "Verify byte quota set"
+      - "Verify file count quota set"
+
+  - ac: 2
+    description: "Save data uploads to Steam Cloud automatically"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Make game progress"
+      - "Trigger save"
+      - "Verify Steam Cloud write called"
+      - "Check Steam Cloud storage"
+
+  - ac: 3
+    description: "Save data downloads on game launch"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Save game on PC 1"
+      - "Launch on PC 2"
+      - "Verify save downloaded"
+      - "Verify progress restored"
+
+  - ac: 4
+    description: "Conflict resolution handles multiple devices"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Create different saves on 2 devices"
+      - "Go online with both"
+      - "Verify conflict detected"
+      - "Verify resolution works (newest wins or user choice)"
+
+  - ac: 5
+    description: "Cloud saves work alongside local saves"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Verify local save exists"
+      - "Verify cloud save exists"
+      - "Verify both readable"
+      - "Verify local used if cloud unavailable"
+
+  - ac: 6
+    description: "Save size stays within Steam Cloud limits"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Check save data size"
+      - "Verify < quota limit"
+      - "Test with max reasonable progress"
+
+  - ac: 7
+    description: "Cloud sync status visible to player"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Verify sync icon in UI"
+      - "Verify last sync time shown"
+      - "Verify syncing indicator during upload"
+
+nfr_validation:
+  security:
+    status: PENDING
+    notes: "Save data should not contain sensitive info"
+  performance:
+    status: PENDING
+    notes: "Cloud sync should not block gameplay"
+  reliability:
+    status: PENDING
+    notes: "Local save must work if cloud fails"
+  maintainability:
+    status: PENDING
+    notes: "Save format versioned for future changes"
+
+recommendations:
+  immediate: []
+  future:
+    - action: "Add save data compression"
+      refs: ["src/services/SaveManager.ts"]

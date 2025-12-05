@@ -39,7 +39,11 @@ import {
 import { getCardById, OATHSWORN_VOWS } from '@/data/cards';
 import { getMinionById } from '@/data/minions';
 import { isDemonEnemy } from '@/data/enemies/act3';
+import { getPotion } from '@/data/potions';
+import { SaveManager } from '@/services/SaveManager';
 import { SHADOW_SELF, HOLLOW_GOD_DIALOGUE, CHOMP_TIMER_CONFIG } from '@/data/enemies/act3-boss';
+import { BONELORD_DIALOGUE } from '@/data/enemies/bosses';
+import { DROWNED_KING_DIALOGUE } from '@/data/enemies/act2-boss';
 
 export class CombatEngine {
   private state: CombatState;
@@ -83,7 +87,7 @@ export class CombatEngine {
       // Hollow God boss state
       corruptedCardIds: new Set<string>(),
       lastPlayerCardPlayed: null,
-      permanentlyExhaustedCards: [],
+      permanentlyFracturedCards: [],
     };
   }
 
@@ -190,6 +194,22 @@ export class CombatEngine {
     this.emit(CombatEventType.PHASE_CHANGED, { phase: CombatPhase.PLAYER_ACTION });
 
     this.log('Combat begins!');
+
+    // Emit initial boss dialogue for phase 1 (phase 0 in code)
+    for (const enemy of this.state.enemies) {
+      if (enemy.isBoss) {
+        const dialogue = this.getBossDialogue(enemy.id, 0);
+        if (dialogue) {
+          this.emit(CombatEventType.BOSS_DIALOGUE, {
+            message: dialogue,
+            phase: 0,
+            bossId: enemy.id,
+            bossName: enemy.name
+          });
+          this.log(`"${dialogue}"`);
+        }
+      }
+    }
   }
 
   // Enemy intent
@@ -291,6 +311,16 @@ export class CombatEngine {
       enemy.intent = this.createIntentFromMove(availableMoves[0]);
     }
 
+    // Debug log intent selection (especially for summons)
+    if (enemy.intent.intent === IntentType.SUMMON) {
+      console.log('[INTENT DEBUG] Summon intent set:', {
+        enemy: enemy.name,
+        phase: enemy.phase,
+        intentName: enemy.intent.name,
+        summons: enemy.intent.summons,
+      });
+    }
+
     this.emit(CombatEventType.ENEMY_INTENT_SET, { enemyId: enemy.id, intent: enemy.intent });
   }
 
@@ -341,11 +371,16 @@ export class CombatEngine {
         this.log(`Infernal Presence intensifies! Player damage reduced by 4!`);
       }
 
-      // Hollow God phase transitions - emit dialogue
-      if (enemy.id === 'hollow_god') {
-        const dialogue = this.getBossDialogue(newPhase);
+      // Boss phase transitions - emit dialogue for all bosses
+      if (enemy.isBoss) {
+        const dialogue = this.getBossDialogue(enemy.id, newPhase);
         if (dialogue) {
-          this.emit(CombatEventType.BOSS_DIALOGUE, { message: dialogue, phase: newPhase });
+          this.emit(CombatEventType.BOSS_DIALOGUE, {
+            message: dialogue,
+            phase: newPhase,
+            bossId: enemy.id,
+            bossName: enemy.name
+          });
           this.log(`"${dialogue}"`);
         }
       }
@@ -400,6 +435,7 @@ export class CombatEngine {
 
   // Register a minion definition for potential summoning
   registerMinionDefinition(definition: EnemyDefinition): void {
+    console.log('[REGISTER DEBUG] Registering minion:', definition.id);
     this.enemyDefinitions.set(definition.id, definition);
   }
 
@@ -551,10 +587,27 @@ export class CombatEngine {
       if (priceResult) log.push(priceResult);
     }
 
-    // Move to discard (or exhaust for Power cards or cards with exhaust property)
-    if (card.type === CardType.POWER || card.exhaust || card.exhaustOnDiscard) {
-      // Powers, exhaust cards, and exhaustOnDiscard cards don't go to discard
-      this.state.player.exhaustPile.push(card);
+    // Handle conditional potion generation
+    if (card.conditionalPotionGen) {
+      const { requireFortify, potionId } = card.conditionalPotionGen;
+      let shouldGenerate = true;
+      if (requireFortify && this.state.player.fortify <= 0) {
+        shouldGenerate = false;
+      }
+      if (shouldGenerate) {
+        const potionResult = this.executeEffect(
+          { type: EffectType.GENERATE_POTION, amount: 1, potionId },
+          target,
+          false
+        );
+        if (potionResult) log.push(potionResult);
+      }
+    }
+
+    // Move to discard (or fracture for Power cards or cards with fracture property)
+    if (card.type === CardType.POWER || card.fracture || card.fractureOnDiscard) {
+      // Powers, fracture cards, and fractureOnDiscard cards don't go to discard
+      this.state.player.fracturePile.push(card);
     } else {
       this.state.player.discardPile.push(card);
     }
@@ -573,7 +626,7 @@ export class CombatEngine {
     return { success: true, log };
   }
 
-  private executeEffect(effect: { type: EffectType; amount: number; cardId?: string; perStack?: number; minionId?: string; multiplier?: number }, target?: Enemy, isAttack: boolean = false): string | null {
+  private executeEffect(effect: { type: EffectType; amount: number; cardId?: string; perStack?: number; minionId?: string; multiplier?: number; potionId?: string }, target?: Enemy, isAttack: boolean = false): string | null {
     switch (effect.type) {
       case EffectType.DAMAGE: {
         if (target) {
@@ -641,6 +694,9 @@ export class CombatEngine {
         const heal = Math.min(effect.amount, this.state.player.maxHp - this.state.player.currentHp);
         this.state.player.currentHp += heal;
         this.emit(CombatEventType.PLAYER_HP_CHANGED, { hp: this.state.player.currentHp });
+        if (heal > 0) {
+          this.emit(CombatEventType.PLAYER_HEALED, { amount: heal });
+        }
 
         // Devotion triggers on heal effect, even if no HP restored
         this.state.player.devotion++;
@@ -659,6 +715,43 @@ export class CombatEngine {
         this.state.player.fortify += fortifyGain;
         this.emit(CombatEventType.PLAYER_FORTIFY_CHANGED, { fortify: this.state.player.fortify });
         return `Gained ${fortifyGain} Fortify`;
+      }
+
+      // Knight effects - Block/Fortify scaling
+      case EffectType.DAMAGE_EQUAL_BLOCK: {
+        if (!target) return null;
+        const damage = this.state.player.block;
+        if (damage > 0) {
+          this.dealDamageToEnemy(target, damage);
+          return `Dealt ${damage} damage (equal to Block)`;
+        }
+        return 'No Block - no damage dealt';
+      }
+
+      case EffectType.DAMAGE_EQUAL_FORTIFY: {
+        if (!target) return null;
+        const damage = this.state.player.fortify;
+        if (damage > 0) {
+          this.dealDamageToEnemy(target, damage);
+          return `Dealt ${damage} damage (equal to Fortify)`;
+        }
+        return 'No Fortify - no damage dealt';
+      }
+
+      case EffectType.BLOCK_EQUAL_FORTIFY: {
+        const blockGain = this.state.player.fortify;
+        this.state.player.block += blockGain;
+        this.emit(CombatEventType.PLAYER_BLOCK_CHANGED, { block: this.state.player.block });
+        return `Gained ${blockGain} Block (equal to Fortify)`;
+      }
+
+      case EffectType.DOUBLE_FORTIFY: {
+        const currentFortify = this.state.player.fortify;
+        const newFortify = Math.min(currentFortify * 2, this.state.player.maxFortify);
+        const gained = newFortify - currentFortify;
+        this.state.player.fortify = newFortify;
+        this.emit(CombatEventType.PLAYER_FORTIFY_CHANGED, { fortify: this.state.player.fortify });
+        return `Doubled Fortify (+${gained}, now ${newFortify})`;
       }
 
       case EffectType.APPLY_STATUS: {
@@ -692,6 +785,22 @@ export class CombatEngine {
             });
           }
           return `Applied ${effect.amount} Soaked to ${target.name}`;
+        }
+
+        // Apply Impaired to enemy (Fey-Touched Whimsy, etc.)
+        // Uses statusType IMPAIRED with target: 'enemy' explicitly
+        if (statusType === StatusType.IMPAIRED && effectTarget === 'enemy' && target) {
+          const existingImpaired = target.statusEffects.find(e => e.type === StatusType.IMPAIRED);
+          if (existingImpaired) {
+            existingImpaired.duration = Math.max(existingImpaired.duration || 0, effect.amount);
+          } else {
+            target.statusEffects.push({
+              type: StatusType.IMPAIRED,
+              amount: 1,
+              duration: effect.amount,
+            });
+          }
+          return `Applied Impaired to ${target.name} for ${effect.amount} turn(s)`;
         }
 
         // Default: empowered attack (legacy behavior)
@@ -793,14 +902,14 @@ export class CombatEngine {
         return `Gained ${blockGain} block (${curseCount} curses × ${effect.amount})`;
       }
 
-      case EffectType.EXHAUST_CURSE_FROM_HAND: {
+      case EffectType.FRACTURE_CURSE_FROM_HAND: {
         const curseIndex = this.state.player.hand.findIndex(c => c.type === CardType.CURSE);
         if (curseIndex === -1) {
-          return 'No curse to exhaust';
+          return 'No curse to fracture';
         }
         const curse = this.state.player.hand.splice(curseIndex, 1)[0];
-        this.state.player.exhaustPile.push(curse);
-        return `Exhausted ${curse.name}`;
+        this.state.player.fracturePile.push(curse);
+        return `Fractured ${curse.name}`;
       }
 
       case EffectType.DAMAGE_IF_LOW_HP: {
@@ -827,6 +936,9 @@ export class CombatEngine {
         const heal = Math.min(damageDealt, this.state.player.maxHp - this.state.player.currentHp);
         this.state.player.currentHp += heal;
         this.emit(CombatEventType.PLAYER_HP_CHANGED, { hp: this.state.player.currentHp });
+        if (heal > 0) {
+          this.emit(CombatEventType.PLAYER_HEALED, { amount: heal });
+        }
         return `Dealt ${effect.amount} damage and healed ${heal} HP`;
       }
 
@@ -914,6 +1026,9 @@ export class CombatEngine {
           const heal = Math.min(healAmount, this.state.player.maxHp - this.state.player.currentHp);
           this.state.player.currentHp += heal;
           this.emit(CombatEventType.PLAYER_HP_CHANGED, { hp: this.state.player.currentHp });
+          if (heal > 0) {
+            this.emit(CombatEventType.PLAYER_HEALED, { amount: heal });
+          }
           return `Healed ${heal} HP (${charges} charges × ${effect.amount})`;
         }
         return 'Vow ended, no healing';
@@ -1132,6 +1247,40 @@ export class CombatEngine {
         this.state.player.permanentBlockBonus += effect.amount;
         this.log(`All block from cards permanently increased by ${effect.amount}!`);
         return `Permanently +${effect.amount} block on all cards`;
+      }
+
+      // Potion generation effects
+      case EffectType.GENERATE_POTION: {
+        const potionId = effect.potionId || 'health_potion';
+        const potion = getPotion(potionId);
+        if (!potion) {
+          this.log(`Unknown potion: ${potionId}`);
+          return null;
+        }
+        // Check max potion slots (3 slots, each slot can stack same potion type)
+        const MAX_POTION_SLOTS = 3;
+        const currentPotions = SaveManager.getPotions();
+        const totalSlots = currentPotions.length;
+        const existingSlot = currentPotions.find(p => p.potionId === potionId);
+
+        if (existingSlot) {
+          // Stack on existing slot
+          SaveManager.addPotion(potionId);
+          this.emit(CombatEventType.POTION_GENERATED, { potionId, potionName: potion.name });
+          this.log(`Generated ${potion.name}!`);
+          return `Generated ${potion.name}`;
+        } else if (totalSlots < MAX_POTION_SLOTS) {
+          // Add to new slot
+          SaveManager.addPotion(potionId);
+          this.emit(CombatEventType.POTION_GENERATED, { potionId, potionName: potion.name });
+          this.log(`Generated ${potion.name}!`);
+          return `Generated ${potion.name}`;
+        } else {
+          // No room - convert to gold instead
+          const goldReward = 10;
+          this.log(`Potion slots full! Gained ${goldReward} gold instead.`);
+          return `Potion slots full! +${goldReward} gold`;
+        }
       }
 
       // Tidecaller effects
@@ -1725,6 +1874,9 @@ export class CombatEngine {
         const heal = Math.min(this.pendingConditionalHeal, this.state.player.maxHp - this.state.player.currentHp);
         this.state.player.currentHp += heal;
         this.emit(CombatEventType.PLAYER_HP_CHANGED, { hp: this.state.player.currentHp });
+        if (heal > 0) {
+          this.emit(CombatEventType.PLAYER_HEALED, { amount: heal });
+        }
         this.log(`Grim Harvest: Healed ${heal} HP`);
         this.pendingConditionalHeal = 0;
       }
@@ -1929,10 +2081,10 @@ export class CombatEngine {
   }
 
   /**
-   * Permanently exhaust a random non-basic card from the player's deck
+   * Permanently fracture a random non-basic card from the player's deck
    * This removes it from the entire run, not just this combat
    */
-  private permanentlyExhaustRandomCard(): Card | null {
+  private permanentlyFractureRandomCard(): Card | null {
     // Collect all cards from hand, draw pile, and discard pile
     const allCards = [
       ...this.state.player.hand,
@@ -1962,15 +2114,15 @@ export class CombatEngine {
       c => c.instanceId !== targetCard.instanceId
     );
 
-    // Add to permanently exhausted list
-    this.state.permanentlyExhaustedCards.push(targetCard);
+    // Add to permanently fractured list
+    this.state.permanentlyFracturedCards.push(targetCard);
 
     // Pick a random taunt
     const taunt = HOLLOW_GOD_DIALOGUE.forgetTaunt[
       Math.floor(Math.random() * HOLLOW_GOD_DIALOGUE.forgetTaunt.length)
     ];
 
-    this.emit(CombatEventType.CARD_PERMANENTLY_EXHAUSTED, {
+    this.emit(CombatEventType.CARD_PERMANENTLY_FRACTURED, {
       card: targetCard,
       taunt,
     });
@@ -2037,6 +2189,9 @@ export class CombatEngine {
       const healAmount = Math.min(10, this.state.player.maxHp - this.state.player.currentHp);
       this.state.player.currentHp += healAmount;
       this.emit(CombatEventType.PLAYER_HP_CHANGED, { hp: this.state.player.currentHp });
+      if (healAmount > 0) {
+        this.emit(CombatEventType.PLAYER_HEALED, { amount: healAmount });
+      }
       this.emit(CombatEventType.SHADOW_SELF_DIED, { healAmount });
       this.log(`${HOLLOW_GOD_DIALOGUE.onShadowSelfDeath} You reclaim a piece of yourself and heal ${healAmount} HP.`);
     }
@@ -2063,11 +2218,21 @@ export class CombatEngine {
   /**
    * Get dialogue for boss phase transitions
    */
-  getBossDialogue(phase: number): string {
+  getBossDialogue(bossId: string, phase: number): string {
+    // Get the dialogue object based on boss ID
+    const dialogueMap: Record<string, { phase1Entry: string; phase2Entry: string; phase3Entry: string }> = {
+      hollow_god: HOLLOW_GOD_DIALOGUE,
+      bonelord: BONELORD_DIALOGUE,
+      drowned_king: DROWNED_KING_DIALOGUE,
+    };
+
+    const dialogue = dialogueMap[bossId];
+    if (!dialogue) return '';
+
     switch (phase) {
-      case 0: return HOLLOW_GOD_DIALOGUE.phase1Entry;
-      case 1: return HOLLOW_GOD_DIALOGUE.phase2Entry;
-      case 2: return HOLLOW_GOD_DIALOGUE.phase3Entry;
+      case 0: return dialogue.phase1Entry;
+      case 1: return dialogue.phase2Entry;
+      case 2: return dialogue.phase3Entry;
       default: return '';
     }
   }
@@ -2120,10 +2285,10 @@ export class CombatEngine {
       this.voidHungersPassive();
     }
 
-    // Discard hand (separating exhaustOnDiscard cards)
+    // Discard hand (separating fractureOnDiscard cards)
     for (const card of this.state.player.hand) {
-      if (card.exhaustOnDiscard) {
-        this.state.player.exhaustPile.push(card);
+      if (card.fractureOnDiscard) {
+        this.state.player.fracturePile.push(card);
       } else {
         this.state.player.discardPile.push(card);
       }
@@ -2250,7 +2415,7 @@ export class CombatEngine {
               this.corruptCardsInHand(2);
               log.push('Two of your cards become corrupted!');
             }
-            // Hollow God - Forget (damage + block + permanent exhaust)
+            // Hollow God - Forget (damage + block + permanent fracture)
             else if (intent.moveId === 'forget') {
               this.dealDamageToPlayerOrMinion(totalDamage);
               log.push(`${enemy.name} makes you forget! ${totalDamage} damage!`);
@@ -2258,10 +2423,10 @@ export class CombatEngine {
               enemy.block += intent.block || 15;
               this.emit(CombatEventType.ENEMY_BLOCK_CHANGED, { enemyId: enemy.id, block: enemy.block });
               log.push(`${enemy.name} gained ${intent.block || 15} block.`);
-              // Permanently exhaust a card
-              const exhaustedCard = this.permanentlyExhaustRandomCard();
-              if (exhaustedCard) {
-                log.push(`You permanently forget how to ${exhaustedCard.name}!`);
+              // Permanently fracture a card
+              const fracturedCard = this.permanentlyFractureRandomCard();
+              if (fracturedCard) {
+                log.push(`You permanently forget how to ${fracturedCard.name}!`);
               }
             }
             // Hollow God - Total Void (damage + corrupt all cards)
@@ -2527,6 +2692,16 @@ export class CombatEngine {
           const maxMinions = 3;
           const summonCooldownTurns = 5;
 
+          // Debug logging for summon
+          console.log('[SUMMON DEBUG]', {
+            enemyName: enemy.name,
+            intent: intent.name,
+            summons: intent.summons,
+            resurrectMinions: intent.resurrectMinions,
+            currentMinionCount,
+            availableDefinitions: Array.from(this.enemyDefinitions.keys()),
+          });
+
           // Handle resurrect minions
           if (intent.resurrectMinions && this.deadMinions.length > 0) {
             let summoned = 0;
@@ -2566,10 +2741,14 @@ export class CombatEngine {
                 summoned++;
               } else {
                 const summonDef = this.enemyDefinitions.get(summonId);
+                console.log('[SUMMON DEBUG] Attempting to summon:', summonId, 'Found:', !!summonDef);
                 if (summonDef) {
                   this.addEnemy(summonDef);
                   log.push(`${enemy.name} summoned ${summonDef.name}!`);
                   summoned++;
+                } else {
+                  console.error('[SUMMON ERROR] No definition found for:', summonId);
+                  log.push(`${enemy.name} tried to summon ${summonId} but failed!`);
                 }
               }
             }

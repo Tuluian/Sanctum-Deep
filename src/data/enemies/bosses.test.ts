@@ -23,7 +23,7 @@ function createMockPlayerState(overrides: Partial<PlayerState> = {}): PlayerStat
     hand: [],
     drawPile: [],
     discardPile: [],
-    exhaustPile: [],
+    fracturePile: [],
     statusEffects: [],
     devotion: 0,
     fortify: 0,

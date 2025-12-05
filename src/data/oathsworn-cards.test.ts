@@ -41,7 +41,7 @@ function createPlayerState(overrides?: Partial<PlayerState>): PlayerState {
     hand: [],
     drawPile: [],
     discardPile: [],
-    exhaustPile: [],
+    fracturePile: [],
     statusEffects: [],
     devotion: 0,
     fortify: 0,
@@ -177,10 +177,10 @@ describe('Oathsworn Card Pool', () => {
       expect(card.effects).toContainEqual({ type: EffectType.BLOCK, amount: 10 });
     });
 
-    it('Binding Light should apply Bound status', () => {
+    it('Binding Light should apply Bound status for 3 turns', () => {
       const card = OATHSWORN_COMMON_CARDS.binding_light;
       expect(card.effects).toContainEqual({ type: EffectType.DAMAGE, amount: 5 });
-      expect(card.effects).toContainEqual({ type: EffectType.APPLY_BOUND, amount: 1 });
+      expect(card.effects).toContainEqual({ type: EffectType.APPLY_BOUND, amount: 3 });
     });
   });
 
@@ -195,10 +195,10 @@ describe('Oathsworn Card Pool', () => {
       });
     });
 
-    it('Divine Judgment should require Vow and exhaust', () => {
+    it('Divine Judgment should require Vow and fracture', () => {
       const card = OATHSWORN_UNCOMMON_CARDS.divine_judgment;
       expect(card.requiresVow).toBe(true);
-      expect(card.exhaust).toBe(true);
+      expect(card.fracture).toBe(true);
       expect(card.effects).toContainEqual({ type: EffectType.DAMAGE, amount: 15 });
     });
 
@@ -230,10 +230,10 @@ describe('Oathsworn Card Pool', () => {
       });
     });
 
-    it('Final Judgment should require Vow, deal 50 damage, and exhaust', () => {
+    it('Final Judgment should require Vow, deal 50 damage, and fracture', () => {
       const card = OATHSWORN_RARE_CARDS.final_judgment;
       expect(card.requiresVow).toBe(true);
-      expect(card.exhaust).toBe(true);
+      expect(card.fracture).toBe(true);
       expect(card.cost).toBe(4);
       expect(card.effects).toContainEqual({ type: EffectType.DAMAGE, amount: 50 });
     });

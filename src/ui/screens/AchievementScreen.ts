@@ -4,6 +4,7 @@
 
 import { Screen } from '../ScreenManager';
 import { AchievementService } from '@/services/AchievementService';
+import { SaveManager } from '@/services/SaveManager';
 import { Achievement, AchievementCategory, AchievementTier, SOUL_ECHO_REWARDS } from '@/types/achievements';
 
 interface AchievementScreenOptions {
@@ -94,7 +95,7 @@ export function createAchievementScreen(options: AchievementScreenOptions): Scre
 
   const render = () => {
     const achievements = getFilteredAchievements(activeTab);
-    const totalEarned = AchievementService.getTotalSoulEchoesFromAchievements();
+    const totalSoulEchoes = SaveManager.getSoulEchoes();
     const unlockCount = AchievementService.getUnlockCount();
     const totalCount = AchievementService.getTotalCount();
     const progressPercent = Math.round((unlockCount / totalCount) * 100);
@@ -116,8 +117,8 @@ export function createAchievementScreen(options: AchievementScreenOptions): Scre
           <button class="back-btn" id="achievement-back">\u{2190} Back</button>
           <h1 class="achievement-title">Achievements</h1>
           <div class="soul-echoes-display">
-            <span class="se-amount">${totalEarned}</span>
-            <span class="se-label">Soul Echoes Earned</span>
+            <span class="se-amount">${totalSoulEchoes}</span>
+            <span class="se-label">Soul Echoes</span>
           </div>
         </header>
 

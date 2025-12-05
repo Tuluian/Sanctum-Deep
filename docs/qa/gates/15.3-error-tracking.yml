@@ -1,0 +1,113 @@
+# Quality Gate: Story 15.3 - Error Tracking & Monitoring
+schema: 1
+story: "15.3"
+story_title: "Error Tracking & Monitoring"
+gate: PENDING
+status_reason: "Story not yet implemented"
+reviewer: "Quinn (Test Architect)"
+updated: "2025-12-05T00:00:00Z"
+
+waiver: { active: false }
+
+top_issues: []
+
+risk_summary:
+  totals: { critical: 0, high: 0, medium: 0, low: 0 }
+  highest: none
+  recommendations:
+    must_fix: []
+    monitor: []
+
+quality_score: 0
+expires: "2025-12-19T00:00:00Z"
+
+evidence:
+  tests_reviewed: 0
+  tests_passing: 0
+  risks_identified: 0
+  trace:
+    ac_covered: []
+    ac_gaps: [1, 2, 3, 4, 5, 6, 7]
+
+ac_trace:
+  - ac: 1
+    description: "Error tracking service integrated (Sentry or similar)"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Verify @sentry/browser package installed"
+      - "Verify Sentry.init() called in main.ts"
+      - "Verify DSN configured via environment variable"
+
+  - ac: 2
+    description: "Uncaught exceptions are captured and reported"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Trigger uncaught exception in production build"
+      - "Verify error appears in Sentry dashboard"
+      - "Verify stack trace is present"
+
+  - ac: 3
+    description: "Source maps uploaded for readable stack traces"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Verify @sentry/vite-plugin configured"
+      - "Verify source maps generated in build"
+      - "Verify stack traces show original TypeScript code"
+
+  - ac: 4
+    description: "Environment (production/development) is tagged"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Verify environment tag in Sentry init"
+      - "Verify production errors tagged 'production'"
+      - "Verify dev errors tagged 'development'"
+
+  - ac: 5
+    description: "User context is anonymized (no PII)"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Verify sendDefaultPii: false"
+      - "Verify beforeSend scrubs user data"
+      - "Verify no email/IP in error reports"
+
+  - ac: 6
+    description: "Error dashboard accessible to developers"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Verify Sentry project accessible"
+      - "Verify team members have access"
+
+  - ac: 7
+    description: "Critical errors trigger notifications"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Verify alert rules configured in Sentry"
+      - "Verify email notifications enabled"
+      - "Trigger critical error, verify notification received"
+
+nfr_validation:
+  security:
+    status: PENDING
+    notes: "PII must not be sent to error tracking"
+  performance:
+    status: PENDING
+    notes: "Error tracking should not impact game performance"
+  reliability:
+    status: PENDING
+    notes: "Game should work even if Sentry unavailable"
+  maintainability:
+    status: PENDING
+    notes: "Error tracking configuration documented"
+
+recommendations:
+  immediate: []
+  future:
+    - action: "Add performance monitoring (tracesSampleRate)"
+      refs: ["src/main.ts"]

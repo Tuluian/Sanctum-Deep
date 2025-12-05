@@ -21,7 +21,9 @@
       "mcp__ide__getDiagnostics",
       "Bash(cp:*)",
       "Bash(ls:*)",
-      "SlashCommand(/BMad:agents:dev)"
+      "SlashCommand(/BMad:agents:dev)",
+      "Bash(dir \"C:\\Users\\C\\Sanctum-Deep\\public\\images\\enemies\")",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []

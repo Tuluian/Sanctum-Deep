@@ -5,6 +5,14 @@
 import { PotionDefinition, PotionRarity, StatusType } from '@/types';
 
 export const POTIONS: Record<string, PotionDefinition> = {
+  minor_health_potion: {
+    id: 'minor_health_potion',
+    name: 'Minor Health Potion',
+    description: 'Restore 10 HP',
+    rarity: PotionRarity.COMMON,
+    icon: '🧴',
+    effect: { type: 'heal', amount: 10 },
+  },
   health_potion: {
     id: 'health_potion',
     name: 'Health Potion',

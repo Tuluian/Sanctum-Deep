@@ -38,7 +38,7 @@ function createPlayerState(overrides?: Partial<PlayerState>): PlayerState {
     hand: [],
     drawPile: [],
     discardPile: [],
-    exhaustPile: [],
+    fracturePile: [],
     statusEffects: [],
     devotion: 0,
     fortify: 0,
@@ -241,9 +241,9 @@ describe('Fey-Touched Card Pool', () => {
       expect(card.cost).toBe(3);
     });
 
-    it('Wish should exhaust and have powerful whimsy options', () => {
+    it('Wish should fracture and have powerful whimsy options', () => {
       const card = FEY_TOUCHED_RARE_CARDS.wish;
-      expect(card.exhaust).toBe(true);
+      expect(card.fracture).toBe(true);
       expect(card.cost).toBe(4);
       expect(card.whimsy).toBeDefined();
       expect(card.whimsy!.length).toBe(4);

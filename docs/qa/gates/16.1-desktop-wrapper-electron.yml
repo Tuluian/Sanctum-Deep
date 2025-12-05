@@ -1,0 +1,120 @@
+# Quality Gate: Story 16.1 - Desktop Wrapper (Electron)
+schema: 1
+story: "16.1"
+story_title: "Desktop Wrapper (Electron)"
+gate: PENDING
+status_reason: "Story not yet implemented"
+reviewer: "Quinn (Test Architect)"
+updated: "2025-12-05T00:00:00Z"
+
+waiver: { active: false }
+
+top_issues: []
+
+risk_summary:
+  totals: { critical: 0, high: 0, medium: 0, low: 0 }
+  highest: none
+  recommendations:
+    must_fix: []
+    monitor: []
+
+quality_score: 0
+expires: "2025-12-19T00:00:00Z"
+
+evidence:
+  tests_reviewed: 0
+  tests_passing: 0
+  risks_identified: 0
+  trace:
+    ac_covered: []
+    ac_gaps: [1, 2, 3, 4, 5, 6, 7]
+
+ac_trace:
+  - ac: 1
+    description: "Electron configured and running the game"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Verify electron/main.js exists"
+      - "Run npm run electron:dev"
+      - "Verify game loads in Electron window"
+
+  - ac: 2
+    description: "Builds produced for Windows (.exe), macOS (.app), Linux (.AppImage)"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Run npm run electron:build:win"
+      - "Run npm run electron:build:mac"
+      - "Run npm run electron:build:linux"
+      - "Verify installers created in release/ folder"
+
+  - ac: 3
+    description: "Game window properly sized and configured"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Verify window opens at 1280x720"
+      - "Verify minimum size enforced (800x600)"
+      - "Verify window is resizable"
+      - "Verify background color matches game"
+
+  - ac: 4
+    description: "All game functionality works in Electron"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Play full game run in Electron"
+      - "Verify combat works"
+      - "Verify save/load works"
+      - "Verify audio plays"
+
+  - ac: 5
+    description: "Application has proper icons and metadata"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Verify .ico file for Windows"
+      - "Verify .icns file for macOS"
+      - "Verify icon displays in taskbar/dock"
+      - "Verify app name displays correctly"
+
+  - ac: 6
+    description: "Build size is reasonable (<200MB)"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Check size of Windows installer"
+      - "Check size of macOS dmg"
+      - "Check size of Linux AppImage"
+      - "All < 200MB"
+
+  - ac: 7
+    description: "Auto-updater foundation in place"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Verify electron-updater configured (or documented for future)"
+      - "Verify update check mechanism exists"
+
+nfr_validation:
+  security:
+    status: PENDING
+    notes: "Node integration disabled, context isolation enabled"
+  performance:
+    status: PENDING
+    notes: "Game should run at 60fps in Electron"
+  reliability:
+    status: PENDING
+    notes: "App should handle crashes gracefully"
+  maintainability:
+    status: PENDING
+    notes: "Build process documented"
+
+recommendations:
+  immediate: []
+  future:
+    - action: "Add crash reporter"
+      refs: ["electron/main.js"]
+    - action: "Consider Tauri for smaller bundle"
+      refs: ["docs/stories/16.0-steam-publishing-epic-overview.md"]

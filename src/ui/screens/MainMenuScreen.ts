@@ -71,6 +71,11 @@ export function createMainMenuScreen(
 
         <footer class="menu-footer">
           <span class="version">v0.1.0</span>
+          <span class="footer-links">
+            <a href="/privacy.html" target="_blank" rel="noopener">Privacy</a>
+            <span class="footer-divider">|</span>
+            <a href="/terms.html" target="_blank" rel="noopener">Terms</a>
+          </span>
         </footer>
       </div>
     `;

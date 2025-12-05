@@ -59,6 +59,19 @@ export const CLERIC_COMMON_CARDS: Record<string, CardDefinition> = {
     rarity: CardRarity.COMMON,
     classId: CharacterClassId.CLERIC,
   },
+  blessed_vial: {
+    id: 'blessed_vial',
+    name: 'Blessed Vial',
+    type: CardType.ATTACK,
+    cost: 1,
+    description: 'Deal 2 damage. Generate a Minor Health Potion.',
+    effects: [
+      { type: EffectType.DAMAGE, amount: 2 },
+      { type: EffectType.GENERATE_POTION, amount: 1, potionId: 'minor_health_potion' },
+    ],
+    rarity: CardRarity.COMMON,
+    classId: CharacterClassId.CLERIC,
+  },
   holy_light: {
     id: 'holy_light',
     name: 'Holy Light',
@@ -306,7 +319,7 @@ export const CLERIC_UNCOMMON_CARDS: Record<string, CardDefinition> = {
     effects: [], // Handled specially - consumes all devotion
     rarity: CardRarity.UNCOMMON,
     classId: CharacterClassId.CLERIC,
-    exhaust: true,
+    fracture: true,
   },
   holy_nova: {
     id: 'holy_nova',
@@ -330,11 +343,11 @@ export const CLERIC_RARE_CARDS: Record<string, CardDefinition> = {
     name: 'Resurrection',
     type: CardType.SKILL,
     cost: 3,
-    description: 'Heal to full HP. Exhaust.',
+    description: 'Heal to full HP. Fracture.',
     effects: [{ type: EffectType.HEAL, amount: 999 }], // Capped by max HP
     rarity: CardRarity.RARE,
     classId: CharacterClassId.CLERIC,
-    exhaust: true,
+    fracture: true,
   },
   smite_the_wicked: {
     id: 'smite_the_wicked',
@@ -367,11 +380,11 @@ export const CLERIC_BLOCK_BONUS_CARD: Record<string, CardDefinition> = {
     name: 'Divine Aegis',
     type: CardType.POWER,
     cost: 2,
-    description: 'Permanently increase all block from cards by 1. Exhaust.',
+    description: 'Permanently increase all block from cards by 1. Fracture.',
     effects: [{ type: EffectType.PERMANENT_BLOCK_BONUS, amount: 1 }],
     rarity: CardRarity.STARTER,
     classId: CharacterClassId.CLERIC,
-    exhaust: true,
+    fracture: true,
   },
 };
 

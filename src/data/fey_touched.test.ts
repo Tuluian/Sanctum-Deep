@@ -25,7 +25,7 @@ function createFeyTouchedPlayerState(overrides: Partial<PlayerState> = {}): Play
     hand: [],
     drawPile: [],
     discardPile: [],
-    exhaustPile: [],
+    fracturePile: [],
     statusEffects: [],
     devotion: 0,
     fortify: 0,

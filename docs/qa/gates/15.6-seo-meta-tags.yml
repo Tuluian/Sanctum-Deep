@@ -1,0 +1,117 @@
+# Quality Gate: Story 15.6 - SEO & Meta Tags
+schema: 1
+story: "15.6"
+story_title: "SEO & Social Meta Tags"
+gate: PENDING
+status_reason: "Story not yet implemented"
+reviewer: "Quinn (Test Architect)"
+updated: "2025-12-05T00:00:00Z"
+
+waiver: { active: false }
+
+top_issues: []
+
+risk_summary:
+  totals: { critical: 0, high: 0, medium: 0, low: 0 }
+  highest: none
+  recommendations:
+    must_fix: []
+    monitor: []
+
+quality_score: 0
+expires: "2025-12-19T00:00:00Z"
+
+evidence:
+  tests_reviewed: 0
+  tests_passing: 0
+  risks_identified: 0
+  trace:
+    ac_covered: []
+    ac_gaps: [1, 2, 3, 4, 5, 6, 7]
+
+ac_trace:
+  - ac: 1
+    description: "Title and description meta tags optimized"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Verify <title> tag present and descriptive"
+      - "Verify meta description present (150-160 chars)"
+      - "Verify meta keywords present"
+
+  - ac: 2
+    description: "Open Graph tags for social sharing"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Verify og:title tag"
+      - "Verify og:description tag"
+      - "Verify og:image tag with valid image URL"
+      - "Verify og:type tag"
+
+  - ac: 3
+    description: "Twitter Card tags configured"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Verify twitter:card tag (summary_large_image)"
+      - "Verify twitter:title tag"
+      - "Verify twitter:description tag"
+      - "Verify twitter:image tag"
+
+  - ac: 4
+    description: "Structured data (JSON-LD) for rich search results"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Verify JSON-LD script tag present"
+      - "Verify @type is VideoGame"
+      - "Validate with Google Rich Results Test"
+
+  - ac: 5
+    description: "Favicon and touch icons complete"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Verify favicon.ico exists"
+      - "Verify apple-touch-icon exists"
+      - "Verify favicon displays in browser tab"
+
+  - ac: 6
+    description: "robots.txt and sitemap.xml present"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Verify public/robots.txt exists"
+      - "Verify public/sitemap.xml exists"
+      - "Verify sitemap URLs are valid"
+
+  - ac: 7
+    description: "Social share preview looks professional"
+    status: PENDING
+    evidence: []
+    test_requirements:
+      - "Test with Facebook Sharing Debugger"
+      - "Test with Twitter Card Validator"
+      - "Verify image displays correctly"
+      - "Verify text is compelling"
+
+nfr_validation:
+  security:
+    status: N/A
+    notes: "No security implications for meta tags"
+  performance:
+    status: PENDING
+    notes: "OG image should be < 1MB"
+  reliability:
+    status: PENDING
+    notes: "Meta tags must not break page rendering"
+  maintainability:
+    status: PENDING
+    notes: "Placeholders replaced with real values"
+
+recommendations:
+  immediate: []
+  future:
+    - action: "Add dynamic OG tags for share links"
+      refs: ["index.html"]

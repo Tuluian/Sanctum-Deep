@@ -149,7 +149,7 @@ describe('Hollow God Combat Mechanics', () => {
         createTestCard('draw2', 'Draw Card 2', 5),
       ],
       discardPile: [],
-      exhaustPile: [],
+      fracturePile: [],
       statusEffects: [],
       devotion: 0,
       fortify: 0,
@@ -235,16 +235,20 @@ describe('Hollow God Combat Mechanics', () => {
   });
 
   describe('Boss Dialogue', () => {
-    it('should return phase 1 dialogue', () => {
-      expect(engine.getBossDialogue(0)).toBe(HOLLOW_GOD_DIALOGUE.phase1Entry);
+    it('should return phase 1 dialogue for Hollow God', () => {
+      expect(engine.getBossDialogue('hollow_god', 0)).toBe(HOLLOW_GOD_DIALOGUE.phase1Entry);
     });
 
-    it('should return phase 2 dialogue', () => {
-      expect(engine.getBossDialogue(1)).toBe(HOLLOW_GOD_DIALOGUE.phase2Entry);
+    it('should return phase 2 dialogue for Hollow God', () => {
+      expect(engine.getBossDialogue('hollow_god', 1)).toBe(HOLLOW_GOD_DIALOGUE.phase2Entry);
     });
 
-    it('should return phase 3 dialogue', () => {
-      expect(engine.getBossDialogue(2)).toBe(HOLLOW_GOD_DIALOGUE.phase3Entry);
+    it('should return phase 3 dialogue for Hollow God', () => {
+      expect(engine.getBossDialogue('hollow_god', 2)).toBe(HOLLOW_GOD_DIALOGUE.phase3Entry);
+    });
+
+    it('should return empty string for unknown boss', () => {
+      expect(engine.getBossDialogue('unknown_boss', 0)).toBe('');
     });
   });
 
@@ -258,11 +262,11 @@ describe('Hollow God Combat Mechanics', () => {
     });
   });
 
-  describe('Permanently Exhausted Cards', () => {
-    it('should track permanently exhausted cards', () => {
+  describe('Permanently Fractured Cards', () => {
+    it('should track permanently fractured cards', () => {
       const state = engine.getState();
-      expect(state.permanentlyExhaustedCards).toBeDefined();
-      expect(state.permanentlyExhaustedCards.length).toBe(0);
+      expect(state.permanentlyFracturedCards).toBeDefined();
+      expect(state.permanentlyFracturedCards.length).toBe(0);
     });
   });
 
@@ -372,7 +376,7 @@ describe('Chomp Timer', () => {
       hand: [],
       drawPile: [],
       discardPile: [],
-      exhaustPile: [],
+      fracturePile: [],
       statusEffects: [],
       devotion: 0,
       fortify: 0,
@@ -549,7 +553,7 @@ describe('Shadow Self Death Healing', () => {
       ],
       drawPile: [],
       discardPile: [],
-      exhaustPile: [],
+      fracturePile: [],
       statusEffects: [],
       devotion: 0,
       fortify: 0,

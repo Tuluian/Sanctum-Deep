@@ -142,13 +142,12 @@ export const KNIGHT_ALDRIC_CAMP: NarrativeEvent = {
   triggerCondition: { chance: 0.15 },
   oncePerRun: true,
   content: {
-    text: `You recognize the Order's symbols. This was Ser Aldric's camp. Your mentor slept here, fifteen years ago.
+    text: `You recognize the Order's symbols. This was Ser Aldric's camp. 
+    
+Your mentor slept here, fifteen years ago. His journal lies open on a rock, and the last entry is unfinished.
 
-His journal lies open on a rock. The last entry is unfinished.
-
-"Tomorrow I face the Bonelord. I am afraid. But fear is not—"
-
-He never finished the sentence.`,
+"Tomorrow I face the Lord of Bones. I am afraid. But fear is n-...."
+`,
     speakerType: 'character',
   },
   choices: [
@@ -210,11 +209,11 @@ export const KNIGHT_CRYSTAL_MENTOR: NarrativeEvent = {
   triggerCondition: { roomsCleared: 2 },
   oncePerRun: true,
   content: {
-    text: `Ser Aldric's crystal. He's here. Preserved. The expression on his face is shame.
+    text: `Ser Aldric's crystal. He's here, somewhere.
 
-The Warden said he hesitated. For one moment, he wanted the peace.
+The Warden says he hesitated. For one moment, he just wanted to feel peace.
 
-You can see it. The moment captured forever. Your mentor, wanting to give up.`,
+You can visualize that... his moment of weakness captured forever in your mind: your mentor, wanting to give up.`,
     speakerType: 'character',
   },
   choices: [
@@ -242,7 +241,7 @@ You can see it. The moment captured forever. Your mentor, wanting to give up.`,
           id: 'forgiveness',
           weight: 100,
           resultText:
-            'The shame on his face softens. Even crystals can cry.',
+            "The shame on his face softens. Crystals can't cry.. right?",
           rewards: [
             { type: 'hp_max', amount: 10 },
             { type: 'boss_damage_bonus', bossId: 'hollow_god', amount: 5 },
@@ -260,7 +259,7 @@ You can see it. The moment captured forever. Your mentor, wanting to give up.`,
           id: 'oath',
           weight: 100,
           resultText:
-            "You swear on the Order's seal. On his seal. On everything you are.",
+            "You swear on the Order's seal... on everything you are and will ever be.",
           rewards: [{ type: 'boss_damage_bonus', bossId: 'hollow_god', amount: 15 }],
           unlocksCard: 'sworn_victory',
           // Defeat screen would show Aldric's disappointment - special handling needed
@@ -285,9 +284,11 @@ export const DIABOLIST_XANTHRAX_VOICE: NarrativeEvent = {
   content: {
     text: `The devil's voice, distant but clear.
 
-"Having fun, little mageling? Remember: every soul you take, I get a percentage. Keep killing. Keep feeding me."
+"Having fun, little mageling? Remember: every soul you take, I get a percentage. 
 
-He laughs. You can feel the contract pulse.`,
+Keep killing. Keep feeding me."
+
+He laughs. You feel the contract pulse, etched behind your eyes.`,
     speakerName: "Xan'thrax",
     speakerType: 'unknown',
   },
@@ -295,13 +296,13 @@ He laughs. You can feel the contract pulse.`,
     {
       id: 'spit_defiance',
       text: 'Spit Defiance',
-      flavorText: 'Go to hell. Oh wait—',
+      flavorText: 'Go to hell. Oh wait...',
       outcomes: [
         {
           id: 'amused',
           weight: 100,
           resultText:
-            "He laughs harder. 'I like you. That's why I chose you.' The contract burns, but you feel stronger.",
+            "He laughs harder. 'I like you. You're gonna go far, kid.' The contract burns, but you feel stronger.",
           penalties: [{ type: 'hp_loss', amount: 3 }],
           rewards: [{ type: 'damage_bonus', amount: 2 }],
         },
@@ -366,7 +367,7 @@ This is dangerous. This is opportunity.`,
           id: 'deal',
           weight: 100,
           resultText:
-            '"Kill Xan\'thrax\'s hold. Sign with me instead." A new contract appears. Better terms. Different trap.',
+            '"Kill Xan\'thrax\'s hold. Sign with me instead." A new contract appears... better terms, different trap.',
           // Remove Pain cards, add Debt cards would need special handling
         },
       ],
@@ -380,8 +381,8 @@ This is dangerous. This is opportunity.`,
           id: 'leverage',
           weight: 100,
           resultText:
-            "Both devils go silent. The silence of fear. You've bought yourself breathing room.",
-          rewards: [{ type: 'hp_max', amount: 5 }],
+            "Both devils go silent. You didn't know devils could feel fear. You've bought yourself some breathing room.",
+          rewards: [{ type: 'hp_max', amount: 10 }],
           unlocksCard: 'devils_leverage',
           // Soul Debt cap removed would need special handling
         },
@@ -396,7 +397,7 @@ This is dangerous. This is opportunity.`,
           id: 'respect',
           weight: 100,
           resultText:
-            'Both voices laugh—but nervously. A mortal refusing power? Unheard of.',
+            'Both voices laugh... nervously. A mortal refusing power? Unheard of.',
           rewards: [
             { type: 'damage_bonus', amount: 3 },
             { type: 'block_bonus', amount: 3 },
@@ -421,11 +422,11 @@ export const OATHSWORN_MARA_WRITING: NarrativeEvent = {
   triggerCondition: { chance: 0.15 },
   oncePerRun: true,
   content: {
-    text: `Words carved into the wall. You recognize the hand—Sister Mara's scripture.
+    text: `Words are carved deep into the wall. You recognize the hand: the scripture of Sister Mara.
 
-But these words aren't in the Order's texts. These are her private thoughts.
+Her words aren't in the Order's texts. These are... her private thoughts.
 
-"The truth burns. But some things should burn. Some truths are too dangerous to speak. I'm writing them here instead."`,
+"The truth burns. I'm tired of hurting."`,
     speakerType: 'character',
   },
   choices: [
@@ -438,7 +439,7 @@ But these words aren't in the Order's texts. These are her private thoughts.
           id: 'enlightened',
           weight: 70,
           resultText:
-            "The truth: the Wardens aren't jailers. They're *volunteers*. They chose this. Mara couldn't accept that.",
+            "The Wardens aren't jailers. They're *volunteers*. Each of them chose this life. How can the Order accept this?",
           rewards: [
             { type: 'resolve_max', amount: 1 },
             { type: 'boss_damage_bonus', bossId: 'bonelord', amount: 5 },
@@ -451,7 +452,7 @@ But these words aren't in the Order's texts. These are her private thoughts.
           id: 'shattered',
           weight: 30,
           resultText:
-            'The truth: Mara founded the Order as revenge. She wanted the Sanctum destroyed because it rejected her.',
+            'The Order was founded out of revenge. She wanted the Sanctum destroyed because it rejected her.',
           penalties: [{ type: 'hp_max_loss', amount: 5 }],
           rewards: [{ type: 'boss_damage_bonus', bossId: 'hollow_god', amount: 10 }],
         },
@@ -466,7 +467,7 @@ But these words aren't in the Order's texts. These are her private thoughts.
           id: 'protected',
           weight: 100,
           resultText:
-            "You scrape the words away. The Order's faith is safe. Your certainty returns.",
+            "You scrape the words away. The Order's faith is safe. Your stoicism returns.",
           rewards: [
             { type: 'hp_max', amount: 5 },
             { type: 'block_bonus', amount: 3 },
@@ -489,20 +490,20 @@ export const OATHSWORN_OATH_STONE: NarrativeEvent = {
   content: {
     text: `A stone where Wardens swore their vows. Names carved into it, dating back millennia.
 
-There's space for one more name.`,
+There's space for one more.`,
     speakerType: 'environment',
   },
   choices: [
     {
       id: 'carve_name',
       text: 'Carve Your Name',
-      flavorText: "I'll take the oath. Whatever it costs.",
+      flavorText: "I take the oath. Whatever it costs.",
       outcomes: [
         {
           id: 'sworn',
           weight: 100,
           resultText:
-            'Your name joins theirs. The stone accepts you. Power flows—and obligation.',
+            'Your name joins theirs. The stone accepts you. Power flows, alongside obligation.',
           rewards: [
             { type: 'resolve_max', amount: 2 },
             { type: 'hp_max', amount: 10 },
@@ -520,7 +521,7 @@ There's space for one more name.`,
           id: 'reformed',
           weight: 100,
           resultText:
-            'You write: "To guard, but not to cage. To hold, but not to trap. To choose, always." The stone glows.',
+            'You write: "To guard, but never cage." The stone glows.',
           rewards: [{ type: 'damage_bonus', amount: 3 }],
           unlocksCard: 'reformed_vow',
         },
@@ -535,7 +536,7 @@ There's space for one more name.`,
           id: 'free',
           weight: 100,
           resultText:
-            'No binding. No obligation. Just you, choosing moment by moment.',
+            'No binding. No obligation. Just you, choosing to be present... moment by moment.',
           rewards: [{ type: 'hp_heal', amount: 999 }],
         },
       ],

@@ -12,7 +12,7 @@ import { EnemyDefinition, IntentType, StatusType } from '@/types';
  * - Chomp Timer: Every 3 seconds during player turn, discards a random card
  * - Card Corruption: Cards become corrupted and add Corruption Stacks when played
  * - Hollow Echo: Copies player's last played card against them
- * - Forget: Permanently exhausts cards from player's deck
+ * - Forget: Permanently fractures cards from player's deck
  * - Shadow Self: Summons a dark reflection that mirrors player actions
  */
 
@@ -107,7 +107,7 @@ export const HOLLOW_GOD: EnemyDefinition = {
           intent: IntentType.ATTACK,
           damage: 15,
           block: 15, // Self-block
-          // Special: Permanently exhaust 1 random card from player's deck
+          // Special: Permanently fracture 1 random card from player's deck
           weight: 30,
         },
         {
