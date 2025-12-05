@@ -45,6 +45,10 @@ To start boss fights or Act 2, open dev console in browser (fn+F12)
   - window.debugCombat('ghoul', 'cleric')
   - window.debugCombat('shade', 'cleric')
   - window.debugCombat('drowned_king', 'cleric')
+  window.debugCombat('slime', 'cleric')
+  window.debugCombat('high_cultist', 'cleric')
+  window.debugCombat('tomb_guardian', 'cleric')
+  window.debugCombat('bonelord', 'cleric')
 
 Thoughts... if I can publish 1 game per month...
     Then EVENTUALLY i should get to a point where I can make enough in salary? (depending on how much we bring in)
