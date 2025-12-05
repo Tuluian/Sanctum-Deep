@@ -1,0 +1,49 @@
+# Quality Gate: 5.6 Narrative Card Unlocks & Event System
+schema: 1
+story: "5.6"
+story_title: "Narrative Card Unlocks & Event System"
+gate: PASS
+status_reason: "All implementation tasks complete with comprehensive documentation. All 918 tests pass. Dev Agent Record properly filled. Files verified to exist and integrate correctly."
+reviewer: "Quinn (Test Architect)"
+updated: "2024-12-05T08:50:00Z"
+
+waiver: { active: false }
+
+top_issues: []
+
+risk_summary:
+  totals: { critical: 0, high: 0, medium: 0, low: 0 }
+  recommendations:
+    must_fix: []
+    monitor:
+      - "Verify unlock popups display correctly in-game"
+      - "Test multi-unlock scenarios (multiple cards unlocked at once)"
+
+evidence:
+  tests_reviewed: 918
+  test_status: "All tests pass"
+  files_verified:
+    - src/types/unlocks.ts
+    - src/services/CardUnlockService.ts
+    - src/services/CardUnlockService.test.ts
+    - src/data/unlockableCards.ts
+    - src/data/eventUnlockMappings.ts
+    - src/ui/CardUnlockPopup.ts
+    - src/ui/screens/CollectionScreen.ts
+    - src/services/NarrativeEventService.ts (integration verified)
+  ac_coverage:
+    covered: [1, 2, 3, 4, 5, 6, 7]
+    partial: []
+    gaps: []
+  task_completion:
+    phase_1: "Complete - Narrative Event System"
+    phase_2: "Complete - Card Unlock System (types, service, mappings, 40+ cards)"
+    phase_3: "Complete - Integration & Polish (UI, tests)"
+  notes: |
+    Exemplary story completion:
+    - All task checkboxes marked [x]
+    - Dev Agent Record fully populated
+    - Agent model, debug log, completion notes, and file list documented
+    - Integration with NarrativeEventService confirmed (lines 24, 302-303)
+    - Comprehensive test coverage in CardUnlockService.test.ts
+    - 40+ unlockable cards defined across multiple trigger types

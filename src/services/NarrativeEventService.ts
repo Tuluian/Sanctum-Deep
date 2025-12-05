@@ -21,6 +21,8 @@ import {
 import { CharacterClassId, PlayerState } from '@/types/index';
 import { getEventsByAct } from '@/data/narrativeEvents';
 import { getStoryCardsByAct } from '@/data/storyCards';
+import { getCardUnlockService } from '@/services/CardUnlockService';
+import { CardUnlockResult } from '@/types/unlocks';
 
 /**
  * Seeded random number generator for consistent event outcomes
@@ -275,7 +277,7 @@ export class NarrativeEventService {
   resolveChoice(
     event: NarrativeEvent,
     choice: NarrativeChoice
-  ): EventOutcomeResult {
+  ): EventOutcomeResult & { cardUnlocks: CardUnlockResult[] } {
     // Mark event as seen
     if (!this.state.seenEventIds.includes(event.id)) {
       this.state.seenEventIds.push(event.id);
@@ -297,11 +299,19 @@ export class NarrativeEventService {
     // Apply stat bonuses to state
     this.applyRewardsToState(appliedRewards);
 
+    // Record with CardUnlockService for meta-progression
+    const cardUnlocks = getCardUnlockService().recordEventChoice(
+      event.id,
+      choice.id,
+      outcome.id
+    );
+
     return {
       outcome,
       appliedRewards,
       appliedPenalties,
       unlockedCardId: outcome.unlocksCard,
+      cardUnlocks,
     };
   }
 

@@ -367,6 +367,7 @@ h1 {
   background-image: url('/images/enemies/cultist.png');
   background-color: transparent;
   background-size: contain;
+  background-position: center -10px;   /* raised 20px above container */
   border-radius: 0;
   box-shadow: none;
   width: 90px;
@@ -381,6 +382,7 @@ h1 {
   background-image: url('/images/enemies/skeleton.png');
   background-color: transparent;
   background-size: contain;
+  background-position: center -10px;   /* raised 20px above container */
   border-radius: 0;
   box-shadow: none;
   width: 90px;
@@ -409,6 +411,7 @@ h1 {
   background-image: url('/images/enemies/haunted_armor.png');
   background-color: transparent;
   background-size: contain;
+  background-position: center -10px;   /* raised 20px above container */
   border-radius: 0;
   box-shadow: none;
   width: 90px;
@@ -423,6 +426,7 @@ h1 {
   background-image: url('/images/enemies/acolyte.png');
   background-color: transparent;
   background-size: contain;
+  background-position: center -18px;   /* raised 20px above container */
   border-radius: 0;
   box-shadow: none;
   width: 90px;
@@ -430,6 +434,143 @@ h1 {
 }
 .enemy-figure[data-enemy-type="acolyte"]::before,
 .enemy-figure[data-enemy-type="acolyte"]::after {
+  display: none;
+}
+
+/* Act 1 Additional Enemy Images */
+.enemy-figure[data-enemy-type="bone_archer"] {
+  background-image: url('/images/enemies/bone_archer.png');
+  background-color: transparent;
+  background-size: contain;
+  background-position: center -18px;   /* raised 20px above container */
+  border-radius: 0;
+  box-shadow: none;
+  width: 180px;
+  height: 240px;
+}
+.enemy-figure[data-enemy-type="bone_archer"]::before,
+.enemy-figure[data-enemy-type="bone_archer"]::after {
+  display: none;
+}
+
+.enemy-figure[data-enemy-type="ghoul"] {
+  background-image: url('/images/enemies/ghoul.png');
+  background-color: transparent;
+  background-size: contain;
+  background-position: center -10px;   /* raised 20px above container */
+  border-radius: 0;
+  box-shadow: none;
+  width: 180px;
+  height: 240px;
+}
+.enemy-figure[data-enemy-type="ghoul"]::before,
+.enemy-figure[data-enemy-type="ghoul"]::after {
+  display: none;
+}
+
+.enemy-figure[data-enemy-type="shade"] {
+  background-image: url('/images/enemies/shade.png');
+  background-color: transparent;
+  background-size: contain;
+  background-position: center -10px;   /* raised 20px above container */
+  border-radius: 0;
+  box-shadow: none;
+  width: 180px;
+  height: 240px;
+}
+.enemy-figure[data-enemy-type="shade"]::before,
+.enemy-figure[data-enemy-type="shade"]::after {
+  display: none;
+}
+
+/* Act 2 Enemy Images */
+.enemy-figure[data-enemy-type="drowned_cultist"] {
+  background-image: url('/images/enemies/drowned_cultist.png');
+  background-color: transparent;
+  background-size: contain;
+  background-position: center -10px;   /* raised 20px above container */
+  border-radius: 0;
+  box-shadow: none;
+  width: 180px;
+  height: 240px; /* Height of the whole block, not the image size */
+}
+.enemy-figure[data-enemy-type="drowned_cultist"]::before,
+.enemy-figure[data-enemy-type="drowned_cultist"]::after {
+  display: none;
+}
+
+/* Act 2 Common Enemy Images */
+.enemy-figure[data-enemy-type="slime"] {
+  background-image: url('/images/enemies/slime.png');
+  background-color: transparent;
+  background-size: contain;
+  background-position: center -10px;   /* raised 20px above container */
+  border-radius: 0;
+  box-shadow: none;
+  width: 180px;
+  height: 240px;
+}
+.enemy-figure[data-enemy-type="slime"]::before,
+.enemy-figure[data-enemy-type="slime"]::after {
+  display: none;
+}
+
+/* Act 2 Boss Images */
+.enemy-figure[data-enemy-type="drowned_king"] {
+  background-image: url('/images/enemies/drowned_king.png');
+  background-color: transparent;
+  background-size: contain;
+  background-position: center -10px;   /* raised 20px above container */
+  border-radius: 0;
+  box-shadow: none;
+  width: 200px;
+  height: 300px;
+}
+.enemy-figure[data-enemy-type="drowned_king"]::before,
+.enemy-figure[data-enemy-type="drowned_king"]::after {
+  display: none;
+}
+
+/* Act 1 Elite Images */
+.enemy-figure[data-enemy-type="high_cultist"] {
+  background: url('/images/enemies/high_cultist_mira.png') no-repeat center center;
+  background-size: contain;
+  border-radius: 0;
+  box-shadow: none;
+  width: 180px;
+  height: 240px;
+}
+.enemy-figure[data-enemy-type="high_cultist"]::before,
+.enemy-figure[data-enemy-type="high_cultist"]::after {
+  display: none;
+}
+
+.enemy-figure[data-enemy-type="tomb_guardian"] {
+  background-image: url('/images/enemies/stone_guardian.png');
+  background-color: transparent;
+  background-size: contain;
+  border-radius: 0;
+  box-shadow: none;
+  width: 180px;
+  height: 240px;
+}
+.enemy-figure[data-enemy-type="tomb_guardian"]::before,
+.enemy-figure[data-enemy-type="tomb_guardian"]::after {
+  display: none;
+}
+
+/* Act 1 Boss Images */
+.enemy-figure[data-enemy-type="bonelord"] {
+  background-image: url('/images/enemies/the_bonelord.png');
+  background-color: transparent;
+  background-size: contain;
+  border-radius: 0;
+  box-shadow: none;
+  width: 400px;
+  height: 560px;
+}
+.enemy-figure[data-enemy-type="bonelord"]::before,
+.enemy-figure[data-enemy-type="bonelord"]::after {
   display: none;
 }
 
@@ -2698,6 +2839,20 @@ button.icon-btn:hover {
   overflow-y: auto;
   box-shadow: 0 0 40px rgba(244, 208, 63, 0.3), inset 0 0 60px rgba(0, 0, 0, 0.5);
   animation: slideUp 0.3s ease;
+  position: relative;
+}
+
+.class-detail-top-bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  background: linear-gradient(180deg, rgba(26, 26, 46, 0.98) 0%, rgba(22, 33, 62, 0.95) 100%);
+  border-bottom: 2px solid #f4d03f;
+  backdrop-filter: blur(8px);
 }
 
 @keyframes slideUp {
@@ -2958,15 +3113,14 @@ button.icon-btn:hover {
     padding: 12px 16px;
   }
 
-  .class-detail-actions {
-    flex-direction: column;
-    padding: 16px;
+  .class-detail-top-bar {
+    padding: 10px 16px;
   }
 
   .class-detail-back-btn,
   .class-detail-start-btn {
-    width: 100%;
-    text-align: center;
+    padding: 10px 16px;
+    font-size: 0.9em;
   }
 }
 
@@ -3096,6 +3250,114 @@ button.icon-btn:hover {
    RESPONSIVE MENU ADJUSTMENTS
    =========================================== */
 
+/* Tablet breakpoint (1024px) */
+@media (max-width: 1024px) {
+  .menu-container {
+    max-width: 450px;
+  }
+
+  .class-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    padding: 16px;
+  }
+
+  .class-detail-popup {
+    max-width: 90vw;
+    max-height: 90vh;
+  }
+
+  .class-portrait {
+    height: 140px;
+  }
+
+  .game-logo {
+    margin-bottom: 25px;
+  }
+
+  .logo-main {
+    font-size: 2.8em;
+  }
+
+  .logo-sub {
+    font-size: 1.3em;
+  }
+}
+
+/* Compact breakpoint (800px) */
+@media (max-width: 800px) {
+  .menu-container {
+    max-width: 400px;
+    padding: 15px;
+  }
+
+  .menu-buttons {
+    gap: 10px;
+  }
+
+  .menu-btn {
+    padding: 14px 20px;
+  }
+
+  .btn-text {
+    font-size: 1em;
+    letter-spacing: 0.1em;
+  }
+
+  .class-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .class-card {
+    border-radius: 8px;
+  }
+
+  .class-portrait {
+    height: 100px;
+  }
+
+  .class-icon {
+    font-size: 2.8em;
+  }
+
+  .class-info {
+    padding: 12px;
+  }
+
+  .class-info h3 {
+    font-size: 1.1em;
+  }
+
+  .class-desc {
+    font-size: 0.85em;
+  }
+
+  .class-mechanic {
+    font-size: 0.85em;
+  }
+
+  .logo-main {
+    font-size: 2.5em;
+    letter-spacing: 0.2em;
+  }
+
+  .logo-sub {
+    font-size: 1.2em;
+  }
+
+  .menu-stats {
+    gap: 20px;
+    padding: 12px;
+  }
+
+  .menu-stats .stat-value {
+    font-size: 1.2em;
+  }
+}
+
+/* Mobile breakpoint (600px) */
 @media (max-width: 600px) {
   .logo-main {
     font-size: 2.2em;
@@ -5183,3 +5445,4 @@ button.icon-btn:hover {
     padding: 0.85rem 1rem;
   }
 }
+

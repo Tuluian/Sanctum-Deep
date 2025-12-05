@@ -16,16 +16,24 @@ import { ShrineService, initShrineService } from '@/services/ShrineService';
 import { applyCombatModifiersToPlayer, getRunModifiers, type RunModifiers } from '@/services/UpgradeEffects';
 import { createStarterDeck, CLASSES } from '@/data/classes';
 import { ACT1_ENEMIES } from '@/data/enemies/act1';
-import { ELITE_ENEMIES } from '@/data/enemies/elites';
+import { ELITE_ENEMIES, ELITE_MINIONS } from '@/data/enemies/elites';
 import { BOSSES, MINIONS } from '@/data/enemies/bosses';
 import { HOLLOW_GOD, SHADOW_SELF } from '@/data/enemies/act3-boss';
-import { ACT3_ELITE_ENEMIES } from '@/data/enemies/act3-elites';
+import { ACT3_ELITE_ENEMIES, ACT3_ELITE_MINIONS } from '@/data/enemies/act3-elites';
 import { ACT3_ENEMIES } from '@/data/enemies/act3';
+import { ACT2_ENEMIES } from '@/data/enemies/act2';
+import { ACT2_BOSSES } from '@/data/enemies/act2-boss';
+import { ACT2_ELITE_MINIONS } from '@/data/enemies/act2-elites';
 import { generateFloor } from '@/map/MapGenerator';
 import { CardType, CharacterClassId, CombatEventType, PlayerState, FloorMap, MapNode, NodeType, EnemyDefinition, StatusType, ActNumber } from '@/types';
 import { NarrativeEvent, NarrativeChoice } from '@/types/narrativeEvents';
 import { ShrineDefinition, ShrineChoice } from '@/types/shrines';
 import { getPotion } from '@/data/potions';
+import { achievementTracker, startRunTracking, endRunTracking, recordActComplete, recordBossDefeated, recordEliteDefeated, recordShrineVisited, recordCampfireRest, recordWardenChoice, countCursesInDeck } from '@/services/AchievementTracker';
+import { initAchievementNotifications } from '@/ui/AchievementNotification';
+import { createAchievementScreen } from '@/ui/screens/AchievementScreen';
+import { setupKeyboardNavigation } from '@/ui/KeyboardNav';
+import { DebugLogService } from '@/services/DebugLogService';
 import './styles/main.css';
 
 // Extended map screen type with custom methods
@@ -63,6 +71,12 @@ class Game {
     this.setupScreens();
     this.setupCombatEventListeners();
     this.setupStoryCardOverlay();
+
+    // Initialize achievement notifications
+    initAchievementNotifications();
+
+    // Setup keyboard navigation
+    setupKeyboardNavigation(this.screenManager);
   }
 
   private setupAudio(): void {
@@ -88,7 +102,8 @@ class Game {
       () => this.screenManager.navigateTo('class-select'),
       () => this.continueRun(),
       () => this.screenManager.navigateTo('settings'),
-      () => this.screenManager.navigateTo('upgrades')
+      () => this.screenManager.navigateTo('upgrades'),
+      () => this.screenManager.navigateTo('achievement-screen')
     );
 
     // Upgrade Screen
@@ -134,6 +149,11 @@ class Game {
       canAffordChoice: (choice: ShrineChoice) => this.canAffordShrineChoice(choice),
     });
 
+    // Achievement Screen
+    const achievementScreen = createAchievementScreen({
+      onBack: () => this.screenManager.back(),
+    });
+
     // Register screens
     this.screenManager.register(mainMenu);
     this.screenManager.register(upgradeScreen);
@@ -142,6 +162,7 @@ class Game {
     this.screenManager.register(this.mapScreen);
     this.screenManager.register(narrativeEventScreen);
     this.screenManager.register(shrineScreen);
+    this.screenManager.register(achievementScreen);
 
     // Start at main menu
     this.screenManager.navigateTo('main-menu');
@@ -158,6 +179,10 @@ class Game {
 
       const result = this.combat.playCard(cardIndex, targetEnemy);
       if (result.success) {
+        // Debug log: Card played
+        const target = state.enemies[targetEnemy];
+        DebugLogService.logCardPlayed(card, state.player, target, result.log);
+
         // Play sound and animation based on card type
         if (card) {
           AudioManager.playSfx('card-play');
@@ -170,6 +195,10 @@ class Game {
         }
 
         result.log.forEach((msg) => this.renderer.addLog(msg));
+
+        // Auto-advance target if current target is dead
+        this.autoSelectLivingTarget();
+
         this.render();
 
         if (this.combat.isGameOver()) {
@@ -213,6 +242,10 @@ class Game {
       });
 
       result.log.forEach((msg) => this.renderer.addLog(msg));
+
+      // Auto-advance target if current target died during enemy turn
+      this.autoSelectLivingTarget();
+
       this.render();
 
       if (this.combat.isGameOver()) {
@@ -322,6 +355,13 @@ class Game {
         permanentBlockBonus: 0,
         upgradeDamageBonus: 0,
         upgradeBlockBonus: 0,
+        tide: 0,
+        shadowEnergy: 0,
+        inShadow: 0,
+        gobbledCardsCombat: [],
+        totalGobbled: 0,
+        gobbleDamageBonus: 0,
+        gobbleBlockBonus: 0,
       };
 
       const rewardDescriptions = this.narrativeService.applyRewardsToPlayer(
@@ -422,6 +462,13 @@ class Game {
       permanentBlockBonus: 0,
       upgradeDamageBonus: 0,
       upgradeBlockBonus: 0,
+      tide: 0,
+      shadowEnergy: 0,
+      inShadow: 0,
+      gobbledCardsCombat: [],
+      totalGobbled: 0,
+      gobbleDamageBonus: 0,
+      gobbleBlockBonus: 0,
     };
 
     const nodeType = this.currentNode?.type === NodeType.COMBAT ? 'combat'
@@ -480,6 +527,13 @@ class Game {
       permanentBlockBonus: 0,
       upgradeDamageBonus: 0,
       upgradeBlockBonus: 0,
+      tide: 0,
+      shadowEnergy: 0,
+      inShadow: 0,
+      gobbledCardsCombat: [],
+      totalGobbled: 0,
+      gobbleDamageBonus: 0,
+      gobbleBlockBonus: 0,
     };
 
     const nodeType = this.currentNode?.type === NodeType.COMBAT ? 'combat'
@@ -529,6 +583,9 @@ class Game {
 
     // Save the new run with modified max HP and starting potions
     SaveManager.startNewRun(classId, maxHp, mapSeed, startNodeId, this.runModifiers.startingPotions);
+
+    // Start achievement tracking for this run
+    startRunTracking(classId);
 
     // Initialize narrative service for this run
     this.narrativeService = initNarrativeEventService(classId, mapSeed);
@@ -636,6 +693,13 @@ class Game {
       permanentBlockBonus: 0,
       upgradeDamageBonus: 0,
       upgradeBlockBonus: 0,
+      tide: 0,
+      shadowEnergy: 0,
+      inShadow: 0,
+      gobbledCardsCombat: [],
+      totalGobbled: 0,
+      gobbleDamageBonus: 0,
+      gobbleBlockBonus: 0,
     };
 
     // Apply upgrade modifiers for combat start
@@ -650,6 +714,14 @@ class Game {
     for (const minion of Object.values(MINIONS)) {
       this.combat.registerMinionDefinition(minion);
     }
+    // Register elite minions (summoned_acolyte for High Cultist)
+    for (const minion of Object.values(ELITE_MINIONS)) {
+      this.combat.registerMinionDefinition(minion);
+    }
+
+    // Start achievement tracking for this combat
+    const cursesInDeck = countCursesInDeck(starterDeck);
+    achievementTracker.startTracking(this.combat, cursesInDeck);
 
     // Subscribe to combat events for logging and UI updates
     this.combat.subscribe((event) => {
@@ -671,6 +743,12 @@ class Game {
 
     this.renderer.clearLog();
     this.combat.startCombat();
+
+    // Debug log: Start combat (after startCombat so we have Enemy[] not EnemyDefinition[])
+    DebugLogService.clear();
+    const combatState = this.combat.getState();
+    DebugLogService.logCombatStart(combatState.player, combatState.enemies);
+
     this.renderer.setSelectedEnemy(0);
     this.render();
 
@@ -782,6 +860,9 @@ class Game {
       const newHp = Math.min(runData.playerHp + healAmount, runData.playerMaxHp);
       SaveManager.updateRun({ playerHp: newHp });
 
+      // Track campfire rest for achievements (blocks "Boss Rush" achievement)
+      recordCampfireRest();
+
       // Mark visited and update map
       node.visited = true;
       SaveManager.markNodeVisited(node.id);
@@ -842,6 +923,9 @@ class Game {
     costDescriptions: string[];
     loreFragment?: string;
   } {
+    // Track shrine visit for achievements
+    recordShrineVisited(shrine.id);
+
     if (!this.shrineService) {
       throw new Error('Shrine service not initialized');
     }
@@ -898,6 +982,13 @@ class Game {
       permanentBlockBonus: 0,
       upgradeDamageBonus: 0,
       upgradeBlockBonus: 0,
+      tide: 0,
+      shadowEnergy: 0,
+      inShadow: 0,
+      gobbledCardsCombat: [],
+      totalGobbled: 0,
+      gobbleDamageBonus: 0,
+      gobbleBlockBonus: 0,
     };
 
     // Apply rewards
@@ -996,6 +1087,23 @@ class Game {
     this.mapScreen.refresh();
   }
 
+  /**
+   * Auto-select the first living enemy if current target is dead
+   */
+  private autoSelectLivingTarget(): void {
+    if (!this.combat) return;
+    const enemies = this.combat.getState().enemies;
+    const currentIndex = this.renderer.getSelectedEnemy();
+
+    // If current target is dead or doesn't exist, find first living enemy
+    if (!enemies[currentIndex] || enemies[currentIndex].currentHp <= 0) {
+      const livingIndex = enemies.findIndex(e => e.currentHp > 0);
+      if (livingIndex !== -1) {
+        this.renderer.setSelectedEnemy(livingIndex);
+      }
+    }
+  }
+
   private handleCombatEnd(): void {
     if (!this.combat) return;
 
@@ -1004,6 +1112,12 @@ class Game {
     const runData = SaveManager.getActiveRun();
     const classId = runData?.classId || CharacterClassId.CLERIC;
     const currentAct = runData?.currentAct || 1;
+
+    // Debug log: Combat end
+    DebugLogService.logCombatEnd(victory, victory ? 'All enemies defeated' : 'Player defeated');
+
+    // Stop achievement tracking for this combat
+    achievementTracker.stopTracking(victory);
 
     // Play victory/defeat music
     AudioManager.playMusic(victory ? 'victory' : 'defeat');
@@ -1030,6 +1144,18 @@ class Game {
       const isBossNode = this.currentNode?.type === NodeType.BOSS;
       const isEliteNode = this.currentNode?.type === NodeType.ELITE;
       const isHollowGodBoss = isBossNode && currentAct === 3; // Final boss
+
+      // Track achievement progress for elite/boss defeats
+      if (isEliteNode) {
+        recordEliteDefeated();
+      }
+      if (isBossNode) {
+        // Record boss defeat with appropriate boss ID
+        const bossId = isHollowGodBoss ? 'hollow_god' : currentAct === 1 ? 'bonelord' : 'drowned_king';
+        recordBossDefeated(bossId);
+        // Record act completion
+        recordActComplete(currentAct);
+      }
 
       // Award Soul Echoes based on combat type
       // Elite rewards: 15 Soul Echoes (vs 2 normal, 50 boss)
@@ -1083,6 +1209,8 @@ class Game {
     } else {
       // Defeat - show narrative defeat screen
       SaveManager.endRun(false);
+      // End run tracking with defeat
+      endRunTracking(false);
       // Determine act number for narrative - use 'boss' if died to a boss
       const isBossNode = this.currentNode?.type === NodeType.BOSS;
       const defeatAct: ActNumber = isBossNode ? 'boss' : (currentAct as 1 | 2 | 3);
@@ -1099,6 +1227,11 @@ class Game {
    * Handle the player's choice after defeating the Hollow God
    */
   private handleVictoryChoice(classId: CharacterClassId, choice: 'warden' | 'leave', soulEchoesEarned: number): void {
+    // Track Warden choice for achievements
+    recordWardenChoice(choice);
+    // End run tracking with victory
+    endRunTracking(true);
+
     if (choice === 'warden') {
       // Player becomes the Warden - show the good ending
       this.renderer.showVictoryEnding(classId, choice, soulEchoesEarned, () => {
@@ -1120,6 +1253,8 @@ class Game {
   }
 
   private abandonRun(): void {
+    // End run tracking with defeat (abandoned = not a victory)
+    endRunTracking(false);
     SaveManager.abandonRun();
     this.renderer.removeGameOver();
     this.hideCombatScreen();
@@ -1159,6 +1294,18 @@ class Game {
       [CharacterClassId.BARGAINER]: {
         icon: '🤝',
         tooltip: 'Favor: Make deals with powerful entities. Pay Prices for powerful effects, but beware of accumulating Debt.',
+      },
+      [CharacterClassId.TIDECALLER]: {
+        icon: '🌊',
+        tooltip: 'Tide: Build Tide to increase Drown threshold. Drown instantly kills enemies below a certain HP percentage.',
+      },
+      [CharacterClassId.SHADOW_STALKER]: {
+        icon: '🌑',
+        tooltip: 'Shadow Energy: Build energy for burst damage. Enter Shadow state for enhanced attacks and evasion.',
+      },
+      [CharacterClassId.GOBLIN]: {
+        icon: '🦷',
+        tooltip: 'Gobble: Eat cards to gain combat bonuses. Hoard cards to trigger Goblin Mode for extra damage and block.',
       },
     };
 
@@ -1369,6 +1516,13 @@ class Game {
       permanentBlockBonus: 0,
       upgradeDamageBonus: 0,
       upgradeBlockBonus: 0,
+      tide: 0,
+      shadowEnergy: 0,
+      inShadow: 0,
+      gobbledCardsCombat: [],
+      totalGobbled: 0,
+      gobbleDamageBonus: 0,
+      gobbleBlockBonus: 0,
     };
 
     // Get enemies based on type
@@ -1376,7 +1530,7 @@ class Game {
 
     if (enemies.length === 0) {
       console.error(`Unknown enemy type: ${enemyType}`);
-      console.log('Available types: hollow_god, shadow_self, greater_demon, sanctum_warden, act3_common, act3_elite, bonelord, drowned_king');
+      console.log('Available types: hollow_god, shadow_self, greater_demon, sanctum_warden, act3_common, act3_elite, bonelord, drowned_king, drowned_cultist, bone_archer, ghoul, shade, slime, high_cultist, tomb_guardian');
       return;
     }
 
@@ -1386,10 +1540,18 @@ class Game {
     for (const minion of Object.values(MINIONS)) {
       this.combat.registerMinionDefinition(minion);
     }
+    // Register Act 2 elite minions (void_tendril for Void Caller)
+    for (const minion of Object.values(ACT2_ELITE_MINIONS)) {
+      this.combat.registerMinionDefinition(minion);
+    }
     // Register Act 3 minions
     this.combat.registerMinionDefinition(SHADOW_SELF);
     for (const enemy of Object.values(ACT3_ENEMIES)) {
       this.combat.registerMinionDefinition(enemy);
+    }
+    // Register Act 3 elite minions (memory enemies for Sanctum Warden)
+    for (const minion of Object.values(ACT3_ELITE_MINIONS)) {
+      this.combat.registerMinionDefinition(minion);
     }
 
     // Subscribe to combat events for logging and UI updates
@@ -1490,7 +1652,23 @@ class Game {
       case 'bonelord':
         return [BOSSES.bonelord];
       case 'drowned_king':
-        return [BOSSES.drowned_king];
+        return [ACT2_BOSSES.drowned_king];
+      case 'drowned_cultist':
+        return [ACT2_ENEMIES.drowned_cultist];
+      case 'bone_archer':
+        return [ACT1_ENEMIES.bone_archer];
+      case 'ghoul':
+        return [ACT1_ENEMIES.ghoul];
+      case 'shade':
+        return [ACT1_ENEMIES.shade];
+      case 'slime':
+        return [ACT2_ENEMIES.slime];
+      case 'high_cultist':
+        return [ELITE_ENEMIES.high_cultist];
+      case 'tomb_guardian':
+        return [ELITE_ENEMIES.tomb_guardian];
+      case 'bonelord':
+        return [BOSSES.bonelord];
       default:
         return [];
     }
@@ -1565,6 +1743,9 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log(`Added ${potion.name}. Potions: ${JSON.stringify(SaveManager.getPotions())}`);
   };
 
+  // Expose DebugLogService to window for console access
+  (window as unknown as { debugLog: typeof DebugLogService }).debugLog = DebugLogService;
+
   console.log('Debug commands available:');
   console.log('  window.debugCombat("hollow_god")       - Fight the Hollow God');
   console.log('  window.debugCombat("greater_demon")    - Fight the Greater Demon');
@@ -1575,5 +1756,8 @@ document.addEventListener('DOMContentLoaded', () => {
   console.log('  window.debugHealPlayer(50)            - Heal the player');
   console.log('  window.giveSoulEchoes(1000)           - Give Soul Echoes for testing');
   console.log('  window.givePotion("health_potion")    - Give a potion for testing');
+  console.log('  window.debugLog.getLogs()             - Get all debug logs');
+  console.log('  window.debugLog.exportJSON()          - Export logs as JSON');
+  console.log('  window.debugLog.exportText()          - Export logs as text');
 });
 

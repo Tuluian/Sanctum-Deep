@@ -174,6 +174,60 @@ Vesper looked at that laughing child and couldn't do it. She voided the contract
       victory: 'Pleasure doing business. Let\'s never meet again.',
     },
   },
+
+  [CharacterClassId.TIDECALLER]: {
+    name: 'Marina',
+    title: 'The Drowned Prophet',
+    hook: 'A sailor who died at sea and came back changed, hearing the whispers of something vast and hungry in the deep.',
+    backstory: `Marina was captain of the Stormbreaker, the finest merchant vessel in the western fleet. When a typhoon struck without warning, she lashed herself to the wheel and sailed her crew through seventeen hours of hell. All thirty-two souls survived.
+
+She didn't. A rogue wave took her overboard in the final hour. She drowned in cold black water, sinking into depths where no light reaches.
+
+Something found her there. Something old. It pressed its vastness against her dying mind and showed her visions of a god that sleeps beneath all oceans—and dreams of the Sanctum's Core.`,
+    motivation: `She enters the Sanctum because the Deep speaks to her still. It showed her the Hollow God consuming whole civilizations, growing fat on divine essence. It showed her something sleeping beneath the waves that hungers for that power. Marina doesn't know if she's here to stop a catastrophe or cause one. She only knows the tide keeps pulling her forward.`,
+    quote: '"The sea takes everything eventually. I\'m just helping it along."',
+    voiceSamples: {
+      combatStart: 'The tide rises. Everything drowns eventually.',
+      lowHp: 'I\'ve already died once. It wasn\'t so bad.',
+      victory: 'The Deep is pleased. For now.',
+    },
+  },
+
+  [CharacterClassId.SHADOW_STALKER]: {
+    name: 'Shade',
+    title: 'The Shadow\'s Child',
+    hook: 'An orphan raised by the darkness itself, seeking to understand why the shadows chose her.',
+    backstory: `Nobody knows her real name—not even her. They found her at three years old, alone in a burned village where nothing cast shadows. She never spoke of what happened, and the priests who raised her learned not to ask. Strange things happened around her. Candles died when she entered rooms. Darkness pooled at her feet like a loyal hound.
+
+At sixteen, she left the monastery. The shadows followed. They taught her to move between them, to strike from nowhere, to become invisible in any light. They whisper secrets in voices like wind through dead leaves. They call her "daughter."
+
+The shadows want her to enter the Sanctum. They grow excited as she approaches, pulling her forward like a current.`,
+    motivation: `She enters because the shadows demand it. They've been leading her here all her life—to the place where the Hollow God consumed a being of pure darkness millennia ago. Her "parents" want something from that Core. She wants to know if she's their savior or their sacrifice.`,
+    quote: '"The darkness raised me. Fed me. Loved me, in its way. But family can lie."',
+    voiceSamples: {
+      combatStart: 'Watch the shadows. That\'s where I\'ll be.',
+      lowHp: 'Even shadows can bleed.',
+      victory: 'You saw me coming. It didn\'t help.',
+    },
+  },
+
+  [CharacterClassId.GOBLIN]: {
+    name: 'Grizzle',
+    title: 'The Hungry King',
+    hook: 'A goblin exile who ate something he shouldn\'t have, now cursed with an endless hunger only the Sanctum can satisfy.',
+    backstory: `Grizzle was never the biggest goblin, or the strongest, or the smartest. But he was absolutely the hungriest. When the chieftain threw scraps to the tribe, Grizzle got there first. When other goblins found food, Grizzle was there to "share."
+
+Then he ate the wrong thing. A crystalline fruit from a wounded Sanctum scout's pack—sweet and strange and impossibly filling. For three glorious hours, Grizzle wasn't hungry. Then the hunger came back a thousandfold.
+
+Nothing satisfies him now. He's eaten everything a goblin can eat and several things they can't. The other goblins kicked him out after he started eyeing the young.`,
+    motivation: `He enters the Sanctum because the fruit came from here. Whatever filled him for those three hours must be inside. He'll find it. He'll eat it. He'll eat everything between him and it. And maybe—finally—he'll be full.`,
+    quote: '"Not picky. Not patient. Just hungry. Very, very hungry."',
+    voiceSamples: {
+      combatStart: 'You look crunchy. Grizzle likes crunchy.',
+      lowHp: 'Getting hungry. Bad things happen when Grizzle gets hungry.',
+      victory: 'Good snack. Still hungry though.',
+    },
+  },
 };
 
 /**

@@ -1,0 +1,50 @@
+# Quality Gate: 6.4 Tidecaller Class
+schema: 1
+story: "6.4"
+story_title: "Tidecaller Class & Tide/Drown System"
+gate: CONCERNS
+status_reason: "Implementation exists and tests pass, but HP value (70) doesn't match spec (72). Story tasks not marked complete. Missing dedicated unit tests per spec."
+reviewer: "Quinn (Test Architect)"
+updated: "2024-12-05T08:45:00Z"
+
+waiver: { active: false }
+
+top_issues:
+  - id: "SPEC-001"
+    severity: medium
+    finding: "Tidecaller HP is 70 in implementation but spec requires 72 HP"
+    suggested_action: "Either update code to 72 HP or update spec to reflect 70 HP as intentional balance choice"
+  - id: "DOC-001"
+    severity: low
+    finding: "Story task checkboxes not marked complete despite implementation existing"
+    suggested_action: "Dev agent should mark tasks as complete and fill Dev Agent Record section"
+  - id: "TEST-001"
+    severity: medium
+    finding: "No dedicated Tidecaller test file at src/tests/classes/Tidecaller.test.ts as specified"
+    suggested_action: "Create dedicated test file covering all 13 test scenarios listed in story"
+
+risk_summary:
+  totals: { critical: 0, high: 0, medium: 2, low: 1 }
+  recommendations:
+    must_fix:
+      - "Resolve HP discrepancy (spec vs implementation)"
+    monitor:
+      - "Ensure Tide/Drown mechanics work correctly in-game"
+      - "Verify Soaked damage multiplier calculations"
+
+evidence:
+  tests_reviewed: 918
+  test_status: "All tests pass"
+  files_verified:
+    - src/data/cards/tidecaller.ts
+    - src/data/classes.ts (TIDECALLER config at line 111)
+    - src/types/index.ts (TIDECALLER enum, GAIN_TIDE, DROWN effects)
+  ac_coverage:
+    covered: [1, 3, 4, 5]
+    partial: [2, 6, 7, 8, 9, 10]
+    gaps: []
+  notes: |
+    - Cards implemented: crashing_wave, tidal_barrier, undertow, drown, splash, rising_tide
+    - Tide mechanic types exist (GAIN_TIDE, StatusType.SOAKED, EffectType.DROWN)
+    - Class registered in CharacterClassId enum
+    - HP discrepancy: Story says 72HP, implementation has 70HP

@@ -14,8 +14,11 @@ export type SfxType =
   | 'spell'
   | 'arrow'
   | 'button'
+  | 'button-hover'
+  | 'button-click'
   | 'menu-move'
   | 'menu-back'
+  | 'screen-transition'
   | 'door'
   | 'error';
 
@@ -37,8 +40,11 @@ const SFX_PATHS: Record<SfxType, string> = {
   spell: '/audio/sfx/spell_cast.ogg',
   arrow: '/audio/sfx/arrow_shoot.ogg',
   button: '/audio/sfx/menu_select.ogg',
+  'button-hover': '/audio/sfx/menu_move.ogg',
+  'button-click': '/audio/sfx/menu_select.ogg',
   'menu-move': '/audio/sfx/menu_move.ogg',
   'menu-back': '/audio/sfx/menu_back.ogg',
+  'screen-transition': '/audio/sfx/door_open.ogg',
   door: '/audio/sfx/door_open.ogg',
   error: '/audio/sfx/error_noise.ogg',
 };

@@ -47,6 +47,21 @@ import {
   BARGAINER_CURSES,
   DEMONIC_DEBT,
 } from './bargainer';
+import {
+  TIDECALLER_CARDS,
+  TIDECALLER_STARTER_CARDS,
+  TIDECALLER_REWARD_POOL,
+} from './tidecaller';
+import {
+  SHADOW_STALKER_CARDS,
+  SHADOW_STALKER_STARTER_CARDS,
+  SHADOW_STALKER_REWARD_POOL,
+} from './shadowstalker';
+import {
+  GOBLIN_CARDS,
+  GOBLIN_STARTER_CARDS,
+  GOBLIN_REWARD_POOL,
+} from './goblin';
 
 // All cards indexed by ID
 export const ALL_CARDS: Record<string, CardDefinition> = {
@@ -58,6 +73,9 @@ export const ALL_CARDS: Record<string, CardDefinition> = {
   ...CELESTIAL_CARDS,
   ...SUMMONER_CARDS,
   ...BARGAINER_CARDS,
+  ...TIDECALLER_CARDS,
+  ...SHADOW_STALKER_CARDS,
+  ...GOBLIN_CARDS,
 };
 
 export function getCardById(id: string): CardDefinition | undefined {
@@ -83,6 +101,12 @@ export function getClassRewardPool(classId: CharacterClassId): CardDefinition[] 
       return SUMMONER_REWARD_POOL;
     case CharacterClassId.BARGAINER:
       return BARGAINER_REWARD_POOL;
+    case CharacterClassId.TIDECALLER:
+      return TIDECALLER_REWARD_POOL;
+    case CharacterClassId.SHADOW_STALKER:
+      return SHADOW_STALKER_REWARD_POOL;
+    case CharacterClassId.GOBLIN:
+      return GOBLIN_REWARD_POOL;
     default:
       return [];
   }
@@ -164,4 +188,13 @@ export {
   BARGAINER_REWARD_POOL,
   BARGAINER_CURSES,
   DEMONIC_DEBT,
+  TIDECALLER_CARDS,
+  TIDECALLER_STARTER_CARDS,
+  TIDECALLER_REWARD_POOL,
+  SHADOW_STALKER_CARDS,
+  SHADOW_STALKER_STARTER_CARDS,
+  SHADOW_STALKER_REWARD_POOL,
+  GOBLIN_CARDS,
+  GOBLIN_STARTER_CARDS,
+  GOBLIN_REWARD_POOL,
 };

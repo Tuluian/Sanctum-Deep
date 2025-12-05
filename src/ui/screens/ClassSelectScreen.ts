@@ -53,6 +53,21 @@ const CLASS_DESCRIPTIONS: Record<CharacterClassId, { desc: string; mechanic: str
     mechanic: 'Prices: Pay ongoing costs for immediate power.',
     tooltip: 'Many Bargainer cards have a "Price" - an ongoing negative effect like losing HP each turn or reduced max Resolve. Accumulate Favor to remove Prices or use Blood Payment to clear all Prices at once.',
   },
+  [CharacterClassId.TIDECALLER]: {
+    desc: 'Command the ocean\'s fury and drown your enemies.',
+    mechanic: 'Tide: Build Tide to increase Drown threshold.',
+    tooltip: 'Build Tide (max 10) to enhance your Drown ability. Drown instantly kills enemies below a HP threshold (base 5% + 1% per Tide). Apply Soaked to enemies for bonus damage from water attacks.',
+  },
+  [CharacterClassId.SHADOW_STALKER]: {
+    desc: 'Strike from the darkness with devastating precision.',
+    mechanic: 'Shadow Energy: Build energy for burst damage.',
+    tooltip: 'Build Shadow Energy (max 10) and enter Shadow state for enhanced attacks. While in Shadow, deal bonus damage. Consume Shadow Energy for massive burst damage. Evade lets you negate attacks.',
+  },
+  [CharacterClassId.GOBLIN]: {
+    desc: 'Devour cards for power and chaos.',
+    mechanic: 'Gobble: Eat cards to gain permanent combat bonuses.',
+    tooltip: 'Gobble cards in your hand to destroy them and gain bonuses: Attacks give +3 damage, Skills give +3 block. Hoard cards (7+) to trigger Goblin Mode for +2 damage/block on all cards. Regurgitate gobbled cards later.',
+  },
 };
 
 const FREE_CLASSES = [
@@ -81,6 +96,11 @@ export function createClassSelectScreen(callbacks: ClassSelectCallbacks): Screen
     return `
       <div class="class-detail-overlay" id="class-detail-overlay">
         <div class="class-detail-popup">
+          <div class="class-detail-top-bar">
+            <button class="class-detail-back-btn" id="btn-detail-back">← Back</button>
+            <button class="class-detail-start-btn" id="btn-detail-start">Begin Descent →</button>
+          </div>
+
           <div class="class-detail-header">
             <div class="class-detail-portrait">
               ${classImage
@@ -121,11 +141,6 @@ export function createClassSelectScreen(callbacks: ClassSelectCallbacks): Screen
               </div>
               <blockquote class="class-detail-quote-inline">${narrative.quote}</blockquote>
             </div>
-          </div>
-
-          <div class="class-detail-actions">
-            <button class="class-detail-back-btn" id="btn-detail-back">← Back</button>
-            <button class="class-detail-start-btn" id="btn-detail-start">Begin Descent</button>
           </div>
         </div>
       </div>

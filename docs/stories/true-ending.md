@@ -294,7 +294,7 @@ The title screen changes. Instead of the Sanctum's entrance, you see the Garden.
 Play any class again with:
 - All cards unlocked from start
 - Enemies have new dialogue acknowledging the True Ending
-- The Hollow God doesn't appear—its "awakened" self offers gifts instead
+- The Hollow God doesn't appear—its "awakened" self offers gifts instead (of more Soul Echoes)
 
 ### Cosmetic Unlocks
 - "Gardener's Blessing" card back

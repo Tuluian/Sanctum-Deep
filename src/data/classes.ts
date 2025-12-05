@@ -108,6 +108,43 @@ export const CLASSES: Record<CharacterClassId, CharacterClass> = {
       { cardId: 'infernal_bulwark', count: 1 },
     ],
   },
+  [CharacterClassId.TIDECALLER]: {
+    id: CharacterClassId.TIDECALLER,
+    name: 'Tidecaller',
+    maxHp: 70,
+    maxResolve: 3,
+    starterDeckRecipe: [
+      { cardId: 'crashing_wave', count: 4 },
+      { cardId: 'tidal_barrier', count: 3 },
+      { cardId: 'undertow', count: 2 },
+      { cardId: 'drown', count: 1 },
+    ],
+  },
+  [CharacterClassId.SHADOW_STALKER]: {
+    id: CharacterClassId.SHADOW_STALKER,
+    name: 'Shadow Stalker',
+    maxHp: 65,
+    maxResolve: 3,
+    starterDeckRecipe: [
+      { cardId: 'shadow_strike', count: 4 },
+      { cardId: 'fade', count: 3 },
+      { cardId: 'evade', count: 2 },
+      { cardId: 'shadowstep', count: 1 },
+    ],
+  },
+  [CharacterClassId.GOBLIN]: {
+    id: CharacterClassId.GOBLIN,
+    name: 'Goblin',
+    maxHp: 60,
+    maxResolve: 3,
+    starterDeckRecipe: [
+      { cardId: 'bite', count: 3 },
+      { cardId: 'scrounge', count: 3 },
+      { cardId: 'gobble', count: 2 },
+      { cardId: 'hoard', count: 1 },
+      { cardId: 'regurgitate', count: 1 },
+    ],
+  },
 };
 
 export function createStarterDeck(classId: CharacterClassId): Card[] {

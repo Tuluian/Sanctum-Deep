@@ -1,0 +1,46 @@
+schema: 1
+story: "8.2"
+story_title: "Greater Demon Self-Heal Fix"
+gate: CONCERNS
+status_reason: "Heal mechanics verified working, enhancements added for Consume Tendril and HP threshold. Missing unit tests for AC: 6."
+reviewer: "Quinn (Test Architect)"
+updated: "2025-12-05T09:05:00Z"
+
+waiver: { active: false }
+
+top_issues:
+  - id: "TEST-001"
+    severity: medium
+    finding: "No unit tests added for heal mechanics (AC: 6)"
+    suggested_action: "Add tests for Consume Minion, Consume Tendril, and HP threshold filtering"
+    suggested_owner: dev
+
+risk_summary:
+  totals: { critical: 0, high: 0, medium: 1, low: 0 }
+  recommendations:
+    must_fix: []
+    monitor:
+      - "Verify heal mechanics across all enemies that have them"
+
+quality_score: 90
+
+evidence:
+  tests_reviewed: 918
+  risks_identified: 1
+  trace:
+    ac_covered: [1, 2, 3, 4, 5]
+    ac_gaps: [6]
+
+nfr_validation:
+  security: { status: PASS, notes: "Internal game logic, no user input" }
+  performance: { status: PASS, notes: "Array filtering is efficient" }
+  reliability: { status: PASS, notes: "Fallback behavior when no minions to consume" }
+  maintainability: { status: PASS, notes: "Consistent pattern across consume abilities" }
+
+recommendations:
+  immediate:
+    - action: "Add unit tests for Consume Minion and Consume Tendril"
+      refs: ["src/engine/CombatEngine.test.ts"]
+  future:
+    - action: "Consider abstracting consume pattern into helper function"
+      refs: ["src/engine/CombatEngine.ts:2463-2494"]

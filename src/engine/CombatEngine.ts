@@ -13,10 +13,17 @@ import {
   EnemyIntent,
   EnemyMove,
   EndTurnResult,
+  GobbledCard,
   IntentType,
   Minion,
   MAX_MINIONS,
   MAX_FAVOR,
+  MAX_TIDE,
+  MAX_SHADOW_ENERGY,
+  DROWN_GOLD_REWARD,
+  GOBLIN_MODE_HAND_THRESHOLD,
+  GOBBLE_ATTACK_BONUS,
+  GOBBLE_SKILL_BONUS,
   DEBT_STACK_THRESHOLD,
   DEBT_STACK_DAMAGE,
   PlayerState,
@@ -243,10 +250,15 @@ export class CombatEngine {
       if (m.oncePerCombat && enemy.usedAbilities.includes(m.id)) {
         return false;
       }
-      // Filter summon moves if on cooldown or at max minions
-      if (m.intent === IntentType.SUMMON) {
+      // Filter summon/spawn moves if on cooldown or at max minions
+      if (m.intent === IntentType.SUMMON || m.intent === IntentType.SPAWN) {
         if (enemy.summonCooldown > 0) return false;
         if (currentMinionCount >= maxMinions) return false;
+      }
+      // Filter moves that require HP threshold (e.g., Warden's Duty only when below 30%)
+      if (m.hpThreshold !== undefined) {
+        const hpPercent = enemy.currentHp / enemy.maxHp;
+        if (hpPercent > m.hpThreshold) return false;
       }
       return true;
     });
@@ -649,11 +661,44 @@ export class CombatEngine {
         return `Gained ${fortifyGain} Fortify`;
       }
 
-      case EffectType.APPLY_STATUS:
-        // For now, APPLY_STATUS with amount means Empowered Attack
+      case EffectType.APPLY_STATUS: {
+        // Check for statusType in the effect
+        const statusType = (effect as { type: EffectType; amount: number; target?: string; statusType?: StatusType }).statusType;
+        const effectTarget = (effect as { type: EffectType; amount: number; target?: string }).target;
+
+        if (statusType === StatusType.EVADE && effectTarget === 'self') {
+          // Apply Evade to player (Shadow Stalker)
+          const existingEvade = this.state.player.statusEffects.find(e => e.type === StatusType.EVADE);
+          if (existingEvade) {
+            existingEvade.amount += effect.amount;
+          } else {
+            this.state.player.statusEffects.push({
+              type: StatusType.EVADE,
+              amount: effect.amount,
+            });
+          }
+          return `Gained ${effect.amount} Evade`;
+        }
+
+        if (statusType === StatusType.SOAKED && effectTarget === 'enemy' && target) {
+          // Apply Soaked to enemy (Tidecaller)
+          const existingSoaked = target.statusEffects.find(e => e.type === StatusType.SOAKED);
+          if (existingSoaked) {
+            existingSoaked.amount += effect.amount;
+          } else {
+            target.statusEffects.push({
+              type: StatusType.SOAKED,
+              amount: effect.amount,
+            });
+          }
+          return `Applied ${effect.amount} Soaked to ${target.name}`;
+        }
+
+        // Default: empowered attack (legacy behavior)
         this.state.player.empoweredAttack += effect.amount;
         this.emit(CombatEventType.PLAYER_EMPOWERED_CHANGED, { empoweredAttack: this.state.player.empoweredAttack });
         return `Your next attack deals +${effect.amount} damage`;
+      }
 
       // Diabolist effects
       case EffectType.LOSE_HP: {
@@ -1089,6 +1134,172 @@ export class CombatEngine {
         return `Permanently +${effect.amount} block on all cards`;
       }
 
+      // Tidecaller effects
+      case EffectType.GAIN_TIDE: {
+        const previousTide = this.state.player.tide;
+        this.state.player.tide = Math.min(
+          this.state.player.tide + effect.amount,
+          MAX_TIDE
+        );
+        this.emit(CombatEventType.TIDE_CHANGED, { tide: this.state.player.tide });
+        return `Gained ${this.state.player.tide - previousTide} Tide (${this.state.player.tide}/${MAX_TIDE})`;
+      }
+
+      case EffectType.DROWN: {
+        if (!target) return null;
+        // Calculate threshold: base + 1% per Tide stack
+        const threshold = effect.amount + this.state.player.tide;
+        const targetHpPercent = (target.currentHp / target.maxHp) * 100;
+
+        if (targetHpPercent <= threshold) {
+          // Execute the enemy
+          const killedName = target.name;
+          target.currentHp = 0;
+          this.emit(CombatEventType.ENEMY_DROWNED, { enemy: target, gold: DROWN_GOLD_REWARD });
+          this.emit(CombatEventType.ENEMY_DIED, { enemy: target });
+          this.log(`${killedName} was drowned! Gained ${DROWN_GOLD_REWARD} gold.`);
+          // Note: Gold is tracked in game state, not combat engine
+          return `Drowned ${killedName}! Gained ${DROWN_GOLD_REWARD} gold.`;
+        }
+        return `Drown failed - enemy HP ${targetHpPercent.toFixed(1)}% > ${threshold}% threshold`;
+      }
+
+      case EffectType.DAMAGE_IF_SOAKED: {
+        if (!target) return null;
+        // Check if target has SOAKED status
+        const soakedStatus = target.statusEffects.find(s => s.type === StatusType.SOAKED);
+        if (soakedStatus && soakedStatus.amount > 0) {
+          return this.dealDamageToEnemy(target, effect.amount);
+        }
+        return 'Target not Soaked - no damage dealt';
+      }
+
+      // Shadow Stalker effects
+      case EffectType.GAIN_SHADOW_ENERGY: {
+        const previousEnergy = this.state.player.shadowEnergy;
+        this.state.player.shadowEnergy = Math.min(
+          this.state.player.shadowEnergy + effect.amount,
+          MAX_SHADOW_ENERGY
+        );
+        this.emit(CombatEventType.SHADOW_ENERGY_CHANGED, { shadowEnergy: this.state.player.shadowEnergy });
+        return `Gained ${this.state.player.shadowEnergy - previousEnergy} Shadow Energy (${this.state.player.shadowEnergy}/${MAX_SHADOW_ENERGY})`;
+      }
+
+      case EffectType.ENTER_SHADOW: {
+        this.state.player.inShadow = effect.amount;
+        this.emit(CombatEventType.ENTERED_SHADOW, { turns: effect.amount });
+        this.log(`Entered the Shadow for ${effect.amount} turn(s)!`);
+        return `Entered Shadow for ${effect.amount} turn(s)`;
+      }
+
+      case EffectType.DAMAGE_IN_SHADOW: {
+        if (!target) return null;
+        // effect.amount is base damage, shadowDamage is in extended effect properties
+        const shadowDamage = (effect as { type: EffectType; amount: number; shadowDamage?: number }).shadowDamage || effect.amount;
+        const damage = this.state.player.inShadow > 0 ? shadowDamage : effect.amount;
+        return this.dealDamageToEnemy(target, damage);
+      }
+
+      case EffectType.CONSUME_SHADOW_ENERGY_DAMAGE: {
+        if (!target) return null;
+        const energyConsumed = this.state.player.shadowEnergy;
+        const perStackDamage = effect.perStack || effect.amount;
+        const totalDamage = energyConsumed * perStackDamage;
+
+        this.state.player.shadowEnergy = 0;
+        this.emit(CombatEventType.SHADOW_ENERGY_CHANGED, { shadowEnergy: 0 });
+
+        if (totalDamage > 0) {
+          this.dealDamageToEnemy(target, totalDamage);
+          return `Consumed ${energyConsumed} Shadow Energy for ${totalDamage} damage`;
+        }
+        return 'No Shadow Energy to consume';
+      }
+
+      // Goblin effects
+      case EffectType.GOBBLE_CARD: {
+        // Find a card in hand (not the card being played)
+        // For now, gobble the first non-gobble card in hand
+        const gobbleableCards = this.state.player.hand.filter(c => c.id !== 'gobble' && c.id !== 'snack_time');
+        if (gobbleableCards.length === 0) {
+          return 'No cards to Gobble';
+        }
+
+        // Gobble a random card
+        const cardToGobble = gobbleableCards[Math.floor(Math.random() * gobbleableCards.length)];
+        const cardIndex = this.state.player.hand.findIndex(c => c.instanceId === cardToGobble.instanceId);
+        if (cardIndex === -1) return 'No cards to Gobble';
+
+        const gobbledCard = this.state.player.hand.splice(cardIndex, 1)[0];
+
+        // Track the gobbled card
+        const gobbledRecord: GobbledCard = {
+          cardId: gobbledCard.id,
+          cardType: gobbledCard.type,
+        };
+        this.state.player.gobbledCardsCombat.push(gobbledRecord);
+        this.state.player.totalGobbled++;
+
+        // Apply bonuses based on card type
+        let bonusText = '';
+        if (gobbledCard.type === CardType.ATTACK) {
+          this.state.player.gobbleDamageBonus += GOBBLE_ATTACK_BONUS;
+          bonusText = ` (+${GOBBLE_ATTACK_BONUS} damage bonus)`;
+        } else if (gobbledCard.type === CardType.SKILL) {
+          this.state.player.gobbleBlockBonus += GOBBLE_SKILL_BONUS;
+          bonusText = ` (+${GOBBLE_SKILL_BONUS} block bonus)`;
+        }
+
+        this.emit(CombatEventType.CARD_GOBBLED, { card: gobbledCard, bonus: bonusText });
+        this.log(`Gobbled ${gobbledCard.name}!${bonusText}`);
+        return `Gobbled ${gobbledCard.name}${bonusText}`;
+      }
+
+      case EffectType.CHECK_GOBLIN_MODE: {
+        const threshold = effect.amount || GOBLIN_MODE_HAND_THRESHOLD;
+        if (this.state.player.hand.length > threshold) {
+          // Apply Goblin Mode status
+          const existingGoblinMode = this.state.player.statusEffects?.find(s => s.type === StatusType.GOBLIN_MODE);
+          if (!existingGoblinMode) {
+            if (!this.state.player.statusEffects) {
+              this.state.player.statusEffects = [];
+            }
+            this.state.player.statusEffects.push({
+              type: StatusType.GOBLIN_MODE,
+              amount: 2, // +2 damage/block to all cards
+              duration: 1, // Lasts 1 turn
+            });
+            this.emit(CombatEventType.GOBLIN_MODE_ACTIVATED, { bonus: 2 });
+            this.log(`GOBLIN MODE activated! +2 damage and block this turn!`);
+            return 'GOBLIN MODE activated! +2 damage/block this turn';
+          }
+        }
+        return null;
+      }
+
+      case EffectType.REGURGITATE_CARD: {
+        if (this.state.player.gobbledCardsCombat.length === 0) {
+          return 'No Gobbled cards to regurgitate';
+        }
+
+        // Pick a random gobbled card
+        const randomIndex = Math.floor(Math.random() * this.state.player.gobbledCardsCombat.length);
+        const gobbledRecord = this.state.player.gobbledCardsCombat.splice(randomIndex, 1)[0];
+
+        // Create a new card instance
+        const cardDef = getCardById(gobbledRecord.cardId);
+        if (!cardDef) {
+          return 'Could not find gobbled card';
+        }
+
+        const newCard = this.createCardInstance(cardDef);
+        this.state.player.hand.push(newCard);
+
+        this.emit(CombatEventType.CARD_REGURGITATED, { card: newCard });
+        this.log(`Regurgitated ${newCard.name}!`);
+        return `Regurgitated ${newCard.name}`;
+      }
+
       default:
         return null;
     }
@@ -1365,7 +1576,21 @@ export class CombatEngine {
     return { blocked, hpDamage };
   }
 
-  private dealDamageToPlayerOrMinion(damage: number): { targetName: string; blocked: number; hpDamage: number } {
+  private dealDamageToPlayerOrMinion(damage: number): { targetName: string; blocked: number; hpDamage: number; evaded?: boolean } {
+    // Check for Evade status (Shadow Stalker) - negates one attack
+    const evadeIndex = this.state.player.statusEffects.findIndex(e => e.type === StatusType.EVADE && e.amount > 0);
+    if (evadeIndex !== -1) {
+      // Consume one stack of Evade
+      const evadeEffect = this.state.player.statusEffects[evadeIndex];
+      evadeEffect.amount--;
+      if (evadeEffect.amount <= 0) {
+        this.state.player.statusEffects.splice(evadeIndex, 1);
+      }
+      this.emit(CombatEventType.EVADE_TRIGGERED, { damage });
+      this.log(`Attack evaded!`);
+      return { targetName: 'you', blocked: 0, hpDamage: 0, evaded: true };
+    }
+
     // If minions exist, target a random minion
     if (this.state.player.minions.length > 0) {
       const targetIndex = Math.floor(Math.random() * this.state.player.minions.length);
@@ -2251,6 +2476,22 @@ export class CombatEngine {
               // No Imps to consume, do a basic attack instead
               log.push(`${enemy.name} has no minions to consume!`);
             }
+          } else if (intent.moveId === 'consume_tendril') {
+            // Void Caller Consume Tendril - destroy a void tendril to heal
+            const tendrils = this.state.enemies.filter(e => e.currentHp > 0 && e.id.startsWith('void_tendril'));
+            if (tendrils.length > 0) {
+              // Consume a random tendril
+              const victim = tendrils[Math.floor(Math.random() * tendrils.length)];
+              victim.currentHp = 0;
+              this.emit(CombatEventType.ENEMY_DIED, { enemyId: victim.id });
+              // Heal the void caller
+              const healAmount = Math.min(intent.heal || 15, enemy.maxHp - enemy.currentHp);
+              enemy.currentHp += healAmount;
+              log.push(`${enemy.name} consumes ${victim.name} and heals for ${healAmount} HP!`);
+            } else {
+              // No tendrils to consume
+              log.push(`${enemy.name} has no tendrils to consume!`);
+            }
           } else if (intent.heal) {
             // Heal an ally (or self if no allies)
             const aliveAllies = this.state.enemies.filter(e => e.currentHp > 0 && e.id !== enemy.id);
@@ -2334,6 +2575,29 @@ export class CombatEngine {
             }
             if (summoned > 0) {
               enemy.summonCooldown = summonCooldownTurns;
+            }
+          }
+          break;
+        }
+
+        case IntentType.SPAWN: {
+          // Spawn a single enemy (similar to SUMMON but uses spawnId)
+          if (intent.spawnId) {
+            const currentMinionCount = this.state.enemies.filter(
+              e => e.currentHp > 0 && !e.isBoss && !e.isElite && e.id !== enemy.id
+            ).length;
+            const maxMinions = 3;
+            const summonCooldownTurns = 5;
+
+            if (currentMinionCount >= maxMinions) {
+              log.push(`${enemy.name} cannot spawn more minions!`);
+            } else {
+              const spawnDef = this.enemyDefinitions.get(intent.spawnId);
+              if (spawnDef) {
+                this.addEnemy(spawnDef);
+                log.push(`${enemy.name} spawned ${spawnDef.name}!`);
+                enemy.summonCooldown = summonCooldownTurns;
+              }
             }
           }
           break;
@@ -2464,6 +2728,37 @@ export class CombatEngine {
         log.push('Corruption fades completely.');
       } else {
         log.push(`Corruption decays. (${corruptEffect.amount} remaining)`);
+      }
+    }
+
+    // Decrement Shadow duration (Shadow Stalker)
+    if (this.state.player.inShadow > 0) {
+      this.state.player.inShadow--;
+      if (this.state.player.inShadow <= 0) {
+        this.emit(CombatEventType.EXITED_SHADOW, {});
+        log.push('You emerge from the Shadow.');
+      } else {
+        log.push(`Shadow remains for ${this.state.player.inShadow} more turn(s).`);
+      }
+    }
+
+    // Expire Goblin Mode at start of turn (Goblin)
+    const goblinModeEffect = this.state.player.statusEffects.find(e => e.type === StatusType.GOBLIN_MODE);
+    if (goblinModeEffect) {
+      this.state.player.statusEffects = this.state.player.statusEffects.filter(
+        e => e.type !== StatusType.GOBLIN_MODE
+      );
+      log.push('Goblin Mode fades.');
+    }
+
+    // Expire Evade status at start of turn (Shadow Stalker)
+    const evadeEffect = this.state.player.statusEffects.find(e => e.type === StatusType.EVADE);
+    if (evadeEffect && evadeEffect.duration !== undefined) {
+      evadeEffect.duration--;
+      if (evadeEffect.duration <= 0) {
+        this.state.player.statusEffects = this.state.player.statusEffects.filter(
+          e => e.type !== StatusType.EVADE
+        );
       }
     }
 

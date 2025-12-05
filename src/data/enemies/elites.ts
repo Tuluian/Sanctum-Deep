@@ -55,6 +55,11 @@ export const ELITE_ENEMIES: Record<string, EnemyDefinition> = {
   },
 };
 
+// Minions that can be summoned by elites
+export const ELITE_MINIONS: Record<string, EnemyDefinition> = {
+  summoned_acolyte: ELITE_ENEMIES.summoned_acolyte,
+};
+
 export function getEliteById(id: string): EnemyDefinition | undefined {
   return ELITE_ENEMIES[id];
 }

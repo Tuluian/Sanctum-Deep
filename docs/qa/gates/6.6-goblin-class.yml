@@ -1,0 +1,52 @@
+# Quality Gate: 6.6 Goblin Class
+schema: 1
+story: "6.6"
+story_title: "Goblin Class & Gobble System"
+gate: CONCERNS
+status_reason: "Implementation exists and tests pass, but HP value (60) doesn't match spec (75). Story tasks not marked complete. Missing dedicated unit tests per spec."
+reviewer: "Quinn (Test Architect)"
+updated: "2024-12-05T08:45:00Z"
+
+waiver: { active: false }
+
+top_issues:
+  - id: "SPEC-001"
+    severity: high
+    finding: "Goblin HP is 60 in implementation but spec requires 75 HP - 15 HP difference is significant"
+    suggested_action: "Either update code to 75 HP or update spec to reflect 60 HP as intentional balance choice"
+  - id: "DOC-001"
+    severity: low
+    finding: "Story task checkboxes not marked complete despite implementation existing"
+    suggested_action: "Dev agent should mark tasks as complete and fill Dev Agent Record section"
+  - id: "TEST-001"
+    severity: medium
+    finding: "No dedicated Goblin test file at src/tests/classes/Goblin.test.ts as specified"
+    suggested_action: "Create dedicated test file covering all 14 test scenarios listed in story"
+
+risk_summary:
+  totals: { critical: 0, high: 1, medium: 1, low: 1 }
+  recommendations:
+    must_fix:
+      - "Resolve HP discrepancy - 15 HP difference significantly impacts class viability"
+    monitor:
+      - "Verify Gobble card destruction works correctly"
+      - "Test Goblin Mode trigger at >7 hand size"
+      - "Verify Regurgitate returns Gobbled cards properly"
+
+evidence:
+  tests_reviewed: 918
+  test_status: "All tests pass"
+  files_verified:
+    - src/data/cards/goblin.ts
+    - src/data/classes.ts (GOBLIN config at line 135)
+    - src/types/index.ts (GOBLIN enum, GOBBLE/REGURGITATE effects, GOBLIN_MODE constants)
+  ac_coverage:
+    covered: [1, 3, 4]
+    partial: [2, 5, 6, 7, 8, 9, 10]
+    gaps: []
+  notes: |
+    - Cards implemented: bite, scrounge, gobble, hoard, regurgitate, chomp, hoarders_delight, snack_time
+    - Gobble mechanic types exist (GOBBLE_CARD, REGURGITATE_CARD, CHECK_GOBLIN_MODE)
+    - Goblin Mode constants defined (threshold=7, bonus=+2 damage/block)
+    - Class registered in CharacterClassId enum
+    - HP discrepancy: Story says 75HP, implementation has 60HP (15 HP difference!)

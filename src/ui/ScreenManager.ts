@@ -2,6 +2,9 @@
  * ScreenManager - Handles navigation between game screens
  */
 
+import { onScreenChange } from './KeyboardNav';
+import { AudioManager } from '@/services/AudioManager';
+
 export interface Screen {
   id: string;
   element: HTMLElement;
@@ -60,6 +63,12 @@ export class ScreenManager {
     // Enter new screen
     newScreen.onEnter?.();
     await this.animateIn(newScreen);
+
+    // Play screen transition sound
+    AudioManager.playSfx('screen-transition');
+
+    // Reset keyboard focus for new screen
+    onScreenChange();
   }
 
   async back(): Promise<void> {
@@ -82,6 +91,12 @@ export class ScreenManager {
     if (prevScreen) {
       prevScreen.onEnter?.();
       await this.animateIn(prevScreen);
+
+      // Play back navigation sound
+      AudioManager.playSfx('menu-back');
+
+      // Reset keyboard focus for previous screen
+      onScreenChange();
     }
   }
 

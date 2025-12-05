@@ -170,6 +170,13 @@ describe('Hollow God Combat Mechanics', () => {
       permanentBlockBonus: 0,
       upgradeDamageBonus: 0,
       upgradeBlockBonus: 0,
+      tide: 0,
+      shadowEnergy: 0,
+      inShadow: 0,
+      gobbledCardsCombat: [],
+      totalGobbled: 0,
+      gobbleDamageBonus: 0,
+      gobbleBlockBonus: 0,
     };
 
     engine = new CombatEngine(player, [HOLLOW_GOD]);
@@ -386,6 +393,13 @@ describe('Chomp Timer', () => {
       permanentBlockBonus: 0,
       upgradeDamageBonus: 0,
       upgradeBlockBonus: 0,
+      tide: 0,
+      shadowEnergy: 0,
+      inShadow: 0,
+      gobbledCardsCombat: [],
+      totalGobbled: 0,
+      gobbleDamageBonus: 0,
+      gobbleBlockBonus: 0,
     };
   });
 
@@ -556,6 +570,13 @@ describe('Shadow Self Death Healing', () => {
       permanentBlockBonus: 0,
       upgradeDamageBonus: 0,
       upgradeBlockBonus: 0,
+      tide: 0,
+      shadowEnergy: 0,
+      inShadow: 0,
+      gobbledCardsCombat: [],
+      totalGobbled: 0,
+      gobbleDamageBonus: 0,
+      gobbleBlockBonus: 0,
     };
 
     const engine = new CombatEngine(player, [SHADOW_SELF]);

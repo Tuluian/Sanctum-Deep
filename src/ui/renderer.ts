@@ -96,6 +96,30 @@ const STATUS_INFO: Record<StatusType, { icon: string; name: string; description:
     description: 'All incoming damage reduced by 50%.',
     isDebuff: false,
   },
+  [StatusType.SOAKED]: {
+    icon: '💧',
+    name: 'Soaked',
+    description: 'Vulnerable to water attacks. Takes extra damage from Tidecaller abilities.',
+    isDebuff: true,
+  },
+  [StatusType.SHADOW]: {
+    icon: '🌑',
+    name: 'In Shadow',
+    description: 'Enhanced damage and 50% evasion chance.',
+    isDebuff: false,
+  },
+  [StatusType.EVADE]: {
+    icon: '💨',
+    name: 'Evade',
+    description: 'Negates the next incoming attack.',
+    isDebuff: false,
+  },
+  [StatusType.GOBLIN_MODE]: {
+    icon: '🦷',
+    name: 'Goblin Mode',
+    description: '+2 damage and block to all cards this turn.',
+    isDebuff: false,
+  },
 };
 
 // Vow bonus display info

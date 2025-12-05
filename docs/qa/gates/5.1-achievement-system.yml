@@ -1,0 +1,114 @@
+# Quality Gate: Story 5.1 - Achievement System
+schema: 1
+story: "5.1"
+story_title: "Achievement System"
+gate: PASS
+status_reason: "All 7 acceptance criteria implemented, 25 tests passing, build succeeds, code quality excellent."
+reviewer: "Quinn (Test Architect)"
+updated: "2025-12-04T22:15:00Z"
+
+waiver: { active: false }
+
+top_issues: []
+# No blocking issues found
+
+risk_summary:
+  totals: { critical: 0, high: 0, medium: 0, low: 1 }
+  highest: low
+  recommendations:
+    must_fix: []
+    monitor:
+      - "TODO: Warden tracking per class in persistent storage (AchievementService.ts:602)"
+
+quality_score: 95
+expires: "2025-12-18T00:00:00Z"
+
+evidence:
+  tests_reviewed: 25
+  tests_passing: 25
+  risks_identified: 1
+  trace:
+    ac_covered: [1, 2, 3, 4, 5, 6, 7]
+    ac_gaps: []
+
+# Acceptance Criteria Traceability
+ac_trace:
+  - ac: 1
+    description: "Achievement system tracks player accomplishments across runs"
+    status: COVERED
+    evidence:
+      - "AchievementService.ts: startRun(), endRun(), checkRunAchievements()"
+      - "AchievementTracker.ts: hooks into CombatEngine events"
+      - "Test: 'should track run stats', 'should track class wins'"
+
+  - ac: 2
+    description: "Achievements award Soul Echoes on first completion"
+    status: COVERED
+    evidence:
+      - "AchievementService.ts:642-643: awardSoulEchoes()"
+      - "SaveManager.addSoulEchoes() integration"
+      - "Test: 'should calculate total earned soul echoes'"
+
+  - ac: 3
+    description: "Achievements have tiers: Bronze (10), Silver (25), Gold (50), Platinum (100)"
+    status: COVERED
+    evidence:
+      - "types/achievements.ts:17-22: SOUL_ECHO_REWARDS constant"
+      - "Test: 'should have correct rewards per tier'"
+
+  - ac: 4
+    description: "Achievement progress persists across sessions"
+    status: COVERED
+    evidence:
+      - "AchievementService.ts:95-126: loadFromStorage(), saveToStorage()"
+      - "localStorage keys: achievement_progress, sanctum_ruins_save"
+      - "Test: mock localStorage, resetAllAchievements()"
+
+  - ac: 5
+    description: "Achievement notification appears on unlock"
+    status: COVERED
+    evidence:
+      - "AchievementNotification.ts: showAchievementNotification()"
+      - "Queue system for multiple unlocks"
+      - "main.ts:73: initAchievementNotifications()"
+
+  - ac: 6
+    description: "Achievement gallery viewable from main menu"
+    status: COVERED
+    evidence:
+      - "MainMenuScreen.ts:49-51: Achievements button"
+      - "AchievementScreen.ts: full gallery with filters"
+      - "main.ts:31: createAchievementScreen import"
+
+  - ac: 7
+    description: "Some achievements are hidden until unlocked"
+    status: COVERED
+    evidence:
+      - "types/achievements.ts:85: hidden boolean field"
+      - "data/achievements.ts: all secret category have hidden: true"
+      - "AchievementScreen.ts:69-71: shows '???' for hidden locked"
+      - "Test: 'should have all secret achievements marked as hidden'"
+
+nfr_validation:
+  security:
+    status: PASS
+    notes: "localStorage for non-sensitive game data only"
+  performance:
+    status: PASS
+    notes: "O(1) lookups, proper event cleanup, queue prevents UI thrashing"
+  reliability:
+    status: PASS
+    notes: "Error handling in storage operations, fallback for missing data"
+  maintainability:
+    status: PASS
+    notes: "Clean separation of concerns, comprehensive type definitions"
+
+recommendations:
+  immediate: []
+  future:
+    - action: "Add E2E test for achievement unlock flow"
+      refs: ["e2e/achievements.spec.ts"]
+    - action: "Track achievement unlock timestamps"
+      refs: ["AchievementService.ts:710"]
+    - action: "Implement Warden choice tracking per class"
+      refs: ["AchievementService.ts:602-620"]

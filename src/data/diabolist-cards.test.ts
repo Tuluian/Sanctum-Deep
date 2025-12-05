@@ -56,6 +56,13 @@ function createDiabolistPlayerState(overrides: Partial<PlayerState> = {}): Playe
     permanentBlockBonus: 0,
     upgradeDamageBonus: 0,
     upgradeBlockBonus: 0,
+    tide: 0,
+    shadowEnergy: 0,
+    inShadow: 0,
+    gobbledCardsCombat: [],
+    totalGobbled: 0,
+    gobbleDamageBonus: 0,
+    gobbleBlockBonus: 0,
     ...overrides,
   };
 }

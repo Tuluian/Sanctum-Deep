@@ -70,6 +70,19 @@ export enum EffectType {
   GAIN_FAVOR = 'GAIN_FAVOR', // Gain Favor resource
   DAMAGE_PER_PRICE = 'DAMAGE_PER_PRICE', // Deal damage per active Price × multiplier
   REMOVE_ALL_PRICES = 'REMOVE_ALL_PRICES', // Remove all active Prices
+  // Tidecaller effects
+  GAIN_TIDE = 'GAIN_TIDE', // Gain Tide stacks
+  DROWN = 'DROWN', // Execute enemies at low HP% for gold
+  DAMAGE_IF_SOAKED = 'DAMAGE_IF_SOAKED', // Deal damage only if target is Soaked
+  // Shadow Stalker effects
+  GAIN_SHADOW_ENERGY = 'GAIN_SHADOW_ENERGY', // Gain Shadow Energy stacks
+  ENTER_SHADOW = 'ENTER_SHADOW', // Enter Shadow state for X turns
+  DAMAGE_IN_SHADOW = 'DAMAGE_IN_SHADOW', // Deal X damage, or Y if in Shadow
+  CONSUME_SHADOW_ENERGY_DAMAGE = 'CONSUME_SHADOW_ENERGY_DAMAGE', // Consume all Shadow Energy, deal X per stack
+  // Goblin effects
+  GOBBLE_CARD = 'GOBBLE_CARD', // Destroy a card in hand for bonuses
+  CHECK_GOBLIN_MODE = 'CHECK_GOBLIN_MODE', // Enter Goblin Mode if hand > threshold
+  REGURGITATE_CARD = 'REGURGITATE_CARD', // Return a random Gobbled card to hand
   // Permanent upgrade effects
   PERMANENT_BLOCK_BONUS = 'PERMANENT_BLOCK_BONUS', // Permanently increase all block from cards by X
 }
@@ -140,6 +153,7 @@ export enum StatusType {
   CURSED = 'CURSED',
   BOUND = 'BOUND',
   CORRUPT = 'CORRUPT', // Take X damage when playing a card
+  SOAKED = 'SOAKED', // Tidecaller: +50% water damage, +10% per stack
   // Buffs
   BLESSED = 'BLESSED',
   EMPOWERED = 'EMPOWERED',
@@ -149,6 +163,11 @@ export enum StatusType {
   REGENERATION = 'REGENERATION', // Heal X at start of turn
   // Celestial buffs
   DIVINE_FORM = 'DIVINE_FORM', // +1 damage to all attacks while at max Radiance
+  // Shadow Stalker buffs
+  SHADOW = 'SHADOW', // Shadow Stalker: bonus damage, 50% evasion
+  EVADE = 'EVADE', // Negates next incoming attack
+  // Goblin buffs
+  GOBLIN_MODE = 'GOBLIN_MODE', // +2 damage/block to all cards this turn
   // Act 3 enemy buffs
   INTANGIBLE = 'INTANGIBLE', // All incoming damage reduced by 50%
 }
@@ -236,6 +255,7 @@ export interface EnemyIntent {
   debuffDuration?: number;
   // Elite abilities
   summons?: string[];
+  spawnId?: string; // Single enemy spawn (for SPAWN intent)
   oncePerCombat?: boolean;
   // Boss abilities
   chargeTurns?: number;
@@ -311,11 +331,27 @@ export interface PlayerState {
   favor: number; // 0-10, spent to remove Prices
   activePrices: Price[]; // Currently active Prices
   baseMaxResolve: number; // Original max Resolve (before RESOLVE_TAX)
+  // Tidecaller specific
+  tide: number; // 0-10, increases Drown threshold
+  // Shadow Stalker specific
+  shadowEnergy: number; // 0-10, consumed for burst damage
+  inShadow: number; // Turns remaining in Shadow state (0 = not in shadow)
+  // Goblin specific
+  gobbledCardsCombat: GobbledCard[]; // Cards Gobbled this combat
+  totalGobbled: number; // Total cards Gobbled this run
+  gobbleDamageBonus: number; // Bonus damage from Gobbled attacks
+  gobbleBlockBonus: number; // Bonus block from Gobbled skills
   // Permanent bonuses
   permanentBlockBonus: number; // Bonus block added to all block-granting cards (from cards like Iron Mastery)
   // Upgrade bonuses (from Soul Echo purchases)
   upgradeDamageBonus: number; // +damage on all attacks (from Sharp Blades upgrade)
   upgradeBlockBonus: number; // +block on all block cards (from Thick Skin upgrade)
+}
+
+// Goblin Gobbled Card tracking
+export interface GobbledCard {
+  cardId: string;
+  cardType: CardType;
 }
 
 // Oathsworn Vow Types
@@ -369,6 +405,9 @@ export enum CharacterClassId {
   CELESTIAL = 'celestial',
   SUMMONER = 'summoner',
   BARGAINER = 'bargainer',
+  TIDECALLER = 'tidecaller',
+  SHADOW_STALKER = 'shadow_stalker',
+  GOBLIN = 'goblin',
 }
 
 // Bargainer Price Types
@@ -395,6 +434,23 @@ export interface PriceDefinition {
 export const MAX_FAVOR = 10;
 export const DEBT_STACK_THRESHOLD = 10;
 export const DEBT_STACK_DAMAGE = 20;
+
+// Tidecaller constants
+export const MAX_TIDE = 10;
+export const DROWN_BASE_THRESHOLD = 5; // 5% HP
+export const DROWN_GOLD_REWARD = 10;
+
+// Shadow Stalker constants
+export const MAX_SHADOW_ENERGY = 10;
+export const SHADOW_EVASION_CHANCE = 0.5; // 50%
+
+// Goblin constants
+export const GOBLIN_MODE_HAND_THRESHOLD = 7;
+export const GOBLIN_MODE_DAMAGE_BONUS = 2;
+export const GOBLIN_MODE_BLOCK_BONUS = 2;
+export const GOBBLE_ATTACK_BONUS = 3;
+export const GOBBLE_SKILL_BONUS = 3;
+export const GOBBLE_CURSE_HEAL = 5;
 
 // Summoner Minion Types
 export interface MinionDefinition {
@@ -499,6 +555,18 @@ export enum CombatEventType {
   PRICE_TRIGGERED = 'PRICE_TRIGGERED',
   PRICE_REMOVED = 'PRICE_REMOVED',
   DEBT_THRESHOLD_TRIGGERED = 'DEBT_THRESHOLD_TRIGGERED',
+  // Tidecaller events
+  TIDE_CHANGED = 'TIDE_CHANGED',
+  ENEMY_DROWNED = 'ENEMY_DROWNED', // Enemy killed via Drown
+  // Shadow Stalker events
+  SHADOW_ENERGY_CHANGED = 'SHADOW_ENERGY_CHANGED',
+  ENTERED_SHADOW = 'ENTERED_SHADOW',
+  EXITED_SHADOW = 'EXITED_SHADOW',
+  EVADE_TRIGGERED = 'EVADE_TRIGGERED', // Evade negated an attack
+  // Goblin events
+  CARD_GOBBLED = 'CARD_GOBBLED',
+  GOBLIN_MODE_ACTIVATED = 'GOBLIN_MODE_ACTIVATED',
+  CARD_REGURGITATED = 'CARD_REGURGITATED',
   // Act 3 enemy mechanic events
   CARD_CONSUMED = 'CARD_CONSUMED', // Void Spawn's Consume Light
   BUFFS_PURGED = 'BUFFS_PURGED', // Sanctum Guardian's Purge

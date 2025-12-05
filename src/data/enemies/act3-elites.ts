@@ -204,6 +204,12 @@ export function getAct3EliteIds(): string[] {
   return Object.keys(ACT3_ELITE_ENEMIES).filter((id) => ACT3_ELITE_ENEMIES[id].isElite);
 }
 
+// Minions that can be summoned by Act 3 elites
+export const ACT3_ELITE_MINIONS: Record<string, EnemyDefinition> = {
+  memory_bonelord: ACT3_ELITE_ENEMIES.memory_bonelord,
+  memory_drowned_king: ACT3_ELITE_ENEMIES.memory_drowned_king,
+};
+
 /**
  * Memory enemy IDs (for Sanctum Warden's Memory Projection)
  */

@@ -15,9 +15,9 @@ import { CharacterClassId, ActNumber } from '@/types';
 
 describe('endingNarratives', () => {
   describe('CHARACTER_NAMES', () => {
-    it('should have names for all 8 character classes', () => {
+    it('should have names for all character classes', () => {
       const classIds = Object.values(CharacterClassId);
-      expect(classIds.length).toBe(8);
+      expect(classIds.length).toBe(11); // 8 original + 3 new (Tidecaller, Shadow Stalker, Goblin)
 
       for (const classId of classIds) {
         expect(CHARACTER_NAMES[classId]).toBeDefined();

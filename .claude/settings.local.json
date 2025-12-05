@@ -20,7 +20,8 @@
       "Bash(npx eslint:*)",
       "mcp__ide__getDiagnostics",
       "Bash(cp:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "SlashCommand(/BMad:agents:dev)"
     ],
     "deny": [],
     "ask": []

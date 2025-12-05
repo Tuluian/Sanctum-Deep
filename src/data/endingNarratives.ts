@@ -23,6 +23,9 @@ export const CHARACTER_NAMES: Record<CharacterClassId, string> = {
   [CharacterClassId.CELESTIAL]: 'Seraphina',
   [CharacterClassId.SUMMONER]: 'Caelum',
   [CharacterClassId.BARGAINER]: 'Vesper',
+  [CharacterClassId.TIDECALLER]: 'Marina',
+  [CharacterClassId.SHADOW_STALKER]: 'Shade',
+  [CharacterClassId.GOBLIN]: 'Grizzle',
 };
 
 // Universal defeat frame text

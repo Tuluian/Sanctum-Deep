@@ -182,6 +182,11 @@ export const ACT2_ELITE_ENEMIES: Record<string, EnemyDefinition> = {
   },
 };
 
+// Minions that can be spawned by Act 2 elites
+export const ACT2_ELITE_MINIONS: Record<string, EnemyDefinition> = {
+  void_tendril: ACT2_ELITE_ENEMIES.void_tendril,
+};
+
 /**
  * Get an Act 2 elite enemy by ID
  */

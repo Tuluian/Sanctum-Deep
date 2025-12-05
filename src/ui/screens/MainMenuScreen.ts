@@ -9,7 +9,8 @@ export function createMainMenuScreen(
   onNewRun: () => void,
   onContinue: () => void,
   onSettings: () => void,
-  onUpgrades?: () => void
+  onUpgrades?: () => void,
+  onAchievements?: () => void
 ): Screen {
   const element = document.createElement('div');
   element.id = 'main-menu';
@@ -44,6 +45,10 @@ export function createMainMenuScreen(
             <span class="btn-text">Soul Sanctum</span>
             <span class="btn-subtitle">Spend Soul Echoes</span>
           </button>
+          <button class="menu-btn" id="btn-achievements">
+            <span class="btn-text">Achievements</span>
+            <span class="btn-subtitle">View Progress</span>
+          </button>
           <button class="menu-btn" id="btn-settings">
             <span class="btn-text">Settings</span>
           </button>
@@ -77,6 +82,9 @@ export function createMainMenuScreen(
     });
     if (onUpgrades) {
       element.querySelector('#btn-upgrades')?.addEventListener('click', onUpgrades);
+    }
+    if (onAchievements) {
+      element.querySelector('#btn-achievements')?.addEventListener('click', onAchievements);
     }
     element.querySelector('#btn-settings')?.addEventListener('click', onSettings);
   };
