@@ -241,12 +241,12 @@ h1 {
   align-items: center;
   cursor: pointer;
   transition: transform 0.2s ease;
-  gap: 15px;
+  gap: 4px;
 }
 
-/* Spacer between HP bar and figure to clear the head */
+/* Spacer between HP bar and figure */
 .arena-enemy .enemy-figure {
-  margin-top: 30px;
+  margin-top: 8px;
 }
 
 .arena-enemy:hover:not(.dead) {
@@ -457,7 +457,7 @@ h1 {
   background-image: url('/images/enemies/ghoul.png');
   background-color: transparent;
   background-size: contain;
-  background-position: center -10px;   /* raised 20px above container */
+  background-position: center -15px;   /* raised 20px above container */
   border-radius: 0;
   box-shadow: none;
   width: 180px;

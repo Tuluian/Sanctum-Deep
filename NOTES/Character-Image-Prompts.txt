@@ -1,6 +1,7 @@
 ** Gemini is CRAZY for making enemy vectors!!!! HOWEVER... usage only resets every 24 hours so we have some waiting/payments to do.
 
     Then Pixelcut.ai seems to work SUPER well for removing background quickly, can only do 4 a day.
+    Adobe Express background remover is also very very good. 
 -----------------------
 UNIVERSAL STYLE TAG (add this to all prompts)
 
