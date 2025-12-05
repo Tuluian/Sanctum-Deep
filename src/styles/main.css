@@ -559,6 +559,106 @@ h1 {
   display: none;
 }
 
+/* Act 2 Enemy Images */
+.enemy-figure[data-enemy-type="slimeling"] {
+  background-image: url('/images/enemies/slimeling.png');
+  background-color: transparent;
+  background-size: contain;
+  border-radius: 0;
+  box-shadow: none;
+  width: 90px;
+  height: 120px;
+}
+.enemy-figure[data-enemy-type="slimeling"]::before,
+.enemy-figure[data-enemy-type="slimeling"]::after {
+  display: none;
+}
+
+.enemy-figure[data-enemy-type="dark_mage"] {
+  background-image: url('/images/enemies/dark_mage.png');
+  background-color: transparent;
+  background-size: contain;
+  border-radius: 0;
+  box-shadow: none;
+  width: 90px;
+  height: 120px;
+}
+.enemy-figure[data-enemy-type="dark_mage"]::before,
+.enemy-figure[data-enemy-type="dark_mage"]::after {
+  display: none;
+}
+
+.enemy-figure[data-enemy-type="gargoyle"] {
+  background-image: url('/images/enemies/gargoyle.png');
+  background-color: transparent;
+  background-size: contain;
+  border-radius: 0;
+  box-shadow: none;
+  width: 90px;
+  height: 120px;
+}
+.enemy-figure[data-enemy-type="gargoyle"]::before,
+.enemy-figure[data-enemy-type="gargoyle"]::after {
+  display: none;
+}
+
+.enemy-figure[data-enemy-type="aberration"] {
+  background-image: url('/images/enemies/aberration.png');
+  background-color: transparent;
+  background-size: contain;
+  border-radius: 0;
+  box-shadow: none;
+  width: 90px;
+  height: 120px;
+}
+.enemy-figure[data-enemy-type="aberration"]::before,
+.enemy-figure[data-enemy-type="aberration"]::after {
+  display: none;
+}
+
+.enemy-figure[data-enemy-type="deep_one"] {
+  background-image: url('/images/enemies/deep_one.png');
+  background-color: transparent;
+  background-size: contain;
+  border-radius: 0;
+  box-shadow: none;
+  width: 90px;
+  height: 120px;
+}
+.enemy-figure[data-enemy-type="deep_one"]::before,
+.enemy-figure[data-enemy-type="deep_one"]::after {
+  display: none;
+}
+
+/* Act 2 Elite Images */
+.enemy-figure[data-enemy-type="void_caller"] {
+  background-image: url('/images/enemies/void_caller.png');
+  background-color: transparent;
+  background-size: contain;
+  border-radius: 0;
+  box-shadow: none;
+  width: 180px;
+  height: 240px;
+}
+.enemy-figure[data-enemy-type="void_caller"]::before,
+.enemy-figure[data-enemy-type="void_caller"]::after {
+  display: none;
+}
+
+.enemy-figure[data-enemy-type="void_tendril"] {
+  background-image: url('/images/enemies/void_tendril.png');
+  background-color: transparent;
+  background-size: contain;
+  border-radius: 0;
+  box-shadow: none;
+  width: 90px;
+  height: 120px;
+}
+.enemy-figure[data-enemy-type="void_tendril"]::before,
+.enemy-figure[data-enemy-type="void_tendril"]::after {
+  display: none;
+}
+
 /* Act 1 Boss Images */
 .enemy-figure[data-enemy-type="bonelord"] {
   background-image: url('/images/enemies/the_bonelord.png');

@@ -2,6 +2,9 @@
 
     Then Pixelcut.ai seems to work SUPER well for removing background quickly, can only do 4 a day.
     Adobe Express background remover is also very very good. 
+
+Need Act 1, 2, 3, and boss arena backgrounds. (and super enhance with AI so it can scale)
+
 -----------------------
 UNIVERSAL STYLE TAG (add this to all prompts)
 
