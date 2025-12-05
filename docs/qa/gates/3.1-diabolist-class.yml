@@ -1,0 +1,50 @@
+schema: 1
+story: "3.1"
+story_title: "The Diabolist Class & Contracts Mechanic"
+gate: CONCERNS
+status_reason: "Core implementation complete with 25 tests passing, but AC1 HP discrepancy (story says 50, implementation uses 70) requires clarification."
+reviewer: "Quinn (Test Architect)"
+updated: "2025-12-04T21:25:00Z"
+
+waiver: { active: false }
+
+top_issues:
+  - id: "DOC-001"
+    severity: medium
+    finding: "AC1 states 50 max HP but implementation uses 70 max HP"
+    suggested_action: "Update AC1 to match implementation (70 HP) or adjust code if 50 HP was intended"
+    suggested_owner: po
+
+quality_score: 85
+expires: "2025-12-18T00:00:00Z"
+
+evidence:
+  tests_reviewed: 25
+  risks_identified: 1
+  trace:
+    ac_covered: [2, 3, 5, 7, 8]
+    ac_gaps: [1, 4, 6]  # 1 = HP discrepancy, 4&6 = deferred Contracts
+
+nfr_validation:
+  security:
+    status: PASS
+    notes: "Game data only"
+  performance:
+    status: PASS
+    notes: "No concerns"
+  reliability:
+    status: PASS
+    notes: "All tests passing"
+  maintainability:
+    status: PASS
+    notes: "Clean code with good card categorization"
+
+recommendations:
+  immediate:
+    - action: "Resolve AC1 HP discrepancy (50 vs 70)"
+      refs: ["docs/stories/archived/3.1-diabolist-class.md:67", "src/data/classes.ts"]
+  future:
+    - action: "Implement Contracts mechanic (AC4, AC6)"
+      refs: ["src/engine/CombatEngine.ts"]
+    - action: "Add Diabolist UI elements (Soul Debt display, HP cost indicators)"
+      refs: ["src/ui/renderer.ts"]

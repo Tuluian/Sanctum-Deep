@@ -502,6 +502,7 @@ export enum CombatEventType {
   // Act 3 enemy mechanic events
   CARD_CONSUMED = 'CARD_CONSUMED', // Void Spawn's Consume Light
   BUFFS_PURGED = 'BUFFS_PURGED', // Sanctum Guardian's Purge
+  DEMON_SYNERGY = 'DEMON_SYNERGY', // Imp's Giggle or Hound's Howl
   // Hollow God boss events
   CARD_CORRUPTED = 'CARD_CORRUPTED', // Card becomes corrupted
   CARD_PERMANENTLY_EXHAUSTED = 'CARD_PERMANENTLY_EXHAUSTED', // Forget attack
@@ -664,4 +665,35 @@ export type PotionEffect =
 export interface PotionSlot {
   potionId: string;
   count: number;
+}
+
+// Victory/Defeat Narrative Types
+export type ActNumber = 1 | 2 | 3 | 'boss';
+
+export interface DefeatNarrative {
+  classId: CharacterClassId;
+  act: ActNumber;
+  narrative: string;
+  wardenQuote: string;
+}
+
+export interface VictoryNarrative {
+  classId: CharacterClassId;
+  choice: 'warden' | 'leave';
+  narrative: string;
+  epilogue: string;
+}
+
+export interface VictoryChoice {
+  id: 'warden' | 'leave';
+  label: string;
+  description: string;
+}
+
+export interface EndScreenData {
+  characterName: string;
+  characterClass: CharacterClassId;
+  victory: boolean;
+  act?: ActNumber;
+  soulEchoesEarned: number;
 }

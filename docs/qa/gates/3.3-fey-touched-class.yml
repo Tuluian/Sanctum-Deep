@@ -1,0 +1,47 @@
+schema: 1
+story: "3.3"
+story_title: "The Fey-Touched Class & Whimsy Mechanic"
+gate: PASS
+status_reason: "Whimsy mechanic implemented with weighted random selection, range-based effects, and Luck resource. 19 tests passing. Deferred items (transformation, UI) are non-blocking."
+reviewer: "Quinn (Test Architect)"
+updated: "2025-12-04T21:30:00Z"
+
+waiver: { active: false }
+
+top_issues: []
+
+quality_score: 90
+expires: "2025-12-18T00:00:00Z"
+
+evidence:
+  tests_reviewed: 19
+  risks_identified: 0
+  trace:
+    ac_covered: [1, 2, 3, 4, 7, 8]
+    ac_gaps: [5, 6]  # UI display and card transformation deferred
+
+nfr_validation:
+  security:
+    status: PASS
+    notes: "Game data only"
+  performance:
+    status: PASS
+    notes: "Math.random() sufficient for gameplay"
+  reliability:
+    status: PASS
+    notes: "All tests passing"
+  maintainability:
+    status: PASS
+    notes: "Clean helper functions for range effects"
+
+recommendations:
+  immediate: []
+  future:
+    - action: "Implement card transformation (TRANSFORM_RANDOM_CARD)"
+      refs: ["src/engine/CombatEngine.ts"]
+    - action: "Add Whimsy outcome display UI"
+      refs: ["src/ui/renderer.ts"]
+    - action: "Implement Luck spend to reroll/choose outcomes"
+      refs: ["src/engine/CombatEngine.ts", "src/ui/renderer.ts"]
+    - action: "Consider seeded randomness for replay consistency"
+      refs: ["src/engine/CombatEngine.ts"]

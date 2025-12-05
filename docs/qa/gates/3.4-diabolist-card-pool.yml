@@ -1,0 +1,45 @@
+schema: 1
+story: "3.4"
+story_title: "Diabolist Card Pool"
+gate: PASS
+status_reason: "Full card pool with 32 cards across all rarities. 4 curse types with different timing triggers. 23 tests passing. Contract conditions deferred appropriately."
+reviewer: "Quinn (Test Architect)"
+updated: "2025-12-04T21:32:00Z"
+
+waiver: { active: false }
+
+top_issues: []
+
+quality_score: 95
+expires: "2025-12-18T00:00:00Z"
+
+evidence:
+  tests_reviewed: 23
+  risks_identified: 0
+  trace:
+    ac_covered: [1, 2, 3, 4, 5]
+    ac_gaps: [6]  # Contract conditions deferred
+
+nfr_validation:
+  security:
+    status: PASS
+    notes: "Game data only"
+  performance:
+    status: PASS
+    notes: "countCursesInDeck acceptable for deck sizes <100"
+  reliability:
+    status: PASS
+    notes: "All tests passing, curse triggers work correctly"
+  maintainability:
+    status: PASS
+    notes: "Clean card categorization, helper functions"
+
+recommendations:
+  immediate: []
+  future:
+    - action: "Implement Contract condition tracking (AC6)"
+      refs: ["src/engine/CombatEngine.ts", "src/types/index.ts"]
+    - action: "Add card transformation effects"
+      refs: ["src/engine/CombatEngine.ts"]
+    - action: "Consider flavor text integration in UI"
+      refs: ["src/ui/renderer.ts"]

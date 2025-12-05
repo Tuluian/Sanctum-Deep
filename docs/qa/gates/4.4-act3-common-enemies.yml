@@ -1,0 +1,45 @@
+schema: 1
+story: "4.4"
+story_title: "Act 3 Common Enemies (Sanctum Core)"
+gate: PASS
+status_reason: "All 6 enemies implemented with correct stats, moves, and weights. 44 unit tests passing. Deferred items (Corruption Stacks, Identity Crisis) are non-blocking and well-documented."
+reviewer: "Quinn (Test Architect)"
+updated: "2025-12-04T21:20:00Z"
+
+waiver: { active: false }
+
+top_issues: []
+
+quality_score: 95
+expires: "2025-12-18T00:00:00Z"
+
+evidence:
+  tests_reviewed: 44
+  risks_identified: 0
+  trace:
+    ac_covered: [1, 2, 3, 4, 5]
+    ac_gaps: [6]  # Partial - Corruption Stacks and Identity Crisis deferred
+
+nfr_validation:
+  security:
+    status: PASS
+    notes: "No external inputs, game data only"
+  performance:
+    status: PASS
+    notes: "Simple array operations, no performance concerns"
+  reliability:
+    status: PASS
+    notes: "All tests passing, error cases handled"
+  maintainability:
+    status: PASS
+    notes: "Clean code with narrative documentation, helper functions, type safety"
+
+recommendations:
+  immediate: []
+  future:
+    - action: "Implement Corruption Stacks system (10 stacks = 20 damage)"
+      refs: ["src/engine/CombatEngine.ts", "src/types/index.ts"]
+    - action: "Implement Identity Crisis card copying mechanic"
+      refs: ["src/engine/CombatEngine.ts"]
+    - action: "Add CombatEngine unit tests for Intangible, Purge, Fade, etc."
+      refs: ["src/engine/CombatEngine.test.ts"]

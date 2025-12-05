@@ -1,0 +1,45 @@
+schema: 1
+story: "3.2"
+story_title: "The Oathsworn Class & Vows Mechanic"
+gate: PASS
+status_reason: "Comprehensive Vow system implemented with 6 unique Vows, full card pool, and 20 passing tests. All acceptance criteria met with UI deferrals documented."
+reviewer: "Quinn (Test Architect)"
+updated: "2025-12-04T21:28:00Z"
+
+waiver: { active: false }
+
+top_issues: []
+
+quality_score: 95
+expires: "2025-12-18T00:00:00Z"
+
+evidence:
+  tests_reviewed: 20
+  risks_identified: 0
+  trace:
+    ac_covered: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    ac_gaps: []
+
+nfr_validation:
+  security:
+    status: PASS
+    notes: "Game data only"
+  performance:
+    status: PASS
+    notes: "No concerns"
+  reliability:
+    status: PASS
+    notes: "All tests passing, edge cases handled"
+  maintainability:
+    status: PASS
+    notes: "Clean Vow registry, type-safe implementation"
+
+recommendations:
+  immediate: []
+  future:
+    - action: "Add Vow display UI (active Vow, charges, restrictions)"
+      refs: ["src/ui/renderer.ts"]
+    - action: "Gray out requiresVow cards when no Vow active"
+      refs: ["src/ui/renderer.ts"]
+    - action: "Mark as premium/DLC class in class configuration"
+      refs: ["src/data/classes.ts"]

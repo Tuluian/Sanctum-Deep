@@ -135,6 +135,12 @@ export class CombatEngine {
       }
     }
 
+    // Apply Corruption Draw Penalty (5+ corrupted cards = -1 draw)
+    if (this.state.corruptedCardIds && this.state.corruptedCardIds.size >= 5) {
+      drawCount = Math.max(1, drawCount - 1);
+      this.log(`Corruption clouds your mind! Draw reduced by 1.`);
+    }
+
     for (let i = 0; i < drawCount; i++) {
       if (this.state.player.drawPile.length === 0) {
         if (this.state.player.discardPile.length === 0) break;
@@ -2104,6 +2110,7 @@ export class CombatEngine {
               for (const imp of imps) {
                 imp.might += intent.buffAmount || 3;
               }
+              this.emit(CombatEventType.DEMON_SYNERGY, { buffName: 'Giggle', enemyCount: imps.length });
               log.push(`${enemy.name} giggles! All Imps gain +${intent.buffAmount || 3} Might!`);
             } else {
               log.push(`${enemy.name} giggles to no one...`);
@@ -2115,6 +2122,7 @@ export class CombatEngine {
               for (const demon of demons) {
                 demon.might += intent.buffAmount || 2;
               }
+              this.emit(CombatEventType.DEMON_SYNERGY, { buffName: 'Howl', enemyCount: demons.length });
               log.push(`${enemy.name} howls! All demons gain +${intent.buffAmount || 2} Might!`);
             } else {
               log.push(`${enemy.name} howls but there are no demons to rally!`);

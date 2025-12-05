@@ -1,4 +1,14 @@
-import { CombatState, IntentType, StatusEffect, StatusType, Vow, VowBonusType, VowRestrictionType, CardType, EffectType, Card, PlayerState, CharacterClassId } from '@/types';
+import { CombatState, IntentType, StatusEffect, StatusType, Vow, VowBonusType, VowRestrictionType, CardType, EffectType, Card, PlayerState, CharacterClassId, ActNumber, VictoryChoice } from '@/types';
+import {
+  getDefeatNarrative,
+  getVictoryNarrative,
+  getCharacterName,
+  DEFEAT_FRAME,
+  VICTORY_FRAME,
+  WARDEN_CHOICE_INTRO,
+  VICTORY_CHOICES,
+  BAD_ENDING,
+} from '@/data/endingNarratives';
 
 // Status effect display info
 const STATUS_INFO: Record<StatusType, { icon: string; name: string; description: string; isDebuff: boolean }> = {
@@ -366,6 +376,19 @@ export class CombatRenderer {
         const bossClass = isBoss ? 'boss' : '';
         const phaseIndicator = isBoss && enemy.phase > 0 ? `<div class="boss-phase">Phase ${enemy.phase + 1}</div>` : '';
 
+        // Elite-specific styling
+        const isElite = enemy.isElite;
+        const eliteClass = isElite ? 'elite' : '';
+        const elitePhaseIndicator = isElite && enemy.phase > 0 ? `<div class="elite-phase">Phase ${enemy.phase + 1}</div>` : '';
+
+        // Elite passive indicator
+        let elitePassiveIndicator = '';
+        if (isElite && enemy.id.includes('greater_demon')) {
+          elitePassiveIndicator = '<div class="elite-passive">🔥 Infernal Presence: -2 damage</div>';
+        } else if (isElite && enemy.id.includes('sanctum_warden')) {
+          elitePassiveIndicator = '<div class="elite-passive">⚓ Reality Anchor: Draw 4 max</div>';
+        }
+
         // Intangible styling
         const intangibleClass = enemy.intangible > 0 ? 'intangible' : '';
         const intangibleIndicator = enemy.intangible > 0 ? `<div class="intangible-indicator">👻 Intangible</div>` : '';
@@ -374,10 +397,12 @@ export class CombatRenderer {
         const intentTooltip = intentDescription ? `<div class="intent-tooltip">${intentDescription}</div>` : '';
 
         return `
-          <div class="arena-enemy ${isDead ? 'dead' : ''} ${isSelected ? 'selected' : ''} ${bossClass} ${intangibleClass}"
+          <div class="arena-enemy ${isDead ? 'dead' : ''} ${isSelected ? 'selected' : ''} ${bossClass} ${eliteClass} ${intangibleClass}"
                onclick="selectEnemy(${index})"
                data-enemy-id="${enemy.id}">
             ${phaseIndicator}
+            ${elitePhaseIndicator}
+            ${elitePassiveIndicator}
             ${intangibleIndicator}
             ${!isDead && enemy.intent ? `
               <div class="arena-enemy-intent-wrapper">
@@ -387,8 +412,12 @@ export class CombatRenderer {
             ` : ''}
             ${enemy.block > 0 ? `<div class="arena-enemy-block">🛡️ ${enemy.block}</div>` : ''}
             <div class="arena-enemy-name">${enemy.name}</div>
-            <div class="arena-enemy-hp ${isBoss ? 'boss-hp' : ''}">
+            <div class="arena-enemy-hp ${isBoss ? 'boss-hp' : ''} ${isElite ? 'elite-hp' : ''} ${enemy.id.includes('hollow_god') ? 'hollow-god-hp' : ''}">
               <div class="arena-enemy-hp-fill" style="width: ${hpPercent}%;"></div>
+              ${enemy.id.includes('hollow_god') ? `
+                <div class="phase-marker" style="left: 70%;" title="Phase 2: Consumption"></div>
+                <div class="phase-marker" style="left: 32%;" title="Phase 3: Annihilation"></div>
+              ` : ''}
               <div class="arena-enemy-hp-text">${enemy.currentHp}/${enemy.maxHp}</div>
             </div>
             ${enemy.statusEffects.length > 0 ? `
@@ -396,7 +425,7 @@ export class CombatRenderer {
                 ${this.renderStatusEffects(enemy.statusEffects)}
               </div>
             ` : ''}
-            <div class="enemy-figure ${isBoss ? 'boss-figure' : ''}"></div>
+            <div class="enemy-figure ${isBoss ? 'boss-figure' : ''} ${isElite ? 'elite-figure' : ''}" data-enemy-type="${enemy.id.replace(/_\d+$/, '')}"></div>
           </div>
         `;
       })
@@ -649,6 +678,210 @@ export class CombatRenderer {
     if (gameOverDiv) gameOverDiv.remove();
   }
 
+  /**
+   * Show narrative defeat screen with class-specific text
+   */
+  showNarrativeDefeat(
+    classId: CharacterClassId,
+    act: ActNumber,
+    soulEchoesEarned: number,
+    onContinue?: () => void
+  ): void {
+    const existing = document.querySelector('.game-over');
+    if (existing) existing.remove();
+
+    const characterName = getCharacterName(classId);
+    const narrative = getDefeatNarrative(classId, act);
+
+    const div = document.createElement('div');
+    div.className = 'game-over defeat narrative-ending';
+
+    // Build narrative content
+    const narrativeText = narrative?.narrative || 'The Sanctum claims another soul...';
+    const wardenQuote = narrative?.wardenQuote || 'Another falls. The void grows.';
+
+    div.innerHTML = `
+      <div class="ending-frame defeat-frame">
+        <h2 class="ending-title">${DEFEAT_FRAME.title}</h2>
+        <div class="ending-character">
+          <div class="character-portrait defeat-portrait"></div>
+          <div class="character-name">${characterName}</div>
+        </div>
+        <p class="ending-subtitle">"${DEFEAT_FRAME.subtitle}"</p>
+      </div>
+      <div class="narrative-content">
+        <div class="narrative-text">${this.formatNarrativeText(narrativeText)}</div>
+        <div class="warden-quote">
+          <span class="warden-attribution">— The Warden</span>
+          <p>"${wardenQuote}"</p>
+        </div>
+      </div>
+      <div class="ending-footer">
+        <p class="soul-echoes-earned">+${soulEchoesEarned} 🔮 Soul Echoes</p>
+        <button id="game-over-continue" class="ending-button">Return to Menu</button>
+      </div>
+    `;
+    document.body.appendChild(div);
+
+    const continueBtn = document.getElementById('game-over-continue');
+    if (continueBtn && onContinue) {
+      continueBtn.addEventListener('click', onContinue);
+    } else if (continueBtn) {
+      continueBtn.addEventListener('click', () => location.reload());
+    }
+  }
+
+  /**
+   * Show victory screen with Warden choice
+   */
+  showVictoryChoice(
+    classId: CharacterClassId,
+    soulEchoesEarned: number,
+    onChoice: (choice: 'warden' | 'leave') => void
+  ): void {
+    const existing = document.querySelector('.game-over');
+    if (existing) existing.remove();
+
+    const characterName = getCharacterName(classId);
+
+    const div = document.createElement('div');
+    div.className = 'game-over victory narrative-ending';
+
+    div.innerHTML = `
+      <div class="ending-frame victory-frame">
+        <h2 class="ending-title">${VICTORY_FRAME.title}</h2>
+        <div class="ending-character">
+          <div class="character-portrait victory-portrait"></div>
+          <div class="character-name">${characterName}</div>
+        </div>
+        <p class="ending-subtitle">"${VICTORY_FRAME.subtitle}"</p>
+      </div>
+      <div class="narrative-content">
+        <div class="warden-speech">${this.formatNarrativeText(WARDEN_CHOICE_INTRO)}</div>
+        <div class="victory-choices">
+          ${VICTORY_CHOICES.map((choice: VictoryChoice) => `
+            <button class="victory-choice-btn" data-choice="${choice.id}">
+              <span class="choice-label">${choice.label}</span>
+              <span class="choice-description">"${choice.description}"</span>
+            </button>
+          `).join('')}
+        </div>
+      </div>
+      <div class="ending-footer">
+        <p class="soul-echoes-earned">+${soulEchoesEarned} 🔮 Soul Echoes</p>
+      </div>
+    `;
+    document.body.appendChild(div);
+
+    // Add click handlers for choices
+    const choiceButtons = div.querySelectorAll('.victory-choice-btn');
+    choiceButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const choice = btn.getAttribute('data-choice') as 'warden' | 'leave';
+        onChoice(choice);
+      });
+    });
+  }
+
+  /**
+   * Show the ending narrative after player makes their choice
+   */
+  showVictoryEnding(
+    classId: CharacterClassId,
+    choice: 'warden' | 'leave',
+    soulEchoesEarned: number,
+    onContinue?: () => void
+  ): void {
+    const existing = document.querySelector('.game-over');
+    if (existing) existing.remove();
+
+    const characterName = getCharacterName(classId);
+    const narrative = getVictoryNarrative(classId, choice);
+
+    const div = document.createElement('div');
+    div.className = 'game-over victory narrative-ending ending-finale';
+
+    const narrativeText = narrative?.narrative || 'Your journey ends here...';
+    const epilogueText = narrative?.epilogue || '';
+
+    const choiceTitle = choice === 'warden' ? 'THE NEW WARDEN' : 'FREEDOM';
+
+    div.innerHTML = `
+      <div class="ending-frame victory-frame">
+        <h2 class="ending-title">${choiceTitle}</h2>
+        <div class="ending-character">
+          <div class="character-portrait victory-portrait"></div>
+          <div class="character-name">${characterName}</div>
+        </div>
+      </div>
+      <div class="narrative-content">
+        <div class="narrative-text">${this.formatNarrativeText(narrativeText)}</div>
+        ${epilogueText ? `
+          <div class="epilogue">
+            <div class="epilogue-divider">* * *</div>
+            <div class="epilogue-text">${this.formatNarrativeText(epilogueText)}</div>
+          </div>
+        ` : ''}
+      </div>
+      <div class="ending-footer">
+        <p class="soul-echoes-earned">+${soulEchoesEarned} 🔮 Soul Echoes</p>
+        <button id="game-over-continue" class="ending-button">Return to Menu</button>
+      </div>
+    `;
+    document.body.appendChild(div);
+
+    const continueBtn = document.getElementById('game-over-continue');
+    if (continueBtn && onContinue) {
+      continueBtn.addEventListener('click', onContinue);
+    } else if (continueBtn) {
+      continueBtn.addEventListener('click', () => location.reload());
+    }
+  }
+
+  /**
+   * Show the bad ending when player leaves without becoming Warden
+   */
+  showBadEnding(soulEchoesEarned: number, onContinue?: () => void): void {
+    const existing = document.querySelector('.game-over');
+    if (existing) existing.remove();
+
+    const div = document.createElement('div');
+    div.className = 'game-over bad-ending narrative-ending';
+
+    div.innerHTML = `
+      <div class="ending-frame bad-ending-frame">
+        <h2 class="ending-title">${BAD_ENDING.title}</h2>
+      </div>
+      <div class="narrative-content bad-ending-content">
+        ${BAD_ENDING.lines.map(line =>
+          line ? `<p class="bad-ending-line">"${line}"</p>` : '<p class="bad-ending-line">&nbsp;</p>'
+        ).join('')}
+      </div>
+      <div class="ending-footer">
+        <p class="soul-echoes-earned">+${soulEchoesEarned} 🔮 Soul Echoes</p>
+        <button id="game-over-continue" class="ending-button">Return to Menu</button>
+      </div>
+    `;
+    document.body.appendChild(div);
+
+    const continueBtn = document.getElementById('game-over-continue');
+    if (continueBtn && onContinue) {
+      continueBtn.addEventListener('click', onContinue);
+    } else if (continueBtn) {
+      continueBtn.addEventListener('click', () => location.reload());
+    }
+  }
+
+  /**
+   * Format narrative text with proper paragraph breaks
+   */
+  private formatNarrativeText(text: string): string {
+    return text
+      .split('\n\n')
+      .map(paragraph => `<p>${paragraph.replace(/\n/g, '<br>')}</p>`)
+      .join('');
+  }
+
   // Turn announcements
   showTurnBanner(isPlayerTurn: boolean): void {
     const banner = document.getElementById('turn-banner');
@@ -733,5 +966,96 @@ export class CombatRenderer {
     setTimeout(() => {
       slash.remove();
     }, 400);
+  }
+
+  // Card consumed by void (Consume Light effect)
+  playCardConsumedAnimation(cardName: string): void {
+    const handContainer = document.querySelector('.hand-container, .cards-in-hand');
+    if (!handContainer) return;
+
+    // Create floating card that gets consumed
+    const consumedCard = document.createElement('div');
+    consumedCard.className = 'consumed-card-effect';
+    consumedCard.innerHTML = `<span class="consumed-card-name">${cardName}</span>`;
+    handContainer.appendChild(consumedCard);
+
+    // Trigger animation
+    requestAnimationFrame(() => {
+      consumedCard.classList.add('active');
+    });
+
+    // Remove after animation
+    setTimeout(() => {
+      consumedCard.remove();
+    }, 800);
+  }
+
+  // Buffs stripped (Purge effect)
+  playBuffsPurgedAnimation(buffCount: number): void {
+    const playerArea = document.querySelector('.player-silhouette, .player-status-bar');
+    if (!playerArea) return;
+
+    // Create shatter effect
+    const purgeEffect = document.createElement('div');
+    purgeEffect.className = 'purge-effect';
+    purgeEffect.innerHTML = `<span class="purge-text">-${buffCount} Buff${buffCount > 1 ? 's' : ''}!</span>`;
+    playerArea.appendChild(purgeEffect);
+
+    // Trigger animation
+    requestAnimationFrame(() => {
+      purgeEffect.classList.add('active');
+    });
+
+    // Remove after animation
+    setTimeout(() => {
+      purgeEffect.remove();
+    }, 1000);
+  }
+
+  // Demon synergy triggered (Howl/Giggle)
+  playDemonSynergyAnimation(buffName: string): void {
+    const enemyArea = this.elements.enemySlots;
+    if (!enemyArea) return;
+
+    // Create synergy indicator
+    const synergyEffect = document.createElement('div');
+    synergyEffect.className = 'demon-synergy-effect';
+    synergyEffect.innerHTML = `<span class="synergy-text">🔥 ${buffName}! 🔥</span>`;
+    enemyArea.appendChild(synergyEffect);
+
+    // Add pulsing glow to all demon enemies
+    const enemies = enemyArea.querySelectorAll('.arena-enemy:not(.dead)');
+    enemies.forEach(enemy => enemy.classList.add('demon-synergy-active'));
+
+    // Trigger animation
+    requestAnimationFrame(() => {
+      synergyEffect.classList.add('active');
+    });
+
+    // Remove after animation
+    setTimeout(() => {
+      synergyEffect.remove();
+      enemies.forEach(enemy => enemy.classList.remove('demon-synergy-active'));
+    }, 1200);
+  }
+
+  // Forget attack effect (Hollow God permanently exhausts a card)
+  playForgetAnimation(cardName: string): void {
+    // Create overlay effect
+    const forgetOverlay = document.createElement('div');
+    forgetOverlay.className = 'forget-effect';
+    document.body.appendChild(forgetOverlay);
+
+    // Create card dissolve display
+    const cardDissolve = document.createElement('div');
+    cardDissolve.className = 'forget-card-dissolve';
+    cardDissolve.innerHTML = `You forget how to...<br><strong>${cardName}</strong>`;
+    document.body.appendChild(cardDissolve);
+
+    // Remove after animation
+    setTimeout(() => {
+      forgetOverlay.remove();
+      cardDissolve.remove();
+    }, 1500);
   }
 }

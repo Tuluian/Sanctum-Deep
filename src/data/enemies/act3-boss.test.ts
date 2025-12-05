@@ -554,6 +554,8 @@ describe('Shadow Self Death Healing', () => {
       activePrices: [],
       baseMaxResolve: 3,
       permanentBlockBonus: 0,
+      upgradeDamageBonus: 0,
+      upgradeBlockBonus: 0,
     };
 
     const engine = new CombatEngine(player, [SHADOW_SELF]);

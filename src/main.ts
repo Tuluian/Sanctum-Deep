@@ -7,10 +7,12 @@ import { createSettingsScreen } from '@/ui/screens/SettingsScreen';
 import { createMapScreen } from '@/ui/screens/MapScreen';
 import { createUpgradeScreen } from '@/ui/screens/UpgradeScreen';
 import { createNarrativeEventScreen } from '@/ui/screens/NarrativeEventScreen';
+import { createShrineScreen } from '@/ui/screens/ShrineScreen';
 import { StoryCardOverlay } from '@/ui/screens/StoryCardOverlay';
 import { SaveManager } from '@/services/SaveManager';
 import { AudioManager } from '@/services/AudioManager';
 import { NarrativeEventService, initNarrativeEventService } from '@/services/NarrativeEventService';
+import { ShrineService, initShrineService } from '@/services/ShrineService';
 import { applyCombatModifiersToPlayer, getRunModifiers, type RunModifiers } from '@/services/UpgradeEffects';
 import { createStarterDeck, CLASSES } from '@/data/classes';
 import { ACT1_ENEMIES } from '@/data/enemies/act1';
@@ -20,8 +22,9 @@ import { HOLLOW_GOD, SHADOW_SELF } from '@/data/enemies/act3-boss';
 import { ACT3_ELITE_ENEMIES } from '@/data/enemies/act3-elites';
 import { ACT3_ENEMIES } from '@/data/enemies/act3';
 import { generateFloor } from '@/map/MapGenerator';
-import { CardType, CharacterClassId, CombatEventType, PlayerState, FloorMap, MapNode, NodeType, EnemyDefinition, StatusType } from '@/types';
+import { CardType, CharacterClassId, CombatEventType, PlayerState, FloorMap, MapNode, NodeType, EnemyDefinition, StatusType, ActNumber } from '@/types';
 import { NarrativeEvent, NarrativeChoice } from '@/types/narrativeEvents';
+import { ShrineDefinition, ShrineChoice } from '@/types/shrines';
 import { getPotion } from '@/data/potions';
 import './styles/main.css';
 
@@ -46,6 +49,7 @@ class Game {
   private currentNode: MapNode | null = null;
   private mapScreen: MapScreenExtended | null = null;
   private narrativeService: NarrativeEventService | null = null;
+  private shrineService: ShrineService | null = null;
   private storyCardOverlay: StoryCardOverlay | null = null;
   private isFirstCombat: boolean = true;
   private runModifiers: RunModifiers | null = null;
@@ -121,6 +125,15 @@ class Game {
       onEventComplete: () => this.handleNarrativeEventComplete(),
     });
 
+    // Shrine Screen
+    const shrineScreen = createShrineScreen({
+      onChoiceSelected: (shrine: ShrineDefinition, choice: ShrineChoice) => {
+        return this.handleShrineChoice(shrine, choice);
+      },
+      onShrineComplete: () => this.handleShrineComplete(),
+      canAffordChoice: (choice: ShrineChoice) => this.canAffordShrineChoice(choice),
+    });
+
     // Register screens
     this.screenManager.register(mainMenu);
     this.screenManager.register(upgradeScreen);
@@ -128,6 +141,7 @@ class Game {
     this.screenManager.register(settings);
     this.screenManager.register(this.mapScreen);
     this.screenManager.register(narrativeEventScreen);
+    this.screenManager.register(shrineScreen);
 
     // Start at main menu
     this.screenManager.navigateTo('main-menu');
@@ -518,6 +532,8 @@ class Game {
 
     // Initialize narrative service for this run
     this.narrativeService = initNarrativeEventService(classId, mapSeed);
+    // Initialize shrine service for this run
+    this.shrineService = initShrineService(classId, mapSeed);
     this.isFirstCombat = true;
 
     // Update class name in UI
@@ -567,6 +583,8 @@ class Game {
 
     // Initialize narrative service for continued run
     this.narrativeService = initNarrativeEventService(runData.classId, runData.mapSeed);
+    // Initialize shrine service for continued run
+    this.shrineService = initShrineService(runData.classId, runData.mapSeed);
     this.isFirstCombat = runData.visitedNodeIds.length === 0;
 
     // Update class name in UI
@@ -729,8 +747,8 @@ class Game {
       // TODO: Show shop
       this.handleNonCombatNode(node, 'Shop coming soon!');
     } else if (node.type === NodeType.SHRINE) {
-      // TODO: Show shrine event
-      this.handleNonCombatNode(node, 'Shrine events coming soon!');
+      // Show shrine event
+      this.handleShrineNode(node);
     }
   }
 
@@ -782,6 +800,189 @@ class Game {
     this.showMapScreen();
   }
 
+  // ===========================================================================
+  // SHRINE HANDLING
+  // ===========================================================================
+
+  /**
+   * Handle a shrine node selection
+   */
+  private handleShrineNode(node: MapNode): void {
+    if (!this.shrineService || !this.currentFloor) return;
+
+    // Get a random shrine for the current act
+    const act = this.currentFloor.act as 1 | 2 | 3;
+    const shrine = this.shrineService.getRandomShrine(act);
+
+    if (!shrine) {
+      // No shrines available (all oncePerRun shrines already visited)
+      this.handleNonCombatNode(node, 'The shrine stands silent. Nothing remains to discover here.');
+      return;
+    }
+
+    // Prepare shrine with class-specific modifications
+    const preparedShrine = this.shrineService.prepareShrine(shrine);
+
+    // Show shrine screen
+    const screen = this.screenManager.getScreen('shrine-screen') as ReturnType<typeof createShrineScreen> | undefined;
+    if (screen && 'showShrine' in screen) {
+      // Store current node for later use
+      this.currentNode = node;
+      screen.showShrine(preparedShrine);
+      this.screenManager.navigateTo('shrine-screen');
+    }
+  }
+
+  /**
+   * Handle a choice made at a shrine
+   */
+  private handleShrineChoice(shrine: ShrineDefinition, choice: ShrineChoice): {
+    outcome: import('@/types/shrines').ShrineOutcome;
+    rewardDescriptions: string[];
+    costDescriptions: string[];
+    loreFragment?: string;
+  } {
+    if (!this.shrineService) {
+      throw new Error('Shrine service not initialized');
+    }
+
+    const runData = SaveManager.getActiveRun();
+    if (!runData) {
+      throw new Error('No active run');
+    }
+
+    // Apply upfront costs (HP, gold)
+    const { newHp, newGold } = this.shrineService.applyChoiceCosts(
+      { currentHp: runData.playerHp, maxHp: runData.playerMaxHp } as PlayerState,
+      choice,
+      runData.gold || 0
+    );
+
+    SaveManager.updateRun({
+      playerHp: newHp,
+      gold: newGold,
+    });
+
+    // Resolve the choice
+    const result = this.shrineService.resolveChoice(shrine, choice);
+
+    // Create a temporary player state to apply changes
+    const tempPlayer: PlayerState = {
+      classId: this.currentClassId!,
+      maxHp: runData.playerMaxHp,
+      currentHp: newHp,
+      block: 0,
+      resolve: 3,
+      maxResolve: 3,
+      hand: [],
+      drawPile: [],
+      discardPile: [],
+      exhaustPile: [],
+      statusEffects: [],
+      devotion: 0,
+      fortify: 0,
+      maxFortify: 15,
+      empoweredAttack: 0,
+      soulDebt: 0,
+      activeVow: null,
+      vowsActivatedThisCombat: 0,
+      luck: 0,
+      maxLuck: 10,
+      guaranteedBest: false,
+      radiance: 0,
+      maxRadiance: 10,
+      minions: [],
+      favor: 0,
+      activePrices: [],
+      baseMaxResolve: 3,
+      permanentBlockBonus: 0,
+      upgradeDamageBonus: 0,
+      upgradeBlockBonus: 0,
+    };
+
+    // Apply rewards
+    const rewardDescriptions = this.shrineService.applyRewardsToPlayer(
+      tempPlayer,
+      result.appliedRewards
+    );
+
+    // Apply costs
+    const costDescriptions = this.shrineService.applyCostsToPlayer(
+      tempPlayer,
+      result.appliedCosts
+    );
+
+    // Save updated player state
+    SaveManager.updateRun({
+      playerHp: tempPlayer.currentHp,
+      playerMaxHp: tempPlayer.maxHp,
+    });
+
+    // Handle gold changes from rewards/costs
+    let goldChange = 0;
+    for (const reward of result.appliedRewards) {
+      if (reward.type === 'gold') {
+        goldChange += reward.amount || 0;
+      }
+    }
+    for (const cost of result.appliedCosts) {
+      if (cost.type === 'gold_loss') {
+        goldChange -= cost.amount || 0;
+      }
+    }
+    if (goldChange !== 0) {
+      SaveManager.updateRun({
+        gold: Math.max(0, (runData.gold || 0) + goldChange),
+      });
+    }
+
+    return {
+      outcome: result.outcome,
+      rewardDescriptions,
+      costDescriptions,
+      loreFragment: result.loreFragment,
+    };
+  }
+
+  /**
+   * Handle shrine completion
+   */
+  private handleShrineComplete(): void {
+    if (this.currentNode) {
+      this.currentNode.visited = true;
+      SaveManager.markNodeVisited(this.currentNode.id);
+      SaveManager.setCurrentNode(this.currentNode.id);
+    }
+
+    // Check for story card after shrine
+    this.checkAndShowStoryCard();
+
+    // Return to map
+    this.showMapScreen();
+  }
+
+  /**
+   * Check if player can afford a shrine choice
+   */
+  private canAffordShrineChoice(choice: ShrineChoice): { canAfford: boolean; reason?: string } {
+    if (!this.shrineService) {
+      return { canAfford: false, reason: 'Shrine service not initialized' };
+    }
+
+    const runData = SaveManager.getActiveRun();
+    if (!runData) {
+      return { canAfford: false, reason: 'No active run' };
+    }
+
+    // Create minimal player state for affordability check
+    const tempPlayer = {
+      currentHp: runData.playerHp,
+      maxHp: runData.playerMaxHp,
+    } as PlayerState;
+
+    return this.shrineService.canAffordChoice(tempPlayer, choice, runData.gold || 0);
+  }
+
   private showMapScreen(): void {
     if (!this.mapScreen || !this.currentFloor) return;
 
@@ -800,6 +1001,9 @@ class Game {
 
     const state = this.combat.getState();
     const victory = state.victory;
+    const runData = SaveManager.getActiveRun();
+    const classId = runData?.classId || CharacterClassId.CLERIC;
+    const currentAct = runData?.currentAct || 1;
 
     // Play victory/defeat music
     AudioManager.playMusic(victory ? 'victory' : 'defeat');
@@ -825,13 +1029,21 @@ class Game {
       // Check if this was the boss - run complete!
       const isBossNode = this.currentNode?.type === NodeType.BOSS;
       const isEliteNode = this.currentNode?.type === NodeType.ELITE;
+      const isHollowGodBoss = isBossNode && currentAct === 3; // Final boss
 
       // Award Soul Echoes based on combat type
-      const soulEchoesReward = isBossNode ? 50 : isEliteNode ? 5 : 2;
+      // Elite rewards: 15 Soul Echoes (vs 2 normal, 50 boss)
+      const soulEchoesReward = isBossNode ? 50 : isEliteNode ? 15 : 2;
       SaveManager.addSoulEchoes(soulEchoesReward);
 
-      if (isBossNode) {
-        // Run complete - full victory!
+      if (isHollowGodBoss) {
+        // Hollow God defeated - show Warden choice!
+        SaveManager.endRun(true);
+        this.renderer.showVictoryChoice(classId, soulEchoesReward, (choice) => {
+          this.handleVictoryChoice(classId, choice, soulEchoesReward);
+        });
+      } else if (isBossNode) {
+        // Act boss defeated (not Hollow God) - continue to next act
         SaveManager.endRun(true);
         this.renderer.showGameOver(true, soulEchoesReward, () => {
           this.renderer.removeGameOver();
@@ -846,8 +1058,10 @@ class Game {
         });
       } else {
         // Show rewards then return to map
-        // TODO: Implement proper rewards screen (card selection, gold, etc.)
-        const goldReward = Math.floor(Math.random() * 20) + 10;
+        // TODO: Implement proper rewards screen (card selection, relic drops, etc.)
+        // Base gold reward: 10-30 gold for normal, doubled for elite
+        const baseGold = Math.floor(Math.random() * 20) + 10;
+        const goldReward = isEliteNode ? baseGold * 2 : baseGold;
         SaveManager.updateRun({ gold: (SaveManager.getActiveRun()?.gold || 0) + goldReward });
 
         this.renderer.showGameOver(true, soulEchoesReward, () => {
@@ -867,12 +1081,40 @@ class Game {
         });
       }
     } else {
-      // Defeat - end run (no Soul Echoes to prevent grinding)
+      // Defeat - show narrative defeat screen
       SaveManager.endRun(false);
-      this.renderer.showGameOver(false, 0, () => {
+      // Determine act number for narrative - use 'boss' if died to a boss
+      const isBossNode = this.currentNode?.type === NodeType.BOSS;
+      const defeatAct: ActNumber = isBossNode ? 'boss' : (currentAct as 1 | 2 | 3);
+
+      this.renderer.showNarrativeDefeat(classId, defeatAct, 0, () => {
         this.renderer.removeGameOver();
         this.hideCombatScreen();
         this.screenManager.navigateTo('main-menu', true);
+      });
+    }
+  }
+
+  /**
+   * Handle the player's choice after defeating the Hollow God
+   */
+  private handleVictoryChoice(classId: CharacterClassId, choice: 'warden' | 'leave', soulEchoesEarned: number): void {
+    if (choice === 'warden') {
+      // Player becomes the Warden - show the good ending
+      this.renderer.showVictoryEnding(classId, choice, soulEchoesEarned, () => {
+        this.renderer.removeGameOver();
+        this.hideCombatScreen();
+        this.screenManager.navigateTo('main-menu', true);
+      });
+    } else {
+      // Player leaves - show class-specific leave ending, then bad ending
+      this.renderer.showVictoryEnding(classId, choice, soulEchoesEarned, () => {
+        // After the leave narrative, show the bad ending consequences
+        this.renderer.showBadEnding(soulEchoesEarned, () => {
+          this.renderer.removeGameOver();
+          this.hideCombatScreen();
+          this.screenManager.navigateTo('main-menu', true);
+        });
       });
     }
   }
@@ -1172,11 +1414,29 @@ class Game {
       if (event.type === CombatEventType.CARD_PERMANENTLY_EXHAUSTED) {
         const data = event.data as { card: { name: string }; taunt: string };
         console.log('Card permanently exhausted:', data);
+        this.renderer.playForgetAnimation(data.card.name);
         this.renderer.addLog(`You forget how to ${data.card.name}... "${data.taunt}"`);
         this.render();
       }
       if (event.type === CombatEventType.BOSS_DIALOGUE) {
         console.log('Boss dialogue:', event.data);
+      }
+      // Act 3 mechanics - Card consumed by void
+      if (event.type === CombatEventType.CARD_CONSUMED) {
+        const data = event.data as { card: { name: string } };
+        this.renderer.playCardConsumedAnimation(data.card.name);
+        this.render();
+      }
+      // Act 3 mechanics - Buffs purged
+      if (event.type === CombatEventType.BUFFS_PURGED) {
+        const data = event.data as { buffs: Array<{ type: string }> };
+        this.renderer.playBuffsPurgedAnimation(data.buffs.length);
+        this.render();
+      }
+      // Act 3 mechanics - Demon synergy (Howl/Giggle)
+      if (event.type === CombatEventType.DEMON_SYNERGY) {
+        const data = event.data as { buffName: string };
+        this.renderer.playDemonSynergyAnimation(data.buffName);
       }
     });
 

@@ -19,7 +19,8 @@
       "Bash(cd:*)",
       "Bash(npx eslint:*)",
       "mcp__ide__getDiagnostics",
-      "Bash(cp:*)"
+      "Bash(cp:*)",
+      "Bash(ls:*)"
     ],
     "deny": [],
     "ask": []

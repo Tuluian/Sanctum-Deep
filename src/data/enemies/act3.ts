@@ -224,3 +224,115 @@ export const DEMON_ENEMY_IDS = ['imp', 'infernal_hound'];
 export function isDemonEnemy(enemyId: string): boolean {
   return DEMON_ENEMY_IDS.includes(enemyId);
 }
+
+/**
+ * Act 3 Encounter Configuration
+ * Act 3 encounters feature fewer but deadlier enemies (max 2 per encounter)
+ * Target HP range: 60-130 HP total per encounter
+ */
+export interface Act3Encounter {
+  enemies: string[];
+  difficulty: 'easy' | 'medium' | 'hard';
+  totalHp: number;
+  flavor?: string;
+}
+
+/**
+ * Curated Act 3 encounter configurations with thematic pairings
+ */
+export const ACT3_ENCOUNTERS: Act3Encounter[] = [
+  // Easy encounters (60-75 HP total)
+  {
+    enemies: ['imp', 'imp'],
+    difficulty: 'easy',
+    totalHp: 60,
+    flavor: 'A giggling pair. They speak in shared sentences. They die in shared screams.',
+  },
+  {
+    enemies: ['soul_fragment', 'soul_fragment'],
+    difficulty: 'easy',
+    totalHp: 70,
+    flavor: "Two almost-people. They've been copying each other so long they've forgotten who started.",
+  },
+
+  // Medium encounters (75-100 HP total)
+  {
+    enemies: ['corrupted_angel'],
+    difficulty: 'medium',
+    totalHp: 60,
+    flavor: 'A single fallen seraph. Once they protected this hall. Now they protect it from you.',
+  },
+  {
+    enemies: ['void_spawn', 'soul_fragment'],
+    difficulty: 'medium',
+    totalHp: 80,
+    flavor: "The purely empty and the almost-someone. Together, they're almost a whole person. Almost.",
+  },
+  {
+    enemies: ['infernal_hound', 'imp'],
+    difficulty: 'medium',
+    totalHp: 80,
+    flavor: "A hunting pack. The hound leads. The imp harries. They've done this dance for centuries.",
+  },
+  {
+    enemies: ['infernal_hound', 'imp', 'imp'],
+    difficulty: 'medium',
+    totalHp: 110,
+    flavor: 'A full demon pack. Giggles echo as the hunt begins.',
+  },
+  {
+    enemies: ['sanctum_guardian'],
+    difficulty: 'medium',
+    totalHp: 70,
+    flavor: 'An ancient protector, purpose inverted. It still thinks it\'s testing worthy souls.',
+  },
+
+  // Hard encounters (100-130 HP total)
+  {
+    enemies: ['sanctum_guardian', 'corrupted_angel'],
+    difficulty: 'hard',
+    totalHp: 130,
+    flavor: "Judge and executioner. They believe they're purifying you. They might be.",
+  },
+  {
+    enemies: ['infernal_hound', 'infernal_hound'],
+    difficulty: 'hard',
+    totalHp: 100,
+    flavor: 'Bonded pair. They hunted together in life. They hunt together in damnation.',
+  },
+  {
+    enemies: ['corrupted_angel', 'soul_fragment'],
+    difficulty: 'hard',
+    totalHp: 95,
+    flavor: 'The angel fell by understanding. The fragment persists by stealing. Together, they almost remember being whole.',
+  },
+  {
+    enemies: ['void_spawn', 'void_spawn'],
+    difficulty: 'hard',
+    totalHp: 90,
+    flavor: 'Fragments of the Hollow God, shed like skin cells. Looking at them hurts.',
+  },
+  {
+    enemies: ['corrupted_angel', 'void_spawn'],
+    difficulty: 'hard',
+    totalHp: 105,
+    flavor: 'Light that fell and darkness that never rose. A terrible pairing.',
+  },
+];
+
+/**
+ * Get a random Act 3 encounter by difficulty
+ */
+export function getRandomAct3Encounter(difficulty?: 'easy' | 'medium' | 'hard'): Act3Encounter {
+  const filtered = difficulty
+    ? ACT3_ENCOUNTERS.filter((e) => e.difficulty === difficulty)
+    : ACT3_ENCOUNTERS;
+  return filtered[Math.floor(Math.random() * filtered.length)];
+}
+
+/**
+ * Get all encounters for a difficulty level
+ */
+export function getAct3EncountersByDifficulty(difficulty: 'easy' | 'medium' | 'hard'): Act3Encounter[] {
+  return ACT3_ENCOUNTERS.filter((e) => e.difficulty === difficulty);
+}
