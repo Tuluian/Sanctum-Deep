@@ -1,8 +1,11 @@
 ## 
 
-Run app with:
+Run app SITE with:
     npm run dev
 
+Run mobile app with;
+    npm run ios:open
+    Then IN XCODE, choose iPhone simulator and press Play
 
 If you need to stop running on a port
     Vite auto-increments ports when 3000 is aready in use. Do:
@@ -50,6 +53,11 @@ To start boss fights or Act 2, open dev console in browser (fn+F12)
   - window.debugCombat('tomb_guardian', 'cleric')
   - window.debugCombat('bonelord', 'cleric')
 
+  ####
+  unlock all classes:
+  - window.unlockAllClasses()
+  - window.lockClasses()    revert to lock behavior
+
 Thoughts... if I can publish 1 game per month...
     Then EVENTUALLY i should get to a point where I can make enough in salary? (depending on how much we bring in)
     Is it worth quitting to focus on this full-time? (Obviously not yet, its super early, but still.)
@@ -63,6 +71,8 @@ Thoughts... if I can publish 1 game per month...
 ------------------
 To-Do:  (PO makes work, Dev does it, QA REVIEWS!!!!, then PO Closes)
 
+Need Soul Sanctum upgrades for Tidecaller, ShadowStalker, and 
+    Soul Sanctum upgrades should only be available for classes that are unlocked
 We need to add to Shrines a random option to choose "+1 damage to spells this run" // "+1 to Block spells this run"
 We need to add Shops (and gold currency for each run)
 Connection nodes overlap a lot. They should only go to nodes one or two away, but not bypassing strings. 

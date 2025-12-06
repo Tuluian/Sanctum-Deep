@@ -1,0 +1,39 @@
+schema: 1
+story: "8.4"
+story_title: "Combat Debug Log System"
+gate: PASS
+status_reason: "Comprehensive debug logging service exceeds all 8 ACs with 15 event types, structured output, and proper dev-mode gating."
+reviewer: "Quinn (Test Architect)"
+updated: "2025-12-06T07:45:00Z"
+
+waiver: { active: false }
+
+top_issues: []
+
+risk_summary:
+  totals: { critical: 0, high: 0, medium: 0, low: 0 }
+  recommendations:
+    must_fix: []
+    monitor: []
+
+quality_score: 100
+expires: "2025-12-20T00:00:00Z"
+
+evidence:
+  tests_reviewed: 0
+  risks_identified: 0
+  trace:
+    ac_covered: [1, 2, 3, 4, 5, 6, 7, 8]
+    ac_gaps: []
+
+nfr_validation:
+  security: { status: PASS, notes: "Dev-mode only, local logs" }
+  performance: { status: PASS, notes: "Buffer limit 1000, no prod impact" }
+  reliability: { status: PASS, notes: "Singleton pattern, proper error handling" }
+  maintainability: { status: PASS, notes: "Clean API with 15 specialized methods" }
+
+recommendations:
+  immediate: []
+  future:
+    - action: "Consider adding unit tests for DebugLogService"
+      refs: ["src/services/DebugLogService.ts"]

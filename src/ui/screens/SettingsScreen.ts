@@ -9,6 +9,55 @@ export interface SettingsCallbacks {
   onBack: () => void;
 }
 
+/**
+ * Apply accessibility settings to the document
+ */
+export function applyAccessibilitySettings(settings: GameSettings): void {
+  const root = document.documentElement;
+
+  // Reduced motion
+  if (settings.reducedMotion) {
+    root.classList.add('reduced-motion');
+  } else {
+    root.classList.remove('reduced-motion');
+  }
+
+  // High contrast
+  if (settings.highContrast) {
+    root.classList.add('high-contrast');
+  } else {
+    root.classList.remove('high-contrast');
+  }
+
+  // Large text
+  if (settings.largeText) {
+    root.classList.add('large-text');
+  } else {
+    root.classList.remove('large-text');
+  }
+
+  // Colorblind mode
+  root.classList.remove('colorblind-deuteranopia', 'colorblind-protanopia', 'colorblind-tritanopia');
+  if (settings.colorblindMode !== 'off') {
+    root.classList.add(`colorblind-${settings.colorblindMode}`);
+  }
+}
+
+/**
+ * Initialize accessibility settings from saved preferences
+ */
+export function initializeAccessibilitySettings(): void {
+  const settings = SaveManager.getSettings();
+
+  // Check system preference for reduced motion
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches && !settings.reducedMotion) {
+    // Auto-enable reduced motion if system prefers it (but don't save - just apply)
+    applyAccessibilitySettings({ ...settings, reducedMotion: true });
+  } else {
+    applyAccessibilitySettings(settings);
+  }
+}
+
 export function createSettingsScreen(callbacks: SettingsCallbacks): Screen {
   const element = document.createElement('div');
   element.id = 'settings';
@@ -77,6 +126,49 @@ export function createSettingsScreen(callbacks: SettingsCallbacks): Screen {
         </section>
 
         <section class="settings-section">
+          <h3>Accessibility</h3>
+
+          <div class="setting-row">
+            <label for="reduced-motion">Reduced Motion</label>
+            <div class="toggle-container">
+              <button class="toggle-btn ${settings.reducedMotion ? 'active' : ''}" id="reduced-motion" aria-pressed="${settings.reducedMotion}">
+                ${settings.reducedMotion ? 'ON' : 'OFF'}
+              </button>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <label for="high-contrast">High Contrast</label>
+            <div class="toggle-container">
+              <button class="toggle-btn ${settings.highContrast ? 'active' : ''}" id="high-contrast" aria-pressed="${settings.highContrast}">
+                ${settings.highContrast ? 'ON' : 'OFF'}
+              </button>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <label for="large-text">Large Text</label>
+            <div class="toggle-container">
+              <button class="toggle-btn ${settings.largeText ? 'active' : ''}" id="large-text" aria-pressed="${settings.largeText}">
+                ${settings.largeText ? 'ON' : 'OFF'}
+              </button>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <label for="colorblind-mode">Colorblind Mode</label>
+            <div class="select-container">
+              <select id="colorblind-mode" class="setting-select">
+                <option value="off" ${settings.colorblindMode === 'off' ? 'selected' : ''}>Off</option>
+                <option value="deuteranopia" ${settings.colorblindMode === 'deuteranopia' ? 'selected' : ''}>Deuteranopia (Red-Green)</option>
+                <option value="protanopia" ${settings.colorblindMode === 'protanopia' ? 'selected' : ''}>Protanopia (Red-Green)</option>
+                <option value="tritanopia" ${settings.colorblindMode === 'tritanopia' ? 'selected' : ''}>Tritanopia (Blue-Yellow)</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <section class="settings-section">
           <h3>Data</h3>
 
           <div class="setting-row">
@@ -100,6 +192,35 @@ export function createSettingsScreen(callbacks: SettingsCallbacks): Screen {
     element.querySelector('#screen-shake')?.addEventListener('click', () => {
       SaveManager.updateSettings({ screenShake: !settings.screenShake });
       render();
+    });
+
+    // Accessibility toggles
+    element.querySelector('#reduced-motion')?.addEventListener('click', () => {
+      const newValue = !settings.reducedMotion;
+      SaveManager.updateSettings({ reducedMotion: newValue });
+      applyAccessibilitySettings({ ...settings, reducedMotion: newValue });
+      render();
+    });
+
+    element.querySelector('#high-contrast')?.addEventListener('click', () => {
+      const newValue = !settings.highContrast;
+      SaveManager.updateSettings({ highContrast: newValue });
+      applyAccessibilitySettings({ ...settings, highContrast: newValue });
+      render();
+    });
+
+    element.querySelector('#large-text')?.addEventListener('click', () => {
+      const newValue = !settings.largeText;
+      SaveManager.updateSettings({ largeText: newValue });
+      applyAccessibilitySettings({ ...settings, largeText: newValue });
+      render();
+    });
+
+    // Colorblind mode select
+    element.querySelector('#colorblind-mode')?.addEventListener('change', (e) => {
+      const value = (e.target as HTMLSelectElement).value as GameSettings['colorblindMode'];
+      SaveManager.updateSettings({ colorblindMode: value });
+      applyAccessibilitySettings({ ...settings, colorblindMode: value });
     });
 
     // Reset button

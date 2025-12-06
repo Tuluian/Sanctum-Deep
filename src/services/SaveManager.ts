@@ -1,8 +1,9 @@
 /**
- * SaveManager - Handles game save/load to localStorage
+ * SaveManager - Handles game save/load to localStorage and iCloud
  */
 
 import { CharacterClassId, PotionSlot } from '@/types';
+import { cloudSave } from './CloudSaveService';
 
 export const SAVE_VERSION = 1;
 const STORAGE_KEY = 'sanctum_ruins_save';
@@ -13,6 +14,11 @@ export interface GameSettings {
   sfxVolume: number;
   animationSpeed: number;
   screenShake: boolean;
+  // Accessibility options
+  reducedMotion: boolean;
+  highContrast: boolean;
+  largeText: boolean;
+  colorblindMode: 'off' | 'deuteranopia' | 'protanopia' | 'tritanopia';
 }
 
 export interface PlayerStatistics {
@@ -86,6 +92,11 @@ const DEFAULT_SETTINGS: GameSettings = {
   sfxVolume: 100,
   animationSpeed: 1,
   screenShake: true,
+  // Accessibility defaults (detect system preferences where possible)
+  reducedMotion: false,
+  highContrast: false,
+  largeText: false,
+  colorblindMode: 'off',
 };
 
 const DEFAULT_STATISTICS: PlayerStatistics = {
@@ -152,9 +163,93 @@ function createDefaultSave(): SaveData {
 
 class SaveManagerClass {
   private saveData: SaveData;
+  private cloudSyncEnabled = true;
+  private syncInProgress = false;
 
   constructor() {
     this.saveData = this.loadFromStorage() || createDefaultSave();
+    // Initialize cloud sync asynchronously
+    this.initializeCloudSync();
+  }
+
+  /**
+   * Initialize cloud sync on startup
+   */
+  private async initializeCloudSync(): Promise<void> {
+    try {
+      await cloudSave.initialize();
+
+      if (cloudSave.isCloudAvailable()) {
+        // Sync with cloud on startup
+        const result = await cloudSave.syncWithCloud<SaveData>(
+          this.saveData,
+          this.saveData.lastSaved
+        );
+
+        if (result.source === 'cloud' && result.data) {
+          console.log('[SaveManager] Using cloud save data');
+          this.saveData = result.data;
+          // Update local storage with cloud data
+          this.saveToLocalStorage();
+        }
+      }
+    } catch (error) {
+      console.error('[SaveManager] Cloud sync init failed:', error);
+    }
+  }
+
+  /**
+   * Manually trigger cloud sync
+   */
+  async syncToCloud(): Promise<{ success: boolean; source: 'local' | 'cloud' }> {
+    if (this.syncInProgress) {
+      return { success: false, source: 'local' };
+    }
+
+    this.syncInProgress = true;
+    try {
+      const result = await cloudSave.syncWithCloud<SaveData>(
+        this.saveData,
+        this.saveData.lastSaved
+      );
+
+      if (result.source === 'cloud' && result.data) {
+        this.saveData = result.data;
+        this.saveToLocalStorage();
+      }
+
+      return { success: true, source: result.source };
+    } catch (error) {
+      console.error('[SaveManager] Cloud sync failed:', error);
+      return { success: false, source: 'local' };
+    } finally {
+      this.syncInProgress = false;
+    }
+  }
+
+  /**
+   * Check if cloud save is available and has data
+   */
+  async getCloudSyncStatus(): Promise<{
+    available: boolean;
+    hasCloudSave: boolean;
+    cloudTimestamp: Date | null;
+    localTimestamp: Date;
+  }> {
+    const status = await cloudSave.getSyncStatus();
+    return {
+      available: status.isNative,
+      hasCloudSave: status.hasCloudSave,
+      cloudTimestamp: status.cloudTimestamp ? new Date(status.cloudTimestamp) : null,
+      localTimestamp: new Date(this.saveData.lastSaved),
+    };
+  }
+
+  /**
+   * Enable or disable cloud sync
+   */
+  setCloudSyncEnabled(enabled: boolean): void {
+    this.cloudSyncEnabled = enabled;
   }
 
   // Meta-progress
@@ -536,6 +631,17 @@ class SaveManagerClass {
   // Persistence
   private saveNow(): void {
     this.saveData.lastSaved = Date.now();
+    this.saveToLocalStorage();
+
+    // Async cloud sync (fire and forget for performance)
+    if (this.cloudSyncEnabled && cloudSave.isCloudAvailable()) {
+      cloudSave.save(this.saveData).catch((error) => {
+        console.error('[SaveManager] Cloud save failed:', error);
+      });
+    }
+  }
+
+  private saveToLocalStorage(): void {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(this.saveData));
     } catch (e) {

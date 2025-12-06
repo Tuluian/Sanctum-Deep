@@ -87,8 +87,8 @@ export function createMapScreen(callbacks: MapScreenCallbacks): Screen {
       </div>
       <div class="map-container">
         <div class="map-scroll-area">
-          ${calculateConnections()}
           <div class="map-nodes">
+            ${calculateConnections()}
             ${columnsHtml.join('')}
           </div>
         </div>
@@ -179,18 +179,17 @@ export function createMapScreen(callbacks: MapScreenCallbacks): Screen {
     const svg = document.getElementById('map-connections-svg');
     if (!svg) return;
 
-    const scrollArea = element.querySelector('.map-scroll-area') as HTMLElement;
-    if (!scrollArea) return;
+    const mapNodesContainer = element.querySelector('.map-nodes') as HTMLElement;
+    if (!mapNodesContainer) return;
 
     // Clear existing lines
     svg.innerHTML = '';
 
-    // Get scroll area bounds - SVG is positioned relative to this
-    const scrollAreaRect = scrollArea.getBoundingClientRect();
-
-    // Set SVG size to match the full scrollable content
-    svg.setAttribute('width', String(scrollArea.scrollWidth));
-    svg.setAttribute('height', String(scrollArea.scrollHeight));
+    // Set SVG size to match the map nodes container (not scroll area)
+    // This ensures the SVG covers all nodes even at the end of the map
+    const containerRect = mapNodesContainer.getBoundingClientRect();
+    svg.setAttribute('width', String(mapNodesContainer.offsetWidth));
+    svg.setAttribute('height', String(mapNodesContainer.offsetHeight));
 
     // Show connections only for nodes reachable from current position
     if (!currentNodeId) return;
@@ -226,14 +225,16 @@ export function createMapScreen(callbacks: MapScreenCallbacks): Screen {
         const toEl = element.querySelector(`[data-node-id="${connId}"]`) as HTMLElement;
         if (!toEl) continue;
 
+        // Use offsetLeft/offsetTop relative to the map-nodes container
+        // This gives us positions that don't change with scroll
         const fromRect = fromEl.getBoundingClientRect();
         const toRect = toEl.getBoundingClientRect();
 
-        // Calculate positions relative to scroll area, then add scroll offset
-        const x1 = fromRect.left - scrollAreaRect.left + scrollArea.scrollLeft + fromRect.width / 2;
-        const y1 = fromRect.top - scrollAreaRect.top + scrollArea.scrollTop + fromRect.height / 2;
-        const x2 = toRect.left - scrollAreaRect.left + scrollArea.scrollLeft + toRect.width / 2;
-        const y2 = toRect.top - scrollAreaRect.top + scrollArea.scrollTop + toRect.height / 2;
+        // Calculate positions relative to the map nodes container
+        const x1 = fromRect.left - containerRect.left + fromRect.width / 2;
+        const y1 = fromRect.top - containerRect.top + fromRect.height / 2;
+        const x2 = toRect.left - containerRect.left + toRect.width / 2;
+        const y2 = toRect.top - containerRect.top + toRect.height / 2;
 
         const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
         line.setAttribute('x1', String(x1));

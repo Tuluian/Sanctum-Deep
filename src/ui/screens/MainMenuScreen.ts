@@ -10,7 +10,8 @@ export function createMainMenuScreen(
   onContinue: () => void,
   onSettings: () => void,
   onUpgrades?: () => void,
-  onAchievements?: () => void
+  onAchievements?: () => void,
+  onTutorial?: () => void
 ): Screen {
   const element = document.createElement('div');
   element.id = 'main-menu';
@@ -48,6 +49,10 @@ export function createMainMenuScreen(
           <button class="menu-btn" id="btn-achievements">
             <span class="btn-text">Achievements</span>
             <span class="btn-subtitle">View Progress</span>
+          </button>
+          <button class="menu-btn" id="btn-tutorial">
+            <span class="btn-text">Tutorial</span>
+            <span class="btn-subtitle">Learn to play</span>
           </button>
           <button class="menu-btn" id="btn-settings">
             <span class="btn-text">Settings</span>
@@ -90,6 +95,9 @@ export function createMainMenuScreen(
     }
     if (onAchievements) {
       element.querySelector('#btn-achievements')?.addEventListener('click', onAchievements);
+    }
+    if (onTutorial) {
+      element.querySelector('#btn-tutorial')?.addEventListener('click', onTutorial);
     }
     element.querySelector('#btn-settings')?.addEventListener('click', onSettings);
   };

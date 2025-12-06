@@ -76,6 +76,11 @@ const FREE_CLASSES = [
   CharacterClassId.DUNGEON_KNIGHT,
 ];
 
+// Check if all classes are unlocked for testing (set via window.unlockAllClasses())
+function isDevUnlockEnabled(): boolean {
+  return (window as unknown as Record<string, boolean>).__ALL_CLASSES_UNLOCKED__ === true;
+}
+
 // Classes unlocked by achievements (check SaveManager for unlock status)
 const UNLOCKABLE_CLASSES: Record<CharacterClassId, { requirement: string }> = {
   [CharacterClassId.CELESTIAL]: { requirement: 'Beat the game with the Cleric.' },
@@ -210,12 +215,16 @@ export function createClassSelectScreen(callbacks: ClassSelectCallbacks): Screen
       `;
     };
 
+    const devUnlocked = isDevUnlockEnabled();
+
     element.innerHTML = `
       <header class="screen-header">
         <button class="back-btn" id="btn-back">← Back</button>
         <h2>Choose Your Class</h2>
         <div class="header-spacer"></div>
       </header>
+
+      ${devUnlocked ? '<div class="dev-unlock-banner">🔓 DEV MODE: All classes unlocked</div>' : ''}
 
       <div class="class-sections">
         <section class="class-section">
@@ -226,19 +235,19 @@ export function createClassSelectScreen(callbacks: ClassSelectCallbacks): Screen
         </section>
 
         <section class="class-section locked-section">
-          <h3 class="section-title">Locked Classes</h3>
+          <h3 class="section-title">${devUnlocked ? 'Unlockable Classes (DEV UNLOCKED)' : 'Locked Classes'}</h3>
           <div class="class-grid">
             ${unlockableClasses.map(cls => {
               const requirement = UNLOCKABLE_CLASSES[cls.id as keyof typeof UNLOCKABLE_CLASSES]?.requirement || '';
-              return renderClassCard(cls, false, requirement);
+              return renderClassCard(cls, devUnlocked, devUnlocked ? '' : requirement);
             }).join('')}
           </div>
         </section>
 
         <section class="class-section dlc-section">
-          <h3 class="section-title">Premium Classes</h3>
+          <h3 class="section-title">${devUnlocked ? 'Premium Classes (DEV UNLOCKED)' : 'Premium Classes'}</h3>
           <div class="class-grid">
-            ${dlcClasses.map(cls => renderClassCard(cls, false, 'Premium DLC')).join('')}
+            ${dlcClasses.map(cls => renderClassCard(cls, devUnlocked, devUnlocked ? '' : 'Premium DLC')).join('')}
           </div>
         </section>
       </div>

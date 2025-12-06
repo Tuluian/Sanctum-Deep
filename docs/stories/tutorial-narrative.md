@@ -1,6 +1,12 @@
 # Tutorial Narrative: First Contact
 
-## Status: Approved
+## Status: Reference Document
+
+> **Note**: This is a narrative reference document containing all dialogue and Warden voice lines for the tutorial system. The implementation story is **Story 7.8: Tutorial Narrative Implementation** (`docs/stories/7.8-tutorial-narrative-implementation.md`).
+>
+> **Dev agents**: Copy dialogue from this document verbatim. Do not paraphrase or modify the writer's text.
+
+---
 
 ## Story
 

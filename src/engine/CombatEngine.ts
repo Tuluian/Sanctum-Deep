@@ -339,6 +339,7 @@ export class CombatEngine {
       debuffType: move.debuffType,
       debuffDuration: move.debuffDuration,
       summons: move.summons,
+      spawnId: move.spawnId,
       oncePerCombat: move.oncePerCombat,
       chargeTurns: move.chargeTurns,
       commandMinions: move.commandMinions,

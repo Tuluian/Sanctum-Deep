@@ -11,6 +11,10 @@ import { createShrineScreen } from '@/ui/screens/ShrineScreen';
 import { StoryCardOverlay } from '@/ui/screens/StoryCardOverlay';
 import { SaveManager } from '@/services/SaveManager';
 import { AudioManager } from '@/services/AudioManager';
+import { TutorialService } from '@/services/TutorialService';
+import { showWardenMessage } from '@/ui/components/WardenDialogue';
+import { FIRST_ELITE_MESSAGE, FIRST_BOSS_MESSAGE, FIRST_SHRINE_MESSAGE, FIRST_MERCHANT_MESSAGE } from '@/data/tutorialDialogue';
+import { TutorialOverlay } from '@/ui/components/TutorialOverlay';
 import { NarrativeEventService, initNarrativeEventService } from '@/services/NarrativeEventService';
 import { ShrineService, initShrineService } from '@/services/ShrineService';
 import { applyCombatModifiersToPlayer, getRunModifiers, type RunModifiers } from '@/services/UpgradeEffects';
@@ -35,6 +39,9 @@ import { initAchievementNotifications } from '@/ui/AchievementNotification';
 import { createAchievementScreen } from '@/ui/screens/AchievementScreen';
 import { setupKeyboardNavigation } from '@/ui/KeyboardNav';
 import { DebugLogService } from '@/services/DebugLogService';
+import { haptics } from '@/services/HapticsService';
+import { statusBar } from '@/services/StatusBarService';
+import { ViewportService } from '@/services/ViewportService';
 import './styles/main.css';
 
 // Extended map screen type with custom methods
@@ -62,6 +69,7 @@ class Game {
   private storyCardOverlay: StoryCardOverlay | null = null;
   private isFirstCombat: boolean = true;
   private runModifiers: RunModifiers | null = null;
+  private isTutorialMode: boolean = false;
 
   constructor() {
     this.renderer = new CombatRenderer();
@@ -104,7 +112,8 @@ class Game {
       () => this.continueRun(),
       () => this.screenManager.navigateTo('settings'),
       () => this.screenManager.navigateTo('upgrades'),
-      () => this.screenManager.navigateTo('achievement-screen')
+      () => this.screenManager.navigateTo('achievement-screen'),
+      () => this.startTutorial()
     );
 
     // Upgrade Screen
@@ -184,6 +193,14 @@ class Game {
         const target = state.enemies[targetEnemy];
         DebugLogService.logCardPlayed(card, state.player, target, result.log);
 
+        // Notify tutorial overlay that player performed an action
+        if (this.isTutorialMode) {
+          TutorialOverlay.notifyAction();
+        }
+
+        // Haptic feedback for card played
+        haptics.cardPlayed();
+
         // Play sound and animation based on card type
         if (card) {
           AudioManager.playSfx('card-play');
@@ -224,6 +241,9 @@ class Game {
     document.getElementById('end-turn-btn')?.addEventListener('click', () => {
       if (!this.combat || this.combat.isGameOver()) return;
 
+      // Haptic feedback for turn change
+      haptics.turnChange();
+
       // Show "Enemy Turn" banner
       this.renderer.showTurnBanner(false);
 
@@ -262,37 +282,70 @@ class Game {
       }
     });
 
-    // Abandon run button
+    // Abandon run button (now inside settings menu)
     document.getElementById('abandon-btn')?.addEventListener('click', () => {
+      this.hideSettingsMenu();
       if (confirm('Are you sure you want to abandon this run?')) {
         this.abandonRun();
       }
     });
 
-    // Settings button in combat
-    document.getElementById('combat-settings-btn')?.addEventListener('click', () => {
-      this.showCombatSettings();
+    // Settings gear button - toggles settings menu
+    document.getElementById('settings-gear-btn')?.addEventListener('click', () => {
+      this.toggleSettingsMenu();
+    });
+
+    // Settings sound toggle
+    document.getElementById('settings-sound-btn')?.addEventListener('click', () => {
+      // Toggle sound (placeholder for actual sound implementation)
+      const btn = document.getElementById('settings-sound-btn');
+      if (btn) {
+        const isOn = btn.textContent?.includes('On');
+        btn.textContent = isOn ? '🔇 Sound: Off' : '🔊 Sound: On';
+      }
+    });
+
+    // Combat log toggle button
+    document.getElementById('combat-log-toggle')?.addEventListener('click', () => {
+      this.toggleCombatLog();
+    });
+
+    // Click outside settings menu to close it
+    document.querySelector('.dungeon-scene')?.addEventListener('click', (e) => {
+      const target = e.target as HTMLElement;
+      const settingsMenu = document.getElementById('settings-menu');
+      const settingsBtn = document.getElementById('settings-gear-btn');
+
+      if (settingsMenu?.style.display !== 'none' &&
+          !settingsMenu?.contains(target) &&
+          !settingsBtn?.contains(target)) {
+        this.hideSettingsMenu();
+      }
     });
   }
 
-  private showCombatSettings(): void {
-    // Hide combat screen and show settings
-    this.combatScreen.style.display = 'none';
-    document.getElementById('screen-container')!.style.display = 'block';
+  private toggleSettingsMenu(): void {
+    const menu = document.getElementById('settings-menu');
+    if (menu) {
+      menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+    }
+  }
 
-    // Navigate to settings with a custom back handler
-    const settings = createSettingsScreen({
-      onBack: () => {
-        // Return to combat
-        this.screenManager.navigateTo('main-menu', true);
-        document.getElementById('screen-container')!.style.display = 'none';
-        this.combatScreen.style.display = 'block';
-      },
-    });
+  private hideSettingsMenu(): void {
+    const menu = document.getElementById('settings-menu');
+    if (menu) {
+      menu.style.display = 'none';
+    }
+  }
 
-    // Replace the settings screen with our custom one
-    this.screenManager.register(settings);
-    this.screenManager.navigateTo('settings');
+  private toggleCombatLog(): void {
+    const panel = document.getElementById('combat-log-panel');
+    const toggle = document.getElementById('combat-log-toggle');
+    if (panel && toggle) {
+      const isVisible = panel.style.display !== 'none';
+      panel.style.display = isVisible ? 'none' : 'flex';
+      toggle.classList.toggle('active', !isVisible);
+    }
   }
 
   private setupStoryCardOverlay(): void {
@@ -614,6 +667,35 @@ class Game {
     this.showMapScreen();
   }
 
+  /**
+   * Start a tutorial battle to teach game mechanics
+   */
+  private startTutorial(): void {
+    // Use Knight class for tutorial (simple, balanced)
+    this.currentClassId = CharacterClassId.DUNGEON_KNIGHT;
+    this.isTutorialMode = true;
+
+    const characterClass = CLASSES[this.currentClassId];
+
+    // Update class name in UI
+    const classNameEl = document.getElementById('player-class-name');
+    if (classNameEl) {
+      classNameEl.textContent = characterClass.name;
+    }
+
+    // Update HUD class info
+    this.updateHudClassInfo(this.currentClassId, characterClass.name);
+
+    // Initialize combat with tutorial enemy (skeleton)
+    this.initCombat(this.currentClassId, true); // true = tutorial mode
+
+    // Show combat screen
+    this.showCombatScreen(false);
+
+    // Start tutorial overlay with hints
+    setTimeout(() => TutorialOverlay.start(), 500);
+  }
+
   private continueRun(): void {
     const runData = SaveManager.getActiveRun();
     if (!runData) return;
@@ -665,20 +747,23 @@ class Game {
     this.showMapScreen();
   }
 
-  private initCombat(classId: CharacterClassId, currentHp?: number): void {
+  private initCombat(classId: CharacterClassId, isTutorial: boolean = false, currentHp?: number): void {
     const characterClass = CLASSES[classId];
     const starterDeck = createStarterDeck(classId);
     const runData = SaveManager.getActiveRun();
 
-    // Add any cards acquired during the run
-    const savedDeck = SaveManager.getDeck();
-    for (const savedCard of savedDeck) {
-      const cardDef = getCardById(savedCard.cardId);
-      if (cardDef) {
-        starterDeck.push({
-          ...cardDef,
-          instanceId: savedCard.instanceId,
-        });
+    // For tutorial, don't add saved deck cards - just use starter deck
+    if (!isTutorial) {
+      // Add any cards acquired during the run
+      const savedDeck = SaveManager.getDeck();
+      for (const savedCard of savedDeck) {
+        const cardDef = getCardById(savedCard.cardId);
+        if (cardDef) {
+          starterDeck.push({
+            ...cardDef,
+            instanceId: savedCard.instanceId,
+          });
+        }
       }
     }
 
@@ -722,11 +807,13 @@ class Game {
       gobbleBlockBonus: 0,
     };
 
-    // Apply upgrade modifiers for combat start
-    applyCombatModifiersToPlayer(player, classId);
+    // Apply upgrade modifiers for combat start (skip for tutorial)
+    if (!isTutorial) {
+      applyCombatModifiersToPlayer(player, classId);
+    }
 
-    // Get enemies based on current node type
-    const enemies = this.getEnemiesForNode();
+    // Get enemies - use tutorial enemy or node-based enemies
+    const enemies = isTutorial ? this.getTutorialEnemy() : this.getEnemiesForNode();
 
     this.combat = new CombatEngine(player, enemies);
 
@@ -772,6 +859,8 @@ class Game {
           if (data.hpDamage >= 10) {
             this.renderer.shakeScreen(Math.min(data.hpDamage / 2, 8), 200);
           }
+          // Haptic feedback for damage dealt
+          haptics.damageDealt();
         }
       }
 
@@ -782,6 +871,8 @@ class Game {
         if (data.hpDamage > 0) {
           this.renderer.shakeScreen(Math.min(data.hpDamage / 3, 6), 250);
           this.renderer.showDamageVignette(Math.min(data.hpDamage / 30, 0.5));
+          // Haptic feedback for damage received
+          haptics.damageReceived();
         }
       }
 
@@ -852,6 +943,13 @@ class Game {
     }
   }
 
+  /**
+   * Get a weak tutorial enemy
+   */
+  private getTutorialEnemy(): EnemyDefinition[] {
+    return [ACT1_ENEMIES.training_dummy];
+  }
+
   private findNodeById(nodeId: string): MapNode | null {
     if (!this.currentFloor) return null;
     for (const row of this.currentFloor.rows) {
@@ -867,27 +965,80 @@ class Game {
 
     // Handle different node types
     if (node.type === NodeType.COMBAT || node.type === NodeType.ELITE || node.type === NodeType.BOSS) {
-      // Check for pre-boss narrative event
-      const isBoss = node.type === NodeType.BOSS;
-      if (isBoss && this.checkForNarrativeEvent(true, false)) {
-        // Event will show, combat starts after event completes
-        // Store that we need to start combat after narrative
-        this.pendingCombatAfterNarrative = true;
+      // Check for first elite encounter message
+      if (node.type === NodeType.ELITE && TutorialService.shouldShowFirstEliteMessage()) {
+        showWardenMessage(FIRST_ELITE_MESSAGE, {
+          duration: 4000,
+          onDismiss: () => {
+            TutorialService.markFirstEliteSeen();
+            this.startCombatSequence(node);
+          }
+        });
         return;
       }
 
-      // Start combat
-      this.startCombatForNode(node);
+      // Check for first boss encounter message
+      if (node.type === NodeType.BOSS && TutorialService.shouldShowFirstBossMessage()) {
+        showWardenMessage(FIRST_BOSS_MESSAGE, {
+          duration: 4000,
+          onDismiss: () => {
+            TutorialService.markFirstBossSeen();
+            this.startCombatSequence(node);
+          }
+        });
+        return;
+      }
+
+      this.startCombatSequence(node);
     } else if (node.type === NodeType.CAMPFIRE) {
       // TODO: Show rest screen (heal or upgrade)
       this.handleCampfireNode(node);
     } else if (node.type === NodeType.MERCHANT) {
+      // Check for first merchant message
+      if (TutorialService.shouldShowFirstMerchantMessage()) {
+        showWardenMessage(FIRST_MERCHANT_MESSAGE, {
+          duration: 4000,
+          onDismiss: () => {
+            TutorialService.markFirstMerchantSeen();
+            this.handleNonCombatNode(node, 'Shop coming soon!');
+          }
+        });
+        return;
+      }
       // TODO: Show shop
       this.handleNonCombatNode(node, 'Shop coming soon!');
     } else if (node.type === NodeType.SHRINE) {
+      // Check for first shrine message
+      if (TutorialService.shouldShowFirstShrineMessage()) {
+        showWardenMessage(FIRST_SHRINE_MESSAGE, {
+          duration: 4000,
+          onDismiss: () => {
+            TutorialService.markFirstShrineSeen();
+            this.handleShrineNode(node);
+          }
+        });
+        return;
+      }
       // Show shrine event
       this.handleShrineNode(node);
     }
+  }
+
+  /**
+   * Start the combat sequence (checks for narrative events first)
+   */
+  private startCombatSequence(node: MapNode): void {
+    // Check for pre-boss narrative event
+    const isBoss = node.type === NodeType.BOSS;
+    if (isBoss && this.checkForNarrativeEvent(true, false)) {
+      // Event will show, combat starts after event completes
+      // Store that we need to start combat after narrative
+      this.pendingCombatAfterNarrative = true;
+      return;
+    }
+
+    // Start combat
+    this.startCombatForNode(node);
   }
 
   /**
@@ -1267,6 +1418,21 @@ class Game {
 
     const state = this.combat.getState();
     const victory = state.victory;
+
+    // Handle tutorial mode - just go back to menu
+    if (this.isTutorialMode) {
+      this.isTutorialMode = false;
+      TutorialOverlay.stop();
+      AudioManager.playMusic(victory ? 'victory' : 'menu');
+
+      this.renderer.showGameOver(victory, 0, () => {
+        this.renderer.removeGameOver();
+        this.hideCombatScreen();
+        this.screenManager.navigateTo('main-menu');
+      });
+      return;
+    }
+
     const runData = SaveManager.getActiveRun();
     const classId = runData?.classId || CharacterClassId.CLERIC;
     const currentAct = runData?.currentAct || 1;
@@ -1277,8 +1443,13 @@ class Game {
     // Stop achievement tracking for this combat
     achievementTracker.stopTracking(victory);
 
-    // Play victory/defeat music
+    // Play victory/defeat music and haptic feedback
     AudioManager.playMusic(victory ? 'victory' : 'defeat');
+    if (victory) {
+      haptics.victory();
+    } else {
+      haptics.defeat();
+    }
 
     // Combat is over
     SaveManager.setInCombat(false);
@@ -1293,6 +1464,11 @@ class Game {
       if (this.currentNode) {
         this.currentNode.visited = true;
         SaveManager.markNodeVisited(this.currentNode.id);
+      }
+
+      // Mark tutorial as complete after first combat victory
+      if (TutorialService.isNewPlayer()) {
+        TutorialService.completeTutorial();
       }
 
       // Save current HP
@@ -1390,13 +1566,26 @@ class Game {
     // End run tracking with victory
     endRunTracking(true);
 
+    // Gather run stats for sharing
+    const classInfo = CLASSES[classId];
+    const combatState = this.combat?.getState();
+    const shareData = {
+      className: classInfo?.name || 'Unknown',
+      bossName: 'The Hollow God',
+      turnsPlayed: combatState?.turn || 0,
+      cardsPlayed: 0, // Not tracked currently
+      actNumber: 3,
+      finalHp: combatState?.player.currentHp || 0,
+      maxHp: combatState?.player.maxHp || 0,
+    };
+
     if (choice === 'warden') {
       // Player becomes the Warden - show the good ending
       this.renderer.showVictoryEnding(classId, choice, soulEchoesEarned, () => {
         this.renderer.removeGameOver();
         this.hideCombatScreen();
         this.screenManager.navigateTo('main-menu', true);
-      });
+      }, shareData);
     } else {
       // Player leaves - show class-specific leave ending, then bad ending
       this.renderer.showVictoryEnding(classId, choice, soulEchoesEarned, () => {
@@ -1406,7 +1595,7 @@ class Game {
           this.hideCombatScreen();
           this.screenManager.navigateTo('main-menu', true);
         });
-      });
+      }, shareData);
     }
   }
 
@@ -1507,6 +1696,9 @@ class Game {
     if (playerSilhouette && this.currentClassId) {
       playerSilhouette.setAttribute('data-class', this.currentClassId);
     }
+
+    // Recalculate viewport scaling for mobile
+    ViewportService.recalculate();
   }
 
   private hideCombatScreen(): void {
@@ -1891,8 +2083,22 @@ class Game {
   }
 }
 
+// Import accessibility initializer
+import { initializeAccessibilitySettings } from '@/ui/screens/SettingsScreen';
+
 // Start game when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
+  // Initialize iOS status bar
+  statusBar.initialize();
+
+  // Initialize accessibility settings (applies saved preferences + system preferences)
+  initializeAccessibilitySettings();
+
+  // Go straight to game - tutorial is opt-in via menu button
+  initializeGame();
+});
+
+function initializeGame(): void {
   const game = new Game();
 
   // Expose debug methods on window for browser console access
@@ -1920,6 +2126,31 @@ document.addEventListener('DOMContentLoaded', () => {
   // Expose DebugLogService to window for console access
   (window as unknown as { debugLog: typeof DebugLogService }).debugLog = DebugLogService;
 
+  // Unlock all classes for testing
+  (window as unknown as Record<string, unknown>).unlockAllClasses = () => {
+    (window as unknown as Record<string, boolean>).__ALL_CLASSES_UNLOCKED__ = true;
+    console.log('All classes unlocked! Refresh the class select screen to see changes.');
+  };
+
+  // Lock classes back to normal
+  (window as unknown as Record<string, unknown>).lockClasses = () => {
+    (window as unknown as Record<string, boolean>).__ALL_CLASSES_UNLOCKED__ = false;
+    console.log('Classes locked back to normal. Refresh the class select screen to see changes.');
+  };
+
+  // Reset tutorial state for testing
+  (window as unknown as Record<string, unknown>).resetTutorial = () => {
+    TutorialService.reset();
+    console.log('Tutorial state reset. Refresh the page to see the entrance screen.');
+  };
+
+  // Get tutorial state for debugging
+  (window as unknown as Record<string, unknown>).getTutorialState = () => {
+    const state = TutorialService.getState();
+    console.log('Tutorial State:', state);
+    return state;
+  };
+
   console.log('Debug commands available:');
   console.log('  window.debugCombat("hollow_god")       - Fight the Hollow God');
   console.log('  window.debugCombat("greater_demon")    - Fight the Greater Demon');
@@ -1930,8 +2161,12 @@ document.addEventListener('DOMContentLoaded', () => {
   console.log('  window.debugHealPlayer(50)            - Heal the player');
   console.log('  window.giveSoulEchoes(1000)           - Give Soul Echoes for testing');
   console.log('  window.givePotion("health_potion")    - Give a potion for testing');
+  console.log('  window.unlockAllClasses()             - Unlock all classes for testing');
+  console.log('  window.lockClasses()                  - Lock classes back to normal');
+  console.log('  window.resetTutorial()                - Reset tutorial state (then refresh)');
+  console.log('  window.getTutorialState()             - View current tutorial state');
   console.log('  window.debugLog.getLogs()             - Get all debug logs');
   console.log('  window.debugLog.exportJSON()          - Export logs as JSON');
   console.log('  window.debugLog.exportText()          - Export logs as text');
-});
+}
 

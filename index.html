@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 
     <!-- Primary Meta Tags -->
     <title>Sanctum Ruins - Roguelike Deck-Builder Game</title>
@@ -138,22 +138,51 @@
             <!-- Active Vow display (Oathsworn class) -->
             <div class="vow-display" id="hud-vow" style="display: none;"></div>
           </div>
-        </div>
-      </div>
 
-      <!-- Hand title and turn info -->
-      <div class="hand-header">
-        <div class="hand-title">Your Hand</div>
-        <div class="piles">
-          <div class="pile">Draw: <span id="draw-count">0</span></div>
-          <div class="pile">Discard: <span id="discard-count">0</span></div>
-          <div class="pile">Turn: <span id="turn-count">1</span></div>
-        </div>
-      </div>
+          <!-- Arena Controls (inside dungeon-scene) -->
+          <div class="arena-controls">
+            <button id="end-turn-btn">End Turn</button>
+            <button id="settings-gear-btn" class="icon-btn" aria-label="Settings">⚙️</button>
+          </div>
 
-      <!-- Card hand -->
-      <div class="hand-area">
-        <div class="cards" id="hand"></div>
+          <!-- Settings Menu (hidden by default) -->
+          <div class="settings-menu" id="settings-menu" style="display: none;">
+            <div class="settings-menu-content">
+              <button id="settings-sound-btn" class="settings-option">🔊 Sound: On</button>
+              <button id="abandon-btn" class="settings-option abandon">🚪 Abandon Run</button>
+            </div>
+          </div>
+
+          <!-- Pile Counters (bottom of arena) -->
+          <div class="pile-counters">
+            <div class="pile-counter" data-tooltip="Cards remaining in your deck">
+              <span class="pile-icon">📚</span>
+              <span class="pile-label">Deck:</span>
+              <span class="pile-value" id="draw-count">0</span>
+            </div>
+            <div class="pile-counter" data-tooltip="Cards you've played or discarded this combat">
+              <span class="pile-icon">🗑️</span>
+              <span class="pile-label">Discard:</span>
+              <span class="pile-value" id="discard-count">0</span>
+            </div>
+          </div>
+          <!-- Hidden turn counter for renderer compatibility -->
+          <span id="turn-count" style="display:none">1</span>
+
+          <!-- Combat Log Toggle & Panel (collapsed by default) -->
+          <button class="combat-log-toggle" id="combat-log-toggle" aria-label="Toggle Combat Log">📜</button>
+          <div class="combat-log-panel" id="combat-log-panel" style="display: none;">
+            <div class="combat-log-header">
+              <span class="log-title">Combat Log</span>
+            </div>
+            <div id="combat-log"></div>
+          </div>
+
+          <!-- Card Hand (bottom-right of arena) -->
+          <div class="arena-hand">
+            <div class="cards" id="hand"></div>
+          </div>
+        </div>
       </div>
 
       <!-- Hidden elements for renderer compatibility -->
@@ -165,19 +194,6 @@
 
       <!-- Hidden element for enemy data (used by renderer) -->
       <div id="enemies" style="display: none;"></div>
-
-      <div class="controls">
-        <button id="end-turn-btn">End Turn</button>
-        <button id="combat-settings-btn" class="icon-btn">Settings</button>
-        <button id="abandon-btn" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white">
-          Abandon Run
-        </button>
-      </div>
-
-      <div class="log-area">
-        <div class="log-title">Combat Log</div>
-        <div id="combat-log"></div>
-      </div>
     </div>
 
     <script type="module" src="/src/main.ts"></script>

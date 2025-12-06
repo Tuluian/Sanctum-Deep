@@ -94,6 +94,17 @@ export const ACT1_ENEMIES: Record<string, EnemyDefinition> = {
       { id: 'phase', name: 'Phase', intent: IntentType.BUFF, weight: 30 }, // Becomes untargetable
     ],
   },
+
+  // Training Dummy (15 HP) - Tutorial enemy, very weak
+  training_dummy: {
+    id: 'training_dummy',
+    name: 'Training Dummy',
+    maxHp: 15,
+    moves: [
+      { id: 'weak_swing', name: 'Weak Swing', intent: IntentType.ATTACK, damage: 4, weight: 60 },
+      { id: 'brace', name: 'Brace', intent: IntentType.DEFEND, block: 3, weight: 40 },
+    ],
+  },
 };
 
 export function getEnemyById(id: string): EnemyDefinition | undefined {

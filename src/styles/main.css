@@ -69,13 +69,25 @@ body {
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
   color: #e0e0e0;
   min-height: 100vh;
+  /* Safe area insets for iOS notch and home indicator */
   padding: 10px;
+  padding-top: max(10px, env(safe-area-inset-top));
+  padding-bottom: max(10px, env(safe-area-inset-bottom));
+  padding-left: max(10px, env(safe-area-inset-left));
+  padding-right: max(10px, env(safe-area-inset-right));
   overflow-x: hidden;
+  /* Prevent text selection on touch */
+  -webkit-user-select: none;
+  user-select: none;
+  /* Prevent pull-to-refresh */
+  overscroll-behavior: none;
 }
 
 .game-container {
   max-width: 100%;
   margin: 0 auto;
+  /* Ensure content respects safe areas */
+  min-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
 }
 
 h1 {
@@ -95,7 +107,7 @@ h1 {
   max-width: 1000px;
   margin: 0 auto 20px auto;
   border-radius: 14px;
-  overflow: hidden;
+  overflow: visible;
   border: 3px solid #4a3728;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), inset 0 0 60px rgba(0, 0, 0, 0.4);
 }
@@ -103,9 +115,9 @@ h1 {
 .dungeon-scene {
   position: relative;
   width: 100%;
-  height: 400px;
+  height: 500px;
   background: linear-gradient(180deg, #0a0a0f 0%, #1a1520 50%, #2a2030 100%);
-  overflow: hidden;
+  overflow: visible;
 }
 
 /* Arena background images based on act */
@@ -586,6 +598,22 @@ h1 {
 }
 .enemy-figure[data-enemy-type="shade"]::before,
 .enemy-figure[data-enemy-type="shade"]::after {
+  display: none;
+}
+
+/* Training Dummy - Tutorial enemy */
+.enemy-figure[data-enemy-type="training_dummy"] {
+  background-image: url('/images/enemies/training_dummy.png');
+  background-color: transparent;
+  background-size: contain;
+  background-position: center bottom;
+  border-radius: 0;
+  box-shadow: none;
+  width: 120px;
+  height: 160px;
+}
+.enemy-figure[data-enemy-type="training_dummy"]::before,
+.enemy-figure[data-enemy-type="training_dummy"]::after {
   display: none;
 }
 
@@ -1563,8 +1591,8 @@ h1 {
 /* Player silhouette (back view) */
 .player-silhouette {
   position: absolute;
-  bottom: 5%;
-  left: 50%;
+  bottom: 10%;
+  left: 30%;
   transform: translateX(-50%);
   z-index: 10;
 }
@@ -2098,6 +2126,21 @@ h1 {
   background-image: url('/images/players/bargainer.png');
 }
 
+/* Tidecaller */
+.player-silhouette[data-class="tidecaller"] .player-figure {
+  background-image: url('/images/players/tidecaller.png');
+}
+
+/* Shadow Stalker */
+.player-silhouette[data-class="shadow_stalker"] .player-figure {
+  background-image: url('/images/players/shadow_stalker.png');
+}
+
+/* Goblin */
+.player-silhouette[data-class="goblin"] .player-figure {
+  background-image: url('/images/players/goblin.png');
+}
+
 /* Turn announcement banner */
 .turn-banner {
   position: absolute;
@@ -2344,14 +2387,36 @@ h2 {
   border-radius: 8px;
   padding: 12px;
   width: 160px;
+  /* Minimum touch target 44pt (Apple HIG) */
+  min-height: 44px;
   cursor: pointer;
   transition: all 0.2s;
+  /* Touch feedback */
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
 }
 
 .card:hover:not(.unplayable) {
   transform: translateY(-40px) scale(1.15);
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.5);
   z-index: 10;
+}
+
+/* Touch-specific active state for mobile */
+.card:active:not(.unplayable) {
+  transform: scale(0.95);
+  opacity: 0.9;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  /* Touch devices - reduce hover effect, enhance tap */
+  .card:hover:not(.unplayable) {
+    transform: none;
+  }
+  .card:active:not(.unplayable) {
+    transform: scale(0.95);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  }
 }
 
 .card.attack {
@@ -2668,6 +2733,10 @@ button {
   flex: 1;
   text-transform: uppercase;
   transition: transform 0.1s;
+  /* iOS touch optimization - minimum 44pt */
+  min-height: 44px;
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
 }
 
 button:hover {
@@ -2710,6 +2779,313 @@ button.icon-btn:hover {
   padding: 4px 0;
   border-bottom: 1px solid #333;
   font-size: 0.85em;
+}
+
+/* ===========================================
+   ARENA-CONTAINED UI ELEMENTS
+   Self-contained combat UI for landscape mobile
+   =========================================== */
+
+/* Arena Controls - End Turn + Settings Gear */
+.arena-controls {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  z-index: 50;
+}
+
+.arena-controls #end-turn-btn {
+  padding: 12px 24px;
+  font-size: 1em;
+  min-width: 120px;
+  min-height: 48px;
+}
+
+.arena-controls #settings-gear-btn {
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  font-size: 1.4em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #555 0%, #444 100%);
+  border: 2px solid #666;
+  color: #e0e0e0;
+}
+
+.arena-controls #settings-gear-btn:hover {
+  border-color: #f4d03f;
+  background: linear-gradient(135deg, #666 0%, #555 100%);
+}
+
+/* Settings Menu */
+.settings-menu {
+  position: absolute;
+  bottom: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+  background: rgba(20, 20, 35, 0.98);
+  border: 2px solid #f4d03f;
+  border-radius: 12px;
+  padding: 8px;
+  min-width: 200px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+}
+
+.settings-menu-content {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.settings-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: rgba(50, 50, 70, 0.8);
+  border: 1px solid #555;
+  border-radius: 8px;
+  color: #e0e0e0;
+  font-size: 0.95em;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: 44px;
+  text-align: left;
+  width: 100%;
+}
+
+.settings-option:hover {
+  background: rgba(70, 70, 100, 0.9);
+  border-color: #f4d03f;
+}
+
+.settings-option.abandon {
+  color: #e74c3c;
+  border-color: #e74c3c;
+}
+
+.settings-option.abandon:hover {
+  background: rgba(231, 76, 60, 0.2);
+}
+
+.settings-option.close {
+  background: rgba(40, 40, 60, 0.8);
+  color: #aaa;
+}
+
+/* Pile Counters - Bottom-right of arena */
+.pile-counters {
+  position: absolute;
+  bottom: 15px;
+  right: 15px;
+  display: flex;
+  gap: 12px;
+  z-index: 20;
+}
+
+.pile-counter {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #444;
+  font-size: 0.85em;
+  cursor: default;
+}
+
+.pile-counter .pile-icon {
+  font-size: 0.9em;
+}
+
+.pile-counter .pile-label {
+  color: #aaa;
+}
+
+.pile-counter .pile-value {
+  color: #f4d03f;
+  font-weight: bold;
+}
+
+/* Pile counter tooltip */
+.pile-counter[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #1a1a2e 0%, #2c3e50 100%);
+  border: 2px solid #f4d03f;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.8em;
+  color: #ddd;
+  white-space: nowrap;
+  z-index: 100;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+
+/* Combat Log Toggle Button */
+.combat-log-toggle {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  font-size: 1.3em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.7);
+  border: 2px solid #555;
+  color: #e0e0e0;
+  cursor: pointer;
+  z-index: 25;
+  transition: all 0.2s;
+}
+
+.combat-log-toggle:hover {
+  border-color: #f4d03f;
+  background: rgba(0, 0, 0, 0.9);
+}
+
+.combat-log-toggle.active {
+  border-color: #f4d03f;
+  background: rgba(244, 208, 63, 0.2);
+}
+
+/* Combat Log Panel */
+.combat-log-panel {
+  position: absolute;
+  top: 70px;
+  right: 15px;
+  width: 280px;
+  max-height: 200px;
+  background: rgba(0, 0, 0, 0.9);
+  border: 2px solid #555;
+  border-radius: 8px;
+  z-index: 24;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.combat-log-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: rgba(30, 30, 50, 0.9);
+  border-bottom: 1px solid #444;
+}
+
+.combat-log-header .log-title {
+  margin: 0;
+  font-size: 0.9em;
+}
+
+.combat-log-close {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  font-size: 1em;
+  background: transparent;
+  border: 1px solid #555;
+  border-radius: 4px;
+  color: #aaa;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.combat-log-close:hover {
+  border-color: #e74c3c;
+  color: #e74c3c;
+}
+
+.combat-log-panel #combat-log {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+  max-height: 150px;
+}
+
+/* Arena Hand - Bottom-right of arena */
+.arena-hand {
+  position: absolute;
+  bottom: 70px;
+  right: 15px;
+  max-width: 60%;
+  z-index: 20;
+}
+
+.arena-hand .cards {
+  display: flex;
+  gap: 8px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  padding: 8px;
+  /* Smooth scrolling */
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+.arena-hand .card {
+  flex-shrink: 0;
+  width: 100px;
+  min-width: 100px;
+  padding: 8px;
+  font-size: 0.75em;
+}
+
+.arena-hand .card .card-name {
+  font-size: 0.85em;
+}
+
+.arena-hand .card .card-cost {
+  width: 20px;
+  height: 20px;
+  font-size: 0.8em;
+}
+
+.arena-hand .card .card-description {
+  font-size: 0.7em;
+  line-height: 1.2;
+}
+
+.arena-hand .card:hover:not(.unplayable) {
+  transform: translateY(-20px) scale(1.05);
+}
+
+/* Hide old hand-header since pile counters are now in arena */
+.hand-header {
+  display: none !important;
+}
+
+/* Hide old hand-area since we now use arena-hand */
+.hand-area {
+  display: none !important;
+}
+
+/* Hide old controls since we now use arena-controls */
+.controls {
+  display: none !important;
+}
+
+/* Hide old log-area since we now use combat-log-panel */
+.log-area {
+  display: none !important;
 }
 
 .game-over {
@@ -3948,14 +4324,23 @@ button.icon-btn:hover {
   pointer-events: none;
 }
 
+.map-nodes {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 80px;
+  padding: 0 20px;
+  min-width: max-content;
+}
+
 .map-connections {
   position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
   pointer-events: none;
   z-index: 1;
+  /* SVG size is set dynamically in JS to match .map-nodes container */
 }
 
 .map-line {
@@ -3964,22 +4349,12 @@ button.icon-btn:hover {
 }
 
 .map-line--available {
-  stroke: rgba(244, 208, 63, 0.5);
+  stroke: rgba(244, 208, 63, 0.6);
+  stroke-width: 3;
 }
 
 .map-line--future {
-  stroke: rgba(150, 150, 150, 0.2);
-}
-
-.map-nodes {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 80px;
-  padding: 0 20px;
-  min-width: max-content;
+  stroke: rgba(150, 150, 150, 0.3);
 }
 
 .map-column {
@@ -5557,6 +5932,24 @@ button.icon-btn:hover {
   transform: translateY(-2px);
 }
 
+.ending-buttons {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.share-button {
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  border-color: #5dade2;
+  color: #fff;
+}
+
+.share-button:hover {
+  background: linear-gradient(135deg, #5dade2 0%, #3498db 100%);
+  border-color: #85c1e9;
+}
+
 /* Ending Finale (after choice) */
 .ending-finale .ending-frame {
   padding-bottom: 25px;
@@ -6237,3 +6630,947 @@ button.icon-btn:hover {
   }
 }
 
+/* ===========================================
+   ACCESSIBILITY SETTINGS
+   =========================================== */
+
+/* Reduced Motion - disable all animations */
+.reduced-motion *,
+.reduced-motion *::before,
+.reduced-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+/* Also respect system preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* High Contrast Mode */
+.high-contrast {
+  --bg-primary: #000;
+  --bg-secondary: #111;
+  --text-primary: #fff;
+  --text-secondary: #eee;
+  --border-color: #fff;
+}
+
+.high-contrast .card {
+  border-width: 3px;
+  border-color: #fff;
+}
+
+.high-contrast .btn,
+.high-contrast button {
+  border: 2px solid #fff;
+}
+
+.high-contrast .map-node {
+  border: 3px solid #fff;
+}
+
+.high-contrast .enemy {
+  border: 2px solid #fff;
+}
+
+.high-contrast .hp-bar-fill {
+  background: #ff0000;
+}
+
+.high-contrast .block-bar-fill {
+  background: #0088ff;
+}
+
+/* Large Text Mode */
+.large-text {
+  font-size: 120%;
+}
+
+.large-text .card {
+  font-size: 1.1em;
+}
+
+.large-text .card-name {
+  font-size: 1.1em;
+}
+
+.large-text .card-cost {
+  font-size: 1.3em;
+}
+
+.large-text .card-description {
+  font-size: 1em;
+}
+
+.large-text .hp-text,
+.large-text .block-text {
+  font-size: 1.1em;
+}
+
+.large-text .status-stacks {
+  font-size: 1.1em;
+}
+
+.large-text .intent-damage {
+  font-size: 1.2em;
+}
+
+/* Colorblind Modes - Deuteranopia (Red-Green) */
+.colorblind-deuteranopia {
+  --attack-color: #ff8c00; /* Orange instead of red */
+  --skill-color: #00bfff; /* Light blue */
+  --heal-color: #ffff00; /* Yellow instead of green */
+  --block-color: #00bfff;
+  --damage-color: #ff8c00;
+}
+
+.colorblind-deuteranopia .card.attack {
+  border-color: #ff8c00;
+}
+
+.colorblind-deuteranopia .card.skill {
+  border-color: #00bfff;
+}
+
+.colorblind-deuteranopia .hp-bar-fill {
+  background: linear-gradient(90deg, #ff8c00, #ffcc00);
+}
+
+/* Colorblind Modes - Protanopia (Red-Green) */
+.colorblind-protanopia {
+  --attack-color: #ffcc00; /* Yellow instead of red */
+  --skill-color: #00bfff;
+  --heal-color: #00ff7f; /* Spring green */
+  --block-color: #00bfff;
+  --damage-color: #ffcc00;
+}
+
+.colorblind-protanopia .card.attack {
+  border-color: #ffcc00;
+}
+
+.colorblind-protanopia .hp-bar-fill {
+  background: linear-gradient(90deg, #ffcc00, #ff8c00);
+}
+
+/* Colorblind Modes - Tritanopia (Blue-Yellow) */
+.colorblind-tritanopia {
+  --attack-color: #ff6666; /* Light red */
+  --skill-color: #ff69b4; /* Pink instead of blue */
+  --heal-color: #90ee90; /* Light green */
+  --block-color: #ff69b4;
+}
+
+.colorblind-tritanopia .card.skill {
+  border-color: #ff69b4;
+}
+
+.colorblind-tritanopia .block-bar-fill {
+  background: linear-gradient(90deg, #ff69b4, #da70d6);
+}
+
+/* Settings Screen Select Styling */
+.setting-select {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  color: #fff;
+  padding: 8px 12px;
+  font-size: 1em;
+  min-width: 200px;
+  cursor: pointer;
+}
+
+.setting-select:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.setting-select:focus {
+  outline: 2px solid #3498db;
+  outline-offset: 2px;
+}
+
+.setting-select option {
+  background: #1a1a2e;
+  color: #fff;
+}
+
+/* Focus Indicators for Keyboard Navigation */
+*:focus-visible {
+  outline: 3px solid #3498db;
+  outline-offset: 2px;
+}
+
+button:focus-visible,
+.btn:focus-visible {
+  outline: 3px solid #3498db;
+  outline-offset: 2px;
+  box-shadow: 0 0 10px rgba(52, 152, 219, 0.5);
+}
+
+.card:focus-visible {
+  outline: 3px solid #f4d03f;
+  outline-offset: 2px;
+}
+
+.map-node:focus-visible {
+  outline: 3px solid #f4d03f;
+  outline-offset: 4px;
+}
+
+/* ===========================================
+   WARDEN DIALOGUE SYSTEM
+   =========================================== */
+
+.warden-dialogue-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.warden-dialogue-overlay.visible {
+  opacity: 1;
+}
+
+.warden-dialogue-overlay.fade-out {
+  opacity: 0;
+}
+
+.warden-dialogue-container {
+  display: flex;
+  gap: 30px;
+  max-width: 800px;
+  padding: 30px;
+  align-items: flex-start;
+}
+
+.warden-portrait {
+  width: 150px;
+  height: 200px;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.warden-portrait .warden-figure {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(180deg, rgba(100, 149, 237, 0.3) 0%, rgba(100, 149, 237, 0.1) 100%);
+  border: 2px solid rgba(100, 149, 237, 0.5);
+  border-radius: 8px;
+  animation: wardenFloat 3s ease-in-out infinite;
+  position: relative;
+}
+
+.warden-portrait .warden-figure::before {
+  content: '👁️';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 48px;
+  opacity: 0.7;
+}
+
+.warden-portrait.speaker-enemy .warden-figure {
+  background: linear-gradient(180deg, rgba(139, 0, 0, 0.3) 0%, rgba(139, 0, 0, 0.1) 100%);
+  border-color: rgba(139, 0, 0, 0.5);
+}
+
+.warden-portrait.speaker-enemy .warden-figure::before {
+  content: '💀';
+}
+
+.warden-portrait.speaker-narrator .warden-figure {
+  background: linear-gradient(180deg, rgba(150, 150, 150, 0.3) 0%, rgba(150, 150, 150, 0.1) 100%);
+  border-color: rgba(150, 150, 150, 0.5);
+}
+
+.warden-portrait.speaker-narrator .warden-figure::before {
+  content: '📜';
+}
+
+@keyframes wardenFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+.warden-dialogue-content {
+  flex: 1;
+  color: #fff;
+}
+
+.warden-stage-direction {
+  font-style: italic;
+  color: #8899aa;
+  margin-bottom: 10px;
+  font-size: 0.9em;
+}
+
+.warden-speaker-name {
+  font-weight: bold;
+  font-size: 1.1em;
+  margin-bottom: 8px;
+  color: #6495ed;
+}
+
+.warden-speaker-name.speaker-enemy {
+  color: #cd5c5c;
+}
+
+.warden-speaker-name.speaker-narrator {
+  color: #aaa;
+}
+
+.warden-dialogue-text {
+  font-size: 1.2em;
+  line-height: 1.6;
+  color: #e0e0e0;
+  min-height: 100px;
+}
+
+.warden-continue-prompt {
+  margin-top: 20px;
+  font-size: 0.9em;
+  color: #666;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Warden Message (single line toast) */
+.warden-message {
+  position: fixed;
+  top: 100px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-20px);
+  background: linear-gradient(135deg, rgba(26, 26, 46, 0.95) 0%, rgba(42, 42, 70, 0.95) 100%);
+  border: 1px solid rgba(100, 149, 237, 0.4);
+  border-radius: 8px;
+  padding: 20px 30px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  max-width: 600px;
+  z-index: 9000;
+  opacity: 0;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  box-shadow: 0 5px 30px rgba(0, 0, 0, 0.5);
+}
+
+.warden-message.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.warden-message.fade-out {
+  opacity: 0;
+  transform: translateX(-50%) translateY(-20px);
+}
+
+.warden-message-icon {
+  font-size: 32px;
+  flex-shrink: 0;
+}
+
+.warden-message-text {
+  font-size: 1.1em;
+  line-height: 1.5;
+  color: #e0e0e0;
+  font-style: italic;
+}
+
+.warden-message-label {
+  color: #6495ed;
+  font-size: 0.9em;
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+/* Tutorial Prompt Box */
+.tutorial-prompt {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.9);
+  background: linear-gradient(135deg, rgba(26, 26, 46, 0.98) 0%, rgba(42, 42, 70, 0.98) 100%);
+  border: 2px solid rgba(244, 208, 63, 0.6);
+  border-radius: 12px;
+  padding: 25px 35px;
+  max-width: 500px;
+  z-index: 9500;
+  opacity: 0;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+}
+
+.tutorial-prompt.visible {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.tutorial-prompt.fade-out {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.9);
+}
+
+.tutorial-prompt-title {
+  font-size: 1.3em;
+  font-weight: bold;
+  color: #f4d03f;
+  margin-bottom: 15px;
+  text-align: center;
+  border-bottom: 1px solid rgba(244, 208, 63, 0.3);
+  padding-bottom: 10px;
+}
+
+.tutorial-prompt-content {
+  color: #e0e0e0;
+  font-size: 1.05em;
+  line-height: 1.6;
+}
+
+.tutorial-prompt-line {
+  margin-bottom: 8px;
+}
+
+.tutorial-prompt-line:empty {
+  height: 10px;
+}
+
+.tutorial-prompt-dismiss {
+  margin-top: 20px;
+  text-align: center;
+  color: #666;
+  font-size: 0.9em;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Entrance Screen Overlay */
+.entrance-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(180deg, #0a0a0f 0%, #1a1a2e 50%, #0a0a0f 100%);
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.entrance-overlay.visible {
+  opacity: 1;
+}
+
+.entrance-overlay.fade-out {
+  opacity: 0;
+}
+
+.entrance-title {
+  font-size: 3em;
+  font-weight: bold;
+  color: #b8860b;
+  text-shadow: 0 0 20px rgba(184, 134, 11, 0.5);
+  margin-bottom: 40px;
+  letter-spacing: 8px;
+}
+
+.entrance-doorway {
+  width: 200px;
+  height: 300px;
+  background: radial-gradient(ellipse at center, #000 0%, #1a1a2e 70%, transparent 100%);
+  border: 2px solid rgba(100, 100, 100, 0.3);
+  border-radius: 100px 100px 0 0;
+  margin-bottom: 40px;
+  position: relative;
+  animation: doorwayPulse 4s ease-in-out infinite;
+}
+
+.entrance-doorway::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80%;
+  height: 80%;
+  background: radial-gradient(ellipse at center, rgba(100, 149, 237, 0.1) 0%, transparent 70%);
+  animation: doorwayGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes doorwayPulse {
+  0%, 100% { border-color: rgba(100, 100, 100, 0.3); }
+  50% { border-color: rgba(100, 149, 237, 0.5); }
+}
+
+@keyframes doorwayGlow {
+  0% { opacity: 0.3; }
+  100% { opacity: 0.7; }
+}
+
+.entrance-text {
+  max-width: 500px;
+  text-align: center;
+  color: #8899aa;
+  font-size: 1.1em;
+  line-height: 1.8;
+  font-style: italic;
+}
+
+.entrance-text p {
+  margin-bottom: 0.8em;
+}
+
+.entrance-continue {
+  margin-top: 40px;
+  color: #555;
+  font-size: 0.9em;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* ===========================================
+   MOBILE LANDSCAPE LAYOUT
+   Consolidates all combat UI into a single
+   scalable arena viewport for mobile landscape
+   =========================================== */
+
+/* Mobile landscape detection:
+   - Landscape orientation
+   - Short viewport height (typical mobile)
+   - Touch device
+*/
+@media (orientation: landscape) and (max-height: 500px) {
+  /* Hide elements that will be moved into arena */
+  .game-container .hand-header,
+  .game-container .log-area {
+    display: none;
+  }
+
+  /* Make game container fill viewport */
+  .game-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* Arena container becomes the main viewport */
+  .arena-container {
+    flex: 1;
+    max-width: none;
+    margin: 0;
+    border-radius: 0;
+    border: none;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Dungeon scene fills available space */
+  .dungeon-scene {
+    flex: 1;
+    height: auto;
+    min-height: 200px;
+  }
+
+  /* Hand area moves inside arena, positioned at bottom */
+  .hand-area {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(10, 10, 20, 0.95) 0%, rgba(10, 10, 20, 0.8) 70%, transparent 100%);
+    padding: 8px 10px;
+    padding-bottom: calc(8px + env(safe-area-inset-bottom));
+    margin: 0;
+    z-index: 100;
+  }
+
+  /* Smaller cards for mobile landscape */
+  .cards {
+    gap: 6px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    justify-content: flex-start;
+    padding: 0 10px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .cards::-webkit-scrollbar {
+    display: none;
+  }
+
+  .card {
+    width: 100px;
+    min-width: 100px;
+    padding: 6px 8px;
+    font-size: 0.75em;
+  }
+
+  .card .card-name {
+    font-size: 0.85em;
+  }
+
+  .card .card-cost {
+    width: 22px;
+    height: 22px;
+    font-size: 0.8em;
+  }
+
+  .card .card-description {
+    font-size: 0.7em;
+    line-height: 1.2;
+  }
+
+  .card:hover:not(.unplayable) {
+    transform: translateY(-20px) scale(1.1);
+  }
+
+  /* Controls move to right side of arena */
+  .controls {
+    position: fixed;
+    top: 50%;
+    right: 10px;
+    right: calc(10px + env(safe-area-inset-right));
+    transform: translateY(-50%);
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+    z-index: 100;
+  }
+
+  .controls button {
+    width: 50px;
+    height: 50px;
+    padding: 0;
+    font-size: 0.65em;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #end-turn-btn {
+    width: 60px;
+    height: 60px;
+    font-size: 0.7em;
+  }
+
+  #abandon-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 0.55em;
+  }
+
+  /* Player HUD adjustments */
+  .player-hud {
+    left: 10px;
+    left: calc(10px + env(safe-area-inset-left));
+    bottom: auto;
+    top: 10px;
+    font-size: 0.8em;
+    padding: 8px 10px;
+    max-width: 140px;
+  }
+
+  .hud-stat-row {
+    gap: 8px;
+  }
+
+  /* Potion slots move to left side */
+  .potion-slots {
+    bottom: auto;
+    top: 10px;
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    gap: 8px;
+  }
+
+  .potion-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .potion-btn .potion-icon {
+    font-size: 1.4rem;
+  }
+
+  /* Enemy slots adjust for landscape */
+  .enemy-slots {
+    top: 15%;
+  }
+
+  .enemy-slot {
+    transform: scale(0.85);
+  }
+
+  /* Player silhouette adjusts */
+  .player-silhouette {
+    bottom: 80px; /* Above the card hand */
+    transform: scale(0.8);
+  }
+
+  /* Turn banner smaller */
+  .turn-banner {
+    font-size: 1.2em;
+    padding: 8px 20px;
+  }
+
+  /* Pile info shows as floating badge */
+  .game-container::after {
+    content: 'Draw: ' attr(data-draw) ' | Discard: ' attr(data-discard);
+    position: fixed;
+    top: 10px;
+    right: 80px;
+    right: calc(80px + env(safe-area-inset-right));
+    background: rgba(10, 10, 20, 0.8);
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.7em;
+    color: #888;
+    z-index: 100;
+  }
+}
+
+/* Even smaller screens (very compact landscape) */
+@media (orientation: landscape) and (max-height: 400px) {
+  .card {
+    width: 85px;
+    min-width: 85px;
+    padding: 4px 6px;
+  }
+
+  .card .card-cost {
+    width: 18px;
+    height: 18px;
+    font-size: 0.7em;
+  }
+
+  .card .card-description {
+    display: none; /* Hide description on very small screens */
+  }
+
+  .player-hud {
+    font-size: 0.7em;
+    padding: 6px 8px;
+  }
+
+  .controls button {
+    width: 44px;
+    height: 44px;
+  }
+
+  #end-turn-btn {
+    width: 50px;
+    height: 50px;
+  }
+
+  .enemy-slot {
+    transform: scale(0.7);
+  }
+}
+
+/* Tablet landscape (larger but still landscape-optimized) */
+@media (orientation: landscape) and (min-height: 501px) and (max-height: 700px) {
+  .game-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    max-width: none;
+    padding: 10px;
+  }
+
+  .arena-container {
+    flex: 2;
+    min-width: 60%;
+    max-width: none;
+    margin: 0;
+  }
+
+  .dungeon-scene {
+    height: 350px;
+  }
+
+  .hand-area {
+    flex: 1;
+    min-width: 300px;
+    padding: 10px;
+    margin: 0;
+  }
+
+  .controls {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+  }
+
+  .log-area {
+    display: none; /* Hide log on tablet landscape too */
+  }
+}
+
+/* Portrait mode - keep traditional layout but optimize */
+@media (orientation: portrait) and (max-width: 600px) {
+  .game-container {
+    padding: 10px;
+    padding-top: calc(10px + env(safe-area-inset-top));
+    padding-bottom: calc(10px + env(safe-area-inset-bottom));
+  }
+
+  .arena-container {
+    margin-bottom: 10px;
+  }
+
+  .dungeon-scene {
+    height: 280px;
+  }
+
+  .hand-area {
+    padding: 5px 0;
+    margin-bottom: 10px;
+  }
+
+  .card {
+    width: 90px;
+    padding: 6px;
+    font-size: 0.7em;
+  }
+
+  .card .card-description {
+    font-size: 0.65em;
+    line-height: 1.2;
+  }
+
+  .controls {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .controls button {
+    flex: 1;
+    min-width: 80px;
+    font-size: 0.8em;
+  }
+
+  .log-area {
+    max-height: 100px;
+    overflow-y: auto;
+  }
+
+  .hand-header {
+    font-size: 0.8em;
+  }
+}
+
+
+
+/* ===========================================
+   TUTORIAL OVERLAY
+   =========================================== */
+
+.tutorial-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.tutorial-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  pointer-events: auto;
+}
+
+.tutorial-hint {
+  position: absolute;
+  background: linear-gradient(135deg, #1a1a2e 0%, #2c3e50 100%);
+  border: 3px solid #f4d03f;
+  border-radius: 12px;
+  padding: 20px 24px;
+  max-width: 350px;
+  min-width: 250px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 20px rgba(244, 208, 63, 0.3);
+  pointer-events: auto;
+  z-index: 10000;
+  animation: tutorialHintPulse 2s ease-in-out infinite;
+}
+
+@keyframes tutorialHintPulse {
+  0%, 100% { box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 20px rgba(244, 208, 63, 0.3); }
+  50% { box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 30px rgba(244, 208, 63, 0.5); }
+}
+
+.tutorial-hint-text {
+  color: #fff;
+  font-size: 1.1em;
+  line-height: 1.5;
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.tutorial-hint-continue {
+  color: #f4d03f;
+  font-size: 0.85em;
+  text-align: center;
+  opacity: 0.8;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Highlight effect for tutorial targets */
+.tutorial-highlight {
+  position: relative;
+  z-index: 10001 !important;
+  animation: tutorialHighlight 1.5s ease-in-out infinite;
+}
+
+@keyframes tutorialHighlight {
+  0%, 100% { 
+    box-shadow: 0 0 0 4px rgba(244, 208, 63, 0.6), 0 0 20px rgba(244, 208, 63, 0.4);
+  }
+  50% { 
+    box-shadow: 0 0 0 8px rgba(244, 208, 63, 0.4), 0 0 30px rgba(244, 208, 63, 0.6);
+  }
+}
+
+/* Make highlighted elements clickable through backdrop */
+.tutorial-highlight,
+.tutorial-highlight * {
+  pointer-events: auto !important;
+}

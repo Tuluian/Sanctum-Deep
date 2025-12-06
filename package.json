@@ -11,9 +11,22 @@
     "heroku-postbuild": "npm run build",
     "test": "vitest",
     "test:run": "vitest run",
-    "lint": "eslint src --ext .ts"
+    "lint": "eslint src --ext .ts",
+    "ios:build": "npm run build && npx cap sync ios",
+    "ios:sync": "npx cap sync ios",
+    "ios:open": "npx cap open ios",
+    "ios:run": "npx cap run ios",
+    "ios:dev": "npx cap run ios --livereload --external",
+    "ios:dev:target": "npx cap run ios --livereload --external --target"
   },
   "dependencies": {
+    "@capacitor/cli": "^7.4.4",
+    "@capacitor/core": "^7.4.4",
+    "@capacitor/haptics": "^7.0.2",
+    "@capacitor/ios": "^7.4.4",
+    "@capacitor/preferences": "^7.0.2",
+    "@capacitor/share": "^7.0.2",
+    "@capacitor/status-bar": "^7.0.3",
     "express": "^4.22.1"
   },
   "devDependencies": {

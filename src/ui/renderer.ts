@@ -9,6 +9,7 @@ import {
   VICTORY_CHOICES,
   BAD_ENDING,
 } from '@/data/endingNarratives';
+import { shareService, VictoryShareData } from '@/services/ShareService';
 
 // Character portrait images for endings
 function getClassImage(classId: CharacterClassId): string | null {
@@ -253,8 +254,16 @@ export class CombatRenderer {
         return player.radiance;
       case CharacterClassId.SUMMONER:
         return player.minions.length;
+      case CharacterClassId.BARGAINER:
+        return player.favor;
+      case CharacterClassId.TIDECALLER:
+        return player.tide;
+      case CharacterClassId.SHADOW_STALKER:
+        return player.shadowEnergy;
+      case CharacterClassId.GOBLIN:
+        return player.gobbleDamageBonus;
       default:
-        return player.devotion;
+        return 0;
     }
   }
 
@@ -945,7 +954,8 @@ export class CombatRenderer {
     classId: CharacterClassId,
     choice: 'warden' | 'leave',
     soulEchoesEarned: number,
-    onContinue?: () => void
+    onContinue?: () => void,
+    shareData?: VictoryShareData
   ): void {
     const existing = document.querySelector('.game-over');
     if (existing) existing.remove();
@@ -980,10 +990,24 @@ export class CombatRenderer {
       </div>
       <div class="ending-footer">
         <p class="soul-echoes-earned">+${soulEchoesEarned} 🔮 Soul Echoes</p>
-        <button id="game-over-continue" class="ending-button">Return to Menu</button>
+        <div class="ending-buttons">
+          <button id="share-victory-btn" class="ending-button share-button">Share Victory</button>
+          <button id="game-over-continue" class="ending-button">Return to Menu</button>
+        </div>
       </div>
     `;
     document.body.appendChild(div);
+
+    // Share button handler
+    const shareBtn = document.getElementById('share-victory-btn');
+    if (shareBtn && shareData) {
+      shareBtn.addEventListener('click', async () => {
+        await shareService.shareVictory(shareData);
+      });
+    } else if (shareBtn) {
+      // Hide share button if no share data
+      shareBtn.style.display = 'none';
+    }
 
     const continueBtn = document.getElementById('game-over-continue');
     if (continueBtn && onContinue) {
@@ -1037,22 +1061,21 @@ export class CombatRenderer {
       .join('');
   }
 
-  // Turn announcements
-  showTurnBanner(isPlayerTurn: boolean): void {
+  // Turn announcements - shows "Turn X" at start of player turn
+  showTurnBanner(isPlayerTurn: boolean, turnNumber?: number): void {
+    // Only show banner at start of player turn (after enemy turn ends)
+    if (!isPlayerTurn) return;
+
     const banner = document.getElementById('turn-banner');
     if (!banner) return;
 
     // Reset any existing animation
     banner.classList.remove('active', 'player-turn', 'enemy-turn');
 
-    // Set content and style based on turn type
-    if (isPlayerTurn) {
-      banner.textContent = 'Your Turn';
-      banner.classList.add('player-turn');
-    } else {
-      banner.textContent = 'Enemy Turn';
-      banner.classList.add('enemy-turn');
-    }
+    // Set content to "Turn X"
+    const turn = turnNumber ?? parseInt(this.elements.turnCount.textContent || '1');
+    banner.textContent = `Turn ${turn}`;
+    banner.classList.add('player-turn');
 
     // Trigger animation
     requestAnimationFrame(() => {

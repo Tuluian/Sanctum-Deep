@@ -1,0 +1,39 @@
+schema: 1
+story: "8.3"
+story_title: "Auto-Target Living Units Only"
+gate: PASS
+status_reason: "All core functionality implemented with clean auto-targeting helper. Design decision to retain dead enemies in array is sound and documented."
+reviewer: "Quinn (Test Architect)"
+updated: "2025-12-06T07:45:00Z"
+
+waiver: { active: false }
+
+top_issues: []
+
+risk_summary:
+  totals: { critical: 0, high: 0, medium: 0, low: 0 }
+  recommendations:
+    must_fix: []
+    monitor: []
+
+quality_score: 100
+expires: "2025-12-20T00:00:00Z"
+
+evidence:
+  tests_reviewed: 0
+  risks_identified: 0
+  trace:
+    ac_covered: [1, 3, 4, 5]
+    ac_gaps: []
+
+nfr_validation:
+  security: { status: PASS, notes: "Internal game state only" }
+  performance: { status: PASS, notes: "findIndex on small arrays" }
+  reliability: { status: PASS, notes: "Null checks in place" }
+  maintainability: { status: PASS, notes: "Clean 12-line helper function" }
+
+recommendations:
+  immediate: []
+  future:
+    - action: "Consider adding unit tests for autoSelectLivingTarget"
+      refs: ["src/main.ts:1251-1263"]

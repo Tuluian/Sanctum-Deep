@@ -269,6 +269,233 @@ const ACT1_DIABOLIST_CARDS: StoryCard[] = [
   },
 ];
 
+// Oathsworn Character Thoughts - Act 1
+const ACT1_OATHSWORN_CARDS: StoryCard[] = [
+  {
+    id: 'oathsworn_act1_first_blood',
+    trigger: { type: 'first_blood' },
+    act: 1,
+    classId: CharacterClassId.OATHSWORN,
+    speaker: 'character',
+    text: `*The Order says these souls are prisoners. I'm starting to think they're refugees.*`,
+    priority: 80,
+    showOnce: true,
+  },
+  {
+    id: 'oathsworn_act1_low_hp',
+    trigger: { type: 'health_threshold', hpThreshold: 0.3 },
+    act: 1,
+    classId: CharacterClassId.OATHSWORN,
+    speaker: 'character',
+    text: `*"Pain is truth made manifest." That's what Sister Mara wrote. Easy to say when you're not bleeding.*`,
+    priority: 70,
+  },
+  {
+    id: 'oathsworn_act1_pre_boss',
+    trigger: { type: 'pre_boss', bossId: 'bonelord' },
+    act: 1,
+    classId: CharacterClassId.OATHSWORN,
+    speaker: 'character',
+    text: `*He ruled here. Another kind of Warden. The Order says they're all the same—monsters guarding a cage.*`,
+    priority: 85,
+    showOnce: true,
+  },
+  {
+    id: 'oathsworn_act1_post_boss',
+    trigger: { type: 'post_boss', bossId: 'bonelord' },
+    act: 1,
+    classId: CharacterClassId.OATHSWORN,
+    speaker: 'character',
+    text: `*He thanked me. At the end. Monsters don't thank their killers. What if the Order is wrong about everything?*`,
+    priority: 85,
+    showOnce: true,
+  },
+];
+
+// Fey-Touched Character Thoughts - Act 1
+const ACT1_FEY_TOUCHED_CARDS: StoryCard[] = [
+  {
+    id: 'fey_act1_first_blood',
+    trigger: { type: 'first_blood' },
+    act: 1,
+    classId: CharacterClassId.FEY_TOUCHED,
+    speaker: 'character',
+    text: `*Oberon is watching. I can feel him giggling. This is all a game to him.*`,
+    priority: 80,
+    showOnce: true,
+  },
+  {
+    id: 'fey_act1_low_hp',
+    trigger: { type: 'health_threshold', hpThreshold: 0.3 },
+    act: 1,
+    classId: CharacterClassId.FEY_TOUCHED,
+    speaker: 'character',
+    text: `*"Good luck, little mortal." His voice, in my head, laughing at my blood.*`,
+    priority: 70,
+  },
+  {
+    id: 'fey_act1_pre_boss',
+    trigger: { type: 'pre_boss', bossId: 'bonelord' },
+    act: 1,
+    classId: CharacterClassId.FEY_TOUCHED,
+    speaker: 'character',
+    text: `*A skeleton king? Sure. Why not. Nothing in my life makes sense anymore. Why should death?*`,
+    priority: 85,
+    showOnce: true,
+  },
+  {
+    id: 'fey_act1_post_boss',
+    trigger: { type: 'post_boss', bossId: 'bonelord' },
+    act: 1,
+    classId: CharacterClassId.FEY_TOUCHED,
+    speaker: 'character',
+    text: `*He was someone's lord. Someone's hero. And Oberon threw me at him like a coin into a well.*
+
+*At least the coin sank. Spite is fuel.*`,
+    priority: 85,
+    showOnce: true,
+  },
+];
+
+// Celestial Character Thoughts - Act 1
+const ACT1_CELESTIAL_CARDS: StoryCard[] = [
+  {
+    id: 'celestial_act1_first_blood',
+    trigger: { type: 'first_blood' },
+    act: 1,
+    classId: CharacterClassId.CELESTIAL,
+    speaker: 'character',
+    text: `*Auriel is excited. It likes the violence. That's... concerning.*`,
+    priority: 80,
+    showOnce: true,
+  },
+  {
+    id: 'celestial_act1_low_hp',
+    trigger: { type: 'health_threshold', hpThreshold: 0.3 },
+    act: 1,
+    classId: CharacterClassId.CELESTIAL,
+    speaker: 'character',
+    text: `*"We're hurt, little host. We should be more careful. I don't want a new vessel."*
+
+*Always "we." Never "you."*`,
+    priority: 70,
+  },
+  {
+    id: 'celestial_act1_pre_boss',
+    trigger: { type: 'pre_boss', bossId: 'bonelord' },
+    act: 1,
+    classId: CharacterClassId.CELESTIAL,
+    speaker: 'character',
+    text: `*He sought immortality. Auriel offers something similar. Eternal existence as someone else's battery.*`,
+    priority: 85,
+    showOnce: true,
+  },
+  {
+    id: 'celestial_act1_post_boss',
+    trigger: { type: 'post_boss', bossId: 'bonelord' },
+    act: 1,
+    classId: CharacterClassId.CELESTIAL,
+    speaker: 'character',
+    text: `*The light burned him. MY light. Not Auriel's—mine. I'm starting to tell the difference.*`,
+    priority: 85,
+    showOnce: true,
+  },
+];
+
+// Summoner Character Thoughts - Act 1
+const ACT1_SUMMONER_CARDS: StoryCard[] = [
+  {
+    id: 'summoner_act1_first_blood',
+    trigger: { type: 'first_blood' },
+    act: 1,
+    classId: CharacterClassId.SUMMONER,
+    speaker: 'character',
+    text: `*My wisps are holding together. This place—it makes them more solid. More real.*`,
+    priority: 80,
+    showOnce: true,
+  },
+  {
+    id: 'summoner_act1_low_hp',
+    trigger: { type: 'health_threshold', hpThreshold: 0.3 },
+    act: 1,
+    classId: CharacterClassId.SUMMONER,
+    speaker: 'character',
+    text: `*They throw themselves in front of me. I didn't ask them to. I can't stop them.*
+
+*Is this love or programming? Does it matter?*`,
+    priority: 70,
+  },
+  {
+    id: 'summoner_act1_pre_boss',
+    trigger: { type: 'pre_boss', bossId: 'bonelord' },
+    act: 1,
+    classId: CharacterClassId.SUMMONER,
+    speaker: 'character',
+    text: `*He commands dead soldiers. Memories given form. My children are different. They're new. Fresh. Right?*`,
+    priority: 85,
+    showOnce: true,
+  },
+  {
+    id: 'summoner_act1_post_boss',
+    trigger: { type: 'post_boss', bossId: 'bonelord' },
+    act: 1,
+    classId: CharacterClassId.SUMMONER,
+    speaker: 'character',
+    text: `*His soldiers faded when he died. They only existed because he remembered them.*
+
+*My wisps—when I forget them, what happens to them?*`,
+    priority: 85,
+    showOnce: true,
+  },
+];
+
+// Bargainer Character Thoughts - Act 1
+const ACT1_BARGAINER_CARDS: StoryCard[] = [
+  {
+    id: 'bargainer_act1_first_blood',
+    trigger: { type: 'first_blood' },
+    act: 1,
+    classId: CharacterClassId.BARGAINER,
+    speaker: 'character',
+    text: `*Malachar is screaming at the barriers. I can feel it. He's so close, and so helpless.*
+
+*Good.*`,
+    priority: 80,
+    showOnce: true,
+  },
+  {
+    id: 'bargainer_act1_low_hp',
+    trigger: { type: 'health_threshold', hpThreshold: 0.3 },
+    act: 1,
+    classId: CharacterClassId.BARGAINER,
+    speaker: 'character',
+    text: `*Lily. I saved Lily. That's worth any price. Even this one.*`,
+    priority: 70,
+  },
+  {
+    id: 'bargainer_act1_pre_boss',
+    trigger: { type: 'pre_boss', bossId: 'bonelord' },
+    act: 1,
+    classId: CharacterClassId.BARGAINER,
+    speaker: 'character',
+    text: `*A king who made a bad deal. Glory for eternity. Should have read the fine print, your majesty.*`,
+    priority: 85,
+    showOnce: true,
+  },
+  {
+    id: 'bargainer_act1_post_boss',
+    trigger: { type: 'post_boss', bossId: 'bonelord' },
+    act: 1,
+    classId: CharacterClassId.BARGAINER,
+    speaker: 'character',
+    text: `*He was a client, in a way. The Sanctum collected when he couldn't pay. Harsh terms.*
+
+*I can do better.*`,
+    priority: 85,
+    showOnce: true,
+  },
+];
+
 // =============================================================================
 // ACT 2 — THE FLOODED DEPTHS
 // =============================================================================
@@ -577,6 +804,11 @@ export const ALL_STORY_CARDS: StoryCard[] = [
   ...ACT1_CLERIC_CARDS,
   ...ACT1_KNIGHT_CARDS,
   ...ACT1_DIABOLIST_CARDS,
+  ...ACT1_OATHSWORN_CARDS,
+  ...ACT1_FEY_TOUCHED_CARDS,
+  ...ACT1_CELESTIAL_CARDS,
+  ...ACT1_SUMMONER_CARDS,
+  ...ACT1_BARGAINER_CARDS,
   // Act 2
   ...ACT2_WARDEN_CARDS,
   ...ACT2_ENVIRONMENT_CARDS,
